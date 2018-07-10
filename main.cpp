@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "cppoutput.h"
 #include "parser.h"
 
 using namespace std;
@@ -54,6 +55,8 @@ int main()
   }
 
   cout << (parsed ? "yes" : "no") << endl;
+
+  WriteCppCode(cout, p);
 
   return 0;
 }
