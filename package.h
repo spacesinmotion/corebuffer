@@ -14,12 +14,21 @@ struct Enum
   vector<pair<string, int>> entries;
 };
 
+enum class Pointer : unsigned char
+{
+  Plain,
+  Weak,
+  Unique,
+  Shared
+};
+
 struct Member
 {
   string name;
   string type;
   string defaultValue;
   bool isVector{false};
+  Pointer pointer{Pointer::Plain};
 };
 
 struct Table

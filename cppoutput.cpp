@@ -68,6 +68,26 @@ void WriteEnums(std::ostream &o, const vector<Enum> &enums)
   }
 }
 
+std::ostream &WriteType(std::ostream &o, const Member &m)
+{
+  if (m.isVector)
+    o << "std::vector<";
+  if (m.pointer == Pointer::Weak)
+    o << "std::weak_ptr<";
+  if (m.pointer == Pointer::Unique)
+    o << "std::unique_ptr<";
+  if (m.pointer == Pointer::Shared)
+    o << "std::shared_ptr<";
+  o << m.type;
+  if (m.pointer != Pointer::Plain)
+    o << ">";
+  if (m.isVector)
+    o << ">";
+  return o;
+}
+
+#include <iomanip>
+
 void WriteTableDeclarations(std::ostream &o, const vector<Table> &tables)
 {
   for (const auto &t : tables)
@@ -75,7 +95,8 @@ void WriteTableDeclarations(std::ostream &o, const vector<Table> &tables)
     o << "struct " << t.name << " {" << endl;
     for (const auto &m : t.member)
     {
-      o << "  " << (m.isVector ? "std::vector<" : "") << m.type << (m.isVector ? "> " : " ") << m.name;
+      o << "  ";
+      WriteType(o, m) << " " << m.name;
       if (!m.defaultValue.empty())
         o << "{" << m.defaultValue << "}";
       o << ";" << endl;

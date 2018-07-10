@@ -20,7 +20,7 @@ int main()
   }
 
   table YYY {
-    still:XXX;
+    still:weak XXX;
     sub:[YYY];
   }
 
@@ -56,7 +56,8 @@ int main()
 
   cout << (parsed ? "yes" : "no") << endl;
 
-  WriteCppCode(cout, p);
+  if (parsed)
+    WriteCppCode(cout, p);
 
   return 0;
 }

@@ -331,10 +331,29 @@ bool Parser::readTypeVector(Member &m)
   return false;
 }
 
+Pointer Parser::readTypePointer()
+{
+  auto s = state();
+
+  const auto id = readIdentifier();
+  if (id == "weak")
+    return Pointer::Weak;
+  else if (id == "unique")
+    return Pointer::Unique;
+  else if (id == "shared")
+    return Pointer::Shared;
+  else if (id == "plain")
+    return Pointer::Plain;
+
+  rewind(s);
+  return Pointer::Plain;
+}
+
 bool Parser::readTypeIdentifier(Member &m)
 {
   auto s = state();
 
+  m.pointer = readTypePointer();
   const auto id = readIdentifier();
   if (!id.empty())
   {
