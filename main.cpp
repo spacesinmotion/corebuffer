@@ -11,6 +11,7 @@ int main()
 
   package SubC.scope;
   version "0.1.203";
+  root_type YYY;
 
   table XXX {
     bill:int = 1;

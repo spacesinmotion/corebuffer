@@ -38,6 +38,7 @@ private:
   bool readPackagePath();
 
   bool readVersion();
+  bool readRootType();
 
   bool readMainContent();
   bool readTable();

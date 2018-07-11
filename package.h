@@ -41,6 +41,7 @@ struct Package
 {
   string path;
   string version;
+  string root_type;
   vector<Table> tables;
   vector<Enum> enums;
 };

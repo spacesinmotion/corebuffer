@@ -178,9 +178,24 @@ bool Parser::readVersion()
   return false;
 }
 
+bool Parser::readRootType()
+{
+  auto s = state();
+
+  if (read("root_type"))
+  {
+    package.root_type = readIdentifier();
+    if (!package.root_type.empty() && read(";"))
+      return true;
+  }
+
+  rewind(s);
+  return false;
+}
+
 bool Parser::readMainContent()
 {
-  return readTable() || readEnum() || readPackage() || readVersion();
+  return readTable() || readEnum() || readPackage() || readVersion() || readRootType();
 }
 
 bool Parser::readTable()
