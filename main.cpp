@@ -1,7 +1,10 @@
+#include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "cppoutput.h"
 #include "parser.h"
+#include "testout.h"
 
 using namespace std;
 
@@ -21,8 +24,8 @@ int main()
   }
 
   table YYY {
-    still:weak XXX;
-    sub:[YYY];
+    still:unique XXX;
+    sub:[shared YYY];
   }
 
   enum Access { Private, Public = 3, Protected }
@@ -58,7 +61,37 @@ int main()
   cout << (parsed ? "yes" : "no") << endl;
 
   if (parsed)
-    WriteCppCode(cout, p);
+  {
+    std::fstream f("../CoreData/testout.h", std::fstream::out);
+    WriteCppCode(f, p);
+    f.close();
+  }
+
+  auto y = std::make_shared<SubC::scope::YYY>();
+  y->still = std::make_unique<SubC::scope::XXX>();
+  y->still->aul = true;
+  y->still->bill = 42;
+  y->still->kaul = 4.2;
+  y->sub.emplace_back(new SubC::scope::YYY);
+  y->sub.emplace_back(new SubC::scope::YYY);
+  y->sub.emplace_back(new SubC::scope::YYY);
+  y->sub.push_back(y->sub.front());
+  y->still->baul = std::vector<float>(20, 1.2f);
+
+  std::string data;
+  SubC::scope::YYY_io io;
+  {
+    std::stringstream s;
+    io.WriteYYY(s, *y);
+
+    data = s.str();
+  }
+
+  auto yy = std::make_shared<SubC::scope::YYY>();
+  {
+    std::stringstream s(data);
+    io.ReadYYY(s, *yy);
+  }
 
   return 0;
 }

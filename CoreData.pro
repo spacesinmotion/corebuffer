@@ -12,4 +12,5 @@ SOURCES += \
 HEADERS += \
     parser.h \
     package.h \
-    cppoutput.h
+    cppoutput.h \
+    testout.h
