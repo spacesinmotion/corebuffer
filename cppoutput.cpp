@@ -384,7 +384,7 @@ void WriteTableDeclaration(std::ostream &o, const Table &t, const std::string &r
   }
   o << "private:" << endl;
   o << "  unsigned int io_counter_{0};" << endl;
-  o << "  friend class " << root_type << "_io;" << endl;
+  o << "  friend struct " << root_type << "_io;" << endl;
   o << "};" << endl << endl;
 }
 

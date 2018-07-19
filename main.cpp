@@ -71,7 +71,7 @@ int main()
   y->still = std::make_unique<SubC::scope::XXX>();
   y->still->aul = true;
   y->still->bill = 42;
-  y->still->kaul = 4.2;
+  y->still->kaul = 4.2f;
   y->sub.emplace_back(new SubC::scope::YYY);
   y->sub.emplace_back(new SubC::scope::YYY);
   y->sub.emplace_back(new SubC::scope::YYY);

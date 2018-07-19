@@ -32,7 +32,7 @@ struct XXX {
   std::vector<float> baul;
 private:
   unsigned int io_counter_{0};
-  friend class YYY_io;
+  friend struct YYY_io;
 };
 
 struct YYY {
@@ -40,7 +40,7 @@ struct YYY {
   std::vector<std::shared_ptr<YYY>> sub;
 private:
   unsigned int io_counter_{0};
-  friend class YYY_io;
+  friend struct YYY_io;
 };
 
 inline const std::array<Access,3> & AccessValues() {
