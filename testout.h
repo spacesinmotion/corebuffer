@@ -26,7 +26,7 @@ enum class Access : unsigned int {
 };
 
 struct XXX {
-  int bill{1};
+  std::int32_t bill{1};
   bool aul{false};
   float kaul;
   std::vector<float> baul;
@@ -62,283 +62,82 @@ inline const char * ValueName(const Access &v) {
 
 struct YYY_io {
 private:
-inline void Write(std::ostream &o, std::int8_t i) {
-  o.write("\x1", 1);
-  o.write(reinterpret_cast<const char *>(&i), 1);
+template<typename T> void Write(std::ostream &o, const T *v) {
+  static_assert(false, "Something not implemented");
 }
 
-inline void Write(std::ostream &o, std::int16_t i) {
-  if (std::numeric_limits<std::int8_t>::lowest() < i && i < std::numeric_limits<std::int8_t>::max())
-    Write(o, std::int8_t(i));
-  else {
-    o.write("\x2", 1);
-    o.write(reinterpret_cast<const char *>(&i), 2);
-  }
+template<typename T> void Write(std::ostream &o, const T &v) {
+  o.write(reinterpret_cast<const char *>(&v), sizeof(T));
 }
 
-inline void Write(std::ostream &o, std::int32_t i) {
-  if (std::numeric_limits<std::int16_t>::lowest() < i && i < std::numeric_limits<std::int16_t>::max())
-    Write(o, std::int16_t(i));
-  else {
-    o.write("\x4", 1);
-    o.write(reinterpret_cast<const char *>(&i), 4);
-  }
+template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
+  Write(o, v.size());
+  o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
-inline void Write(std::ostream &o, std::int64_t i) {
-  if (std::numeric_limits<std::int32_t>::lowest() < i && i < std::numeric_limits<std::int32_t>::max())
-    Write(o, std::int32_t(i));
-  else {
-    o.write("\x8", 1);
-    o.write(reinterpret_cast<const char *>(&i), 8);
-  }
+template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
+  static_assert(false, "Something not implemented");
 }
 
-inline void Write(std::ostream &o, std::uint8_t i) {
-  o.write("\x1", 1);
-  o.write(reinterpret_cast<const char *>(&i), 1);
+template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {
+  static_assert(false, "Something not implemented");
 }
 
-inline void Write(std::ostream &o, std::uint16_t i) {
-  if (i < std::numeric_limits<std::uint8_t>::max())
-    Write(o, std::uint8_t(i));
-  else {
-    o.write("\x2", 1);
-    o.write(reinterpret_cast<const char *>(&i), 2);
-  }
+template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {
+  static_assert(false, "Something not implemented");
 }
 
-inline void Write(std::ostream &o, std::uint32_t i) {
-  if (i < std::numeric_limits<std::uint16_t>::max())
-    Write(o, std::uint16_t(i));
-  else {
-    o.write("\x4", 1);
-    o.write(reinterpret_cast<const char *>(&i), 4);
-  }
+template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
+  static_assert(false, "Something not implemented");
 }
 
-inline void Write(std::ostream &o, std::uint64_t i) {
-  if (i < std::numeric_limits<std::uint32_t>::max())
-    Write(o, std::uint32_t(i));
-  else {
-    o.write("\x8", 1);
-    o.write(reinterpret_cast<const char *>(&i), 8);
-  }
+template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
+  static_assert(false, "Something not implemented");
 }
 
-inline void Write(std::ostream &o, float f) {
-  o.write("\x4", 1);
-  o.write(reinterpret_cast<const char *>(&f), 4);
+template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
+  static_assert(false, "Something not implemented");
 }
 
-inline void Write(std::ostream &o, double f) {
-  if (f < double(std::numeric_limits<float>::max()) && f > double(std::numeric_limits<float>::lowest()))
-    Write(o, float(f));
-  else {
-    o.write("\x8", 1);
-    o.write(reinterpret_cast<const char *>(&f), 8);
-  }
+template<> void Write(std::ostream &o, const std::string &v) {
+  Write(o, v.size());
+  o.write(v.data(), v.size());
 }
 
-inline void Write(std::ostream &o, const std::string &t) {
-  Write(o, t.size());
-  o.write(t.c_str(), t.size());
+template<> void Write(std::ostream &o, const char *v) {
+  Write(o, std::string(v));
 }
 
-
-inline void Read(std::istream &s, std::int8_t &i)
-{
-  char c[2];
-  s.read(c, 2);
-  i = *reinterpret_cast<std::int8_t *>(&c[1]);
+template<typename T> void Read(std::istream &i, T &v) {
+  i.read(reinterpret_cast<char *>(&v), sizeof(T));
 }
 
-inline void Read(std::istream &s, std::int16_t &i)
-{
-  char c;
-  s.read(&c, 1);
-  if (c == '\x1')
-  {
-    s.read(&c, 1);
-    i = *reinterpret_cast<std::int8_t *>(&c);
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 2);
-  }
+template<typename T> void Read(std::istream &i, std::vector<T> &v) {
+  std::vector<T>::size_type s{0};
+  Read(i, s);
+  v.resize(s);
+  i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
 }
 
-inline void Read(std::istream &s, std::int32_t i)
-{
-  char c[2];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::int32_t(*reinterpret_cast<std::int8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::int32_t(*reinterpret_cast<std::int16_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 4);
-  }
-}
-
-inline void Read(std::istream &s, std::int64_t &i)
-{
-  char c[4];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::int64_t(*reinterpret_cast<std::int8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::int64_t(*reinterpret_cast<std::int16_t *>(&c));
-  }
-  else if (c[0] == '\x4')
-  {
-    s.read(c, 4);
-    i = std::int64_t(*reinterpret_cast<std::int32_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 8);
-  }
-}
-
-inline void Read(std::istream &s, std::uint8_t &i)
-{
-  char c[2];
-  s.read(c, 2);
-  i = *reinterpret_cast<std::uint8_t *>(&c[1]);
-}
-
-inline void Read(std::istream &s, std::uint16_t &i)
-{
-  char c;
-  s.read(&c, 1);
-  if (c == '\x1')
-  {
-    s.read(&c, 1);
-    i = *reinterpret_cast<std::uint8_t *>(&c);
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 2);
-  }
-}
-
-inline void Read(std::istream &s, std::uint32_t &i)
-{
-  char c[2];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::uint32_t(*reinterpret_cast<std::uint8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::uint32_t(*reinterpret_cast<std::uint16_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 4);
-  }
-}
-
-inline void Read(std::istream &s, float &f)
-{
-  char c[5];
-  s.read(&c[0], 5);
-  f = *reinterpret_cast<float *>(&c[1]);
-}
-
-inline void Read(std::istream &s, double &f)
-{
-  char c[4];
-  s.read(&c[0], 1);
-  if (c[0] == '\x4')
-  {
-    s.read(c, 4);
-    f = double(*reinterpret_cast<float *>(c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&f), 4);
-  }
-}
-
-inline void Read(std::istream &s, std::uint64_t &i)
-{
-  char c[4];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::uint64_t(*reinterpret_cast<std::uint8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::uint64_t(*reinterpret_cast<std::uint16_t *>(&c));
-  }
-  else if (c[0] == '\x4')
-  {
-    s.read(c, 4);
-    i = std::uint64_t(*reinterpret_cast<std::uint32_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 8);
-  }
-}
-
-inline void Read(std::istream &s, std::string &t)
-{
-  std::string::size_type size = 0;
-  Read(s, size);
-  t.resize(size);
-  s.read(&t[0], size);
-}
-inline void Write(std::ostream &o, const Access &v) {
-  Write(o, static_cast<unsigned int>(v));
-}
-
-inline void Read(std::istream &s, Access &v) {
-  unsigned int t{0};
-  Read(s, t);
-  v = static_cast<Access>(t);
+template<> void Read(std::istream &i, std::string &v) {
+  std::string::size_type s{0};
+  Read(i, s);
+  v.resize(s);
+  i.read(&v[0], s);
 }
 
 void Write(std::ostream &o, const XXX &v) {
   Write(o, v.bill);
   Write(o, v.aul);
   Write(o, v.kaul);
-  Write(o, v.baul.size());
-  for (const auto &entry : v.baul) {
-    Write(o, entry);
-  };
+  Write(o, v.baul);
 }
 
 void Read(std::istream &s, XXX &v) {
   Read(s, v.bill);
   Read(s, v.aul);
   Read(s, v.kaul);
-  std::vector<float>::size_type baul_size{0};
-  Read(s, baul_size);
-  v.baul.resize(baul_size);
-  for (auto &entry : v.baul) {
-    Read(s, entry);
-  };
+  Read(s, v.baul);
 }
 
 void Write(std::ostream &o, const YYY &v) {
@@ -348,7 +147,7 @@ void Write(std::ostream &o, const YYY &v) {
     o.write("\x1", 1);
     Write(o, *v.still);
   }
-  Write(o, v.sub.size());
+  o << v.sub.size();
   for (const auto &entry : v.sub) {
     const auto t = entry;
   if (!t) {
@@ -374,7 +173,7 @@ void Read(std::istream &s, YYY &v) {
     }
   }
   std::vector<std::shared_ptr<YYY>>::size_type sub_size{0};
-  Read(s, sub_size);
+  s >> sub_size;
   v.sub.resize(sub_size);
   for (auto &entry : v.sub) {
     {
@@ -405,7 +204,7 @@ void WriteYYY(std::ostream &o, const YYY &v) {
   YYY_count_ = 0;
 
   o.write("CORE", 4);
-  Write(o, "0.1.203");
+  o.write("0.1.203", 7);
   Write(o, v);
 }
 
@@ -417,8 +216,8 @@ bool ReadYYY(std::istream &i, YYY &v) {
   i.read(&marker[0], 4);
   if (marker != "CORE")
     return false;
-  std::string version;
-  Read(i, version);
+  std::string version(7, '_');
+  i.read(&version[0], 7);
   if (version != "0.1.203")
     return false;
   Read(i, v);

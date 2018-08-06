@@ -40,259 +40,6 @@ void WriteForwardDeclarations(std::ostream &o, const Package &p)
   }
 }
 
-void WriteDefaultOutputFunctions(std::ostream &o)
-{
-  o << "inline void Write(std::ostream &o, std::int8_t i) {" << endl;
-  o << "  o.write(\"\\x1\", 1);" << endl;
-  o << "  o.write(reinterpret_cast<const char *>(&i), 1);" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, std::int16_t i) {" << endl;
-  o << "  if (std::numeric_limits<std::int8_t>::lowest() < i && i < std::numeric_limits<std::int8_t>::max())" << endl;
-  o << "    Write(o, std::int8_t(i));" << endl;
-  o << "  else {" << endl;
-  o << "    o.write(\"\\x2\", 1);" << endl;
-  o << "    o.write(reinterpret_cast<const char *>(&i), 2);" << endl;
-  o << "  }" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, std::int32_t i) {" << endl;
-  o << "  if (std::numeric_limits<std::int16_t>::lowest() < i && i < std::numeric_limits<std::int16_t>::max())" << endl;
-  o << "    Write(o, std::int16_t(i));" << endl;
-  o << "  else {" << endl;
-  o << "    o.write(\"\\x4\", 1);" << endl;
-  o << "    o.write(reinterpret_cast<const char *>(&i), 4);" << endl;
-  o << "  }" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, std::int64_t i) {" << endl;
-  o << "  if (std::numeric_limits<std::int32_t>::lowest() < i && i < std::numeric_limits<std::int32_t>::max())" << endl;
-  o << "    Write(o, std::int32_t(i));" << endl;
-  o << "  else {" << endl;
-  o << "    o.write(\"\\x8\", 1);" << endl;
-  o << "    o.write(reinterpret_cast<const char *>(&i), 8);" << endl;
-  o << "  }" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, std::uint8_t i) {" << endl;
-  o << "  o.write(\"\\x1\", 1);" << endl;
-  o << "  o.write(reinterpret_cast<const char *>(&i), 1);" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, std::uint16_t i) {" << endl;
-  o << "  if (i < std::numeric_limits<std::uint8_t>::max())" << endl;
-  o << "    Write(o, std::uint8_t(i));" << endl;
-  o << "  else {" << endl;
-  o << "    o.write(\"\\x2\", 1);" << endl;
-  o << "    o.write(reinterpret_cast<const char *>(&i), 2);" << endl;
-  o << "  }" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, std::uint32_t i) {" << endl;
-  o << "  if (i < std::numeric_limits<std::uint16_t>::max())" << endl;
-  o << "    Write(o, std::uint16_t(i));" << endl;
-  o << "  else {" << endl;
-  o << "    o.write(\"\\x4\", 1);" << endl;
-  o << "    o.write(reinterpret_cast<const char *>(&i), 4);" << endl;
-  o << "  }" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, std::uint64_t i) {" << endl;
-  o << "  if (i < std::numeric_limits<std::uint32_t>::max())" << endl;
-  o << "    Write(o, std::uint32_t(i));" << endl;
-  o << "  else {" << endl;
-  o << "    o.write(\"\\x8\", 1);" << endl;
-  o << "    o.write(reinterpret_cast<const char *>(&i), 8);" << endl;
-  o << "  }" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, float f) {" << endl;
-  o << "  o.write(\"\\x4\", 1);" << endl;
-  o << "  o.write(reinterpret_cast<const char *>(&f), 4);" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, double f) {" << endl;
-  o << "  if (f < double(std::numeric_limits<float>::max()) && f > double(std::numeric_limits<float>::lowest()))"
-    << endl;
-  o << "    Write(o, float(f));" << endl;
-  o << "  else {" << endl;
-  o << "    o.write(\"\\x8\", 1);" << endl;
-  o << "    o.write(reinterpret_cast<const char *>(&f), 8);" << endl;
-  o << "  }" << endl;
-  o << "}" << endl << endl;
-
-  o << "inline void Write(std::ostream &o, const std::string &t) {" << endl;
-  o << "  Write(o, t.size());" << endl;
-  o << "  o.write(t.c_str(), t.size());" << endl;
-  o << "}" << endl << endl;
-
-  o << R"(
-inline void Read(std::istream &s, std::int8_t &i)
-{
-  char c[2];
-  s.read(c, 2);
-  i = *reinterpret_cast<std::int8_t *>(&c[1]);
-}
-
-inline void Read(std::istream &s, std::int16_t &i)
-{
-  char c;
-  s.read(&c, 1);
-  if (c == '\x1')
-  {
-    s.read(&c, 1);
-    i = *reinterpret_cast<std::int8_t *>(&c);
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 2);
-  }
-}
-
-inline void Read(std::istream &s, std::int32_t i)
-{
-  char c[2];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::int32_t(*reinterpret_cast<std::int8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::int32_t(*reinterpret_cast<std::int16_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 4);
-  }
-}
-
-inline void Read(std::istream &s, std::int64_t &i)
-{
-  char c[4];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::int64_t(*reinterpret_cast<std::int8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::int64_t(*reinterpret_cast<std::int16_t *>(&c));
-  }
-  else if (c[0] == '\x4')
-  {
-    s.read(c, 4);
-    i = std::int64_t(*reinterpret_cast<std::int32_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 8);
-  }
-}
-
-inline void Read(std::istream &s, std::uint8_t &i)
-{
-  char c[2];
-  s.read(c, 2);
-  i = *reinterpret_cast<std::uint8_t *>(&c[1]);
-}
-
-inline void Read(std::istream &s, std::uint16_t &i)
-{
-  char c;
-  s.read(&c, 1);
-  if (c == '\x1')
-  {
-    s.read(&c, 1);
-    i = *reinterpret_cast<std::uint8_t *>(&c);
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 2);
-  }
-}
-
-inline void Read(std::istream &s, std::uint32_t &i)
-{
-  char c[2];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::uint32_t(*reinterpret_cast<std::uint8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::uint32_t(*reinterpret_cast<std::uint16_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 4);
-  }
-}
-
-inline void Read(std::istream &s, float &f)
-{
-  char c[5];
-  s.read(&c[0], 5);
-  f = *reinterpret_cast<float *>(&c[1]);
-}
-
-inline void Read(std::istream &s, double &f)
-{
-  char c[4];
-  s.read(&c[0], 1);
-  if (c[0] == '\x4')
-  {
-    s.read(c, 4);
-    f = double(*reinterpret_cast<float *>(c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&f), 4);
-  }
-}
-
-inline void Read(std::istream &s, std::uint64_t &i)
-{
-  char c[4];
-  s.read(&c[0], 1);
-  if (c[0] == '\x1')
-  {
-    s.read(c, 1);
-    i = std::uint64_t(*reinterpret_cast<std::uint8_t *>(&c[0]));
-  }
-  else if (c[0] == '\x2')
-  {
-    s.read(c, 2);
-    i = std::uint64_t(*reinterpret_cast<std::uint16_t *>(&c));
-  }
-  else if (c[0] == '\x4')
-  {
-    s.read(c, 4);
-    i = std::uint64_t(*reinterpret_cast<std::uint32_t *>(&c));
-  }
-  else
-  {
-    s.read(reinterpret_cast<char *>(&i), 8);
-  }
-}
-
-inline void Read(std::istream &s, std::string &t)
-{
-  std::string::size_type size = 0;
-  Read(s, size);
-  t.resize(size);
-  s.read(&t[0], size);
-}
-)";
-}
-
 void WriteEnumDeclaration(std::ostream &o, const Enum &e)
 {
   o << "enum class " << e.name << " : "
@@ -320,27 +67,88 @@ void WriteEnumFunctions(std::ostream &o, const Enum &e)
   o << "};" << endl << endl;
 }
 
-void WriteEnumOutputFunctions(std::ostream &o, const Enum &e)
-{
-  o << "inline void Write(std::ostream &o, const " << e.name << " &v) {" << endl;
-  o << "  Write(o, static_cast<unsigned int>(v));" << endl;
-  o << "}" << endl << endl;
-}
+void WriteEnumOutputFunctions(std::ostream &o, const Enum &e) {}
 
-void WriteEnumInputFunctions(std::ostream &o, const Enum &e)
-{
-  o << "inline void Read(std::istream &s, " << e.name << " &v) {" << endl;
-  o << "  unsigned int t{0};" << endl;
-  o << "  Read(s, t);" << endl;
-  o << "  v = static_cast<" << e.name << ">(t);" << endl;
-  o << "}" << endl << endl;
-}
+void WriteEnumInputFunctions(std::ostream &o, const Enum &e) {}
 
 void WriteEnumDeclarations(std::ostream &o, const vector<Enum> &enums)
 {
   for (const auto &e : enums)
   {
     WriteEnumDeclaration(o, e);
+  }
+}
+
+void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
+{
+  o << "template<typename T> void Write(std::ostream &o, const T *v) {" << endl;
+  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const T &v) {" << endl;
+  o << "  o.write(reinterpret_cast<const char *>(&v), sizeof(T));" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {" << endl;
+  o << "  Write(o, v.size());" << endl;
+  o << "  o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {" << endl;
+  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {" << endl;
+  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {" << endl;
+  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {" << endl;
+  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {" << endl;
+  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {" << endl;
+  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<> void Write(std::ostream &o, const std::string &v) {" << endl;
+  o << "  Write(o, v.size());" << endl;
+  o << "  o.write(v.data(), v.size());" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<> void Write(std::ostream &o, const char *v) {" << endl;
+  o << "  Write(o, std::string(v));" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Read(std::istream &i, T &v) {" << endl;
+  o << "  i.read(reinterpret_cast<char *>(&v), sizeof(T));" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Read(std::istream &i, std::vector<T> &v) {" << endl;
+  o << "  std::vector<T>::size_type s{0};" << endl;
+  o << "  Read(i, s);" << endl;
+  o << "  v.resize(s);" << endl;
+  o << "  i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<> void Read(std::istream &i, std::string &v) {" << endl;
+  o << "  std::string::size_type s{0};" << endl;
+  o << "  Read(i, s);" << endl;
+  o << "  v.resize(s);" << endl;
+  o << "  i.read(&v[0], s);" << endl;
+  o << "}" << endl << endl;
+
+  for (const auto &b : p.baseTypes)
+  {
+    if (b.appearance == NoPointer)
+      continue;
   }
 }
 
@@ -394,15 +202,17 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
   for (const auto &m : t.member)
   {
     auto n = "v." + m.name;
-    if (m.isVector)
+    if (m.isVector && !m.isBaseType)
     {
+      o << "  o << " << n << ".size();" << endl;
       n = "entry";
-      o << "  Write(o, v." << m.name << ".size());" << endl;
       o << "  for (const auto &" << n << " : v." << m.name << ") {" << endl;
       o << "  ";
     }
-    if (m.pointer == Pointer::Plain)
+    if (m.pointer == Pointer::Plain || m.isBaseType)
+    {
       o << "  Write(o, " << n << ");" << endl;
+    }
     else if (m.pointer == Pointer::Unique)
     {
       o << "  if (!" << n << ") {" << endl;
@@ -426,7 +236,7 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
       o << "    Write(o, t->io_counter_);" << endl;
       o << "  }" << endl;
     }
-    if (m.isVector)
+    if (m.isVector && !m.isBaseType)
       o << "  };" << endl;
   }
   o << "}" << endl << endl;
@@ -438,18 +248,20 @@ void WriteTableInputFunctions(std::ostream &o, const Table &t)
   for (const auto &m : t.member)
   {
     auto n = "v." + m.name;
-    if (m.isVector)
+    if (m.isVector && !m.isBaseType)
     {
       n = "entry";
       o << "  ";
       WriteType(o, m) << "::size_type " << m.name << "_size{0};" << endl;
-      o << "  Read(s, " << m.name << "_size);" << endl;
+      o << "  s >> " << m.name << "_size;" << endl;
       o << "  v." << m.name << ".resize(" << m.name << "_size);" << endl;
       o << "  for (auto &" << n << " : v." << m.name << ") {" << endl;
       o << "  ";
     }
-    if (m.pointer == Pointer::Plain)
+    if (m.pointer == Pointer::Plain || m.isBaseType)
+    {
       o << "  Read(s, " << n << ");" << endl;
+    }
     else if (m.pointer == Pointer::Unique)
     {
       o << "  {" << endl;
@@ -478,7 +290,7 @@ void WriteTableInputFunctions(std::ostream &o, const Table &t)
       o << "    }" << endl;
       o << "  }" << endl;
     }
-    if (m.isVector)
+    if (m.isVector && !m.isBaseType)
       o << "  };" << endl;
   }
   o << "}" << endl << endl;
@@ -506,7 +318,7 @@ void WriteBaseIO(std::ostream &o, const Package &p)
     o << "  " << t.name << "_count_ = 0;" << endl;
 
   o << endl << "  o.write(\"CORE\", 4);" << endl;
-  o << "  Write(o, \"" << p.version << "\");" << endl;
+  o << "  o.write(\"" << p.version << "\", " << p.version.size() << ");" << endl;
   o << "  Write(o, v);" << endl;
   o << "}" << endl << endl;
 
@@ -520,8 +332,8 @@ void WriteBaseIO(std::ostream &o, const Package &p)
   o << "  if (marker != \"CORE\")" << endl;
   o << "    return false;" << endl;
 
-  o << "  std::string version;" << endl;
-  o << "  Read(i, version);" << endl;
+  o << "  std::string version(" << p.version.size() << ", '_');" << endl;
+  o << "  i.read(&version[0], " << p.version.size() << ");" << endl;
   o << "  if (version != \"" << p.version << "\")" << endl;
   o << "    return false;" << endl;
 
@@ -551,7 +363,9 @@ void WriteCppCode(std::ostream &o, const Package &p)
 
   o << "struct " << p.root_type << "_io {" << endl;
   o << "private:" << endl;
-  WriteDefaultOutputFunctions(o);
+
+  WriteBaseTypecIoFnuctions(o, p);
+
   WriteEnumIOFunctions(o, p.enums);
   WriteTables(o, p.tables);
 

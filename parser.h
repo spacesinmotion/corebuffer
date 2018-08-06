@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 using std::string;
 using std::unique_ptr;
@@ -61,10 +62,15 @@ private:
   bool readNumber(std::string &val);
   bool readString(std::string &val);
 
+  void initBaseTypes();
+  Table *tableForType(const std::string &t);
+  bool updateTableAppearance();
+
 private:
   const string &text;
   size_t pos{0};
 
+  std::unordered_map<string, string> aliases;
   Package &package;
 };
 

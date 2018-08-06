@@ -13,12 +13,14 @@ Parser::Parser(const std::string &t, Package &p) : text(t), package(p) {}
 
 bool Parser::parse()
 {
+  initBaseTypes();
+
   while (readMainContent())
     ;
 
   skipComment();
   if (end())
-    return true;
+    return updateTableAppearance();
   return false;
 }
 
@@ -472,4 +474,93 @@ bool Parser::readString(string &val)
 
   rewind(s);
   return false;
+}
+
+void Parser::initBaseTypes()
+{
+  package.baseTypes.clear();
+
+  aliases["int"] = "std::int32_t";
+  aliases["short"] = "std::int16_t";
+  aliases["long"] = "std::int64_t";
+
+  aliases["i8"] = "std::int8_t";
+  aliases["i16"] = "std::int16_t";
+  aliases["i32"] = "std::int32_t";
+  aliases["i64"] = "std::int64_t";
+  aliases["ui8"] = "std::uint8_t";
+  aliases["ui16"] = "std::uint16_t";
+  aliases["ui32"] = "std::uint32_t";
+  aliases["ui64"] = "std::uint64_t";
+
+  aliases["f32"] = "float";
+  aliases["f64"] = "double";
+
+  aliases["string"] = "std::string";
+
+  aliases["float"] = "float";
+  aliases["double"] = "double";
+  aliases["bool"] = "bool";
+
+  package.baseTypes.emplace_back("float");
+  package.baseTypes.emplace_back("double");
+  package.baseTypes.emplace_back("bool");
+
+  package.baseTypes.emplace_back("std::int8_t");
+  package.baseTypes.emplace_back("std::int16_t");
+  package.baseTypes.emplace_back("std::int32_t");
+  package.baseTypes.emplace_back("std::int64_t");
+  package.baseTypes.emplace_back("std::uint8_t");
+  package.baseTypes.emplace_back("std::uint16_t");
+  package.baseTypes.emplace_back("std::uint32_t");
+  package.baseTypes.emplace_back("std::uint64_t");
+
+  package.baseTypes.emplace_back("std::string");
+}
+
+Table *Parser::tableForType(const std::string &name)
+{
+  for (auto &t : package.tables)
+    if (t.name == name)
+      return &t;
+  for (auto &t : package.baseTypes)
+    if (t.name == name)
+      return &t;
+  return nullptr;
+}
+
+bool Parser::updateTableAppearance()
+{
+  for (auto &t : package.tables)
+  {
+    for (auto &m : t.member)
+    {
+      if (aliases.find(m.type) != aliases.end())
+      {
+        m.type = aliases.at(m.type);
+        m.isBaseType = true;
+      }
+
+      auto *t = tableForType(m.type);
+      if (!t)
+        return false;
+      if (m.isVector && m.pointer == Pointer::Weak)
+        t->appearance |= WeakVectorAppearance;
+      else if (m.isVector && m.pointer == Pointer::Unique)
+        t->appearance |= UniqueVectorAppearance;
+      else if (m.isVector && m.pointer == Pointer::Shared)
+        t->appearance |= SharedVectorAppearance;
+      else if (m.isVector && m.pointer == Pointer::Plain)
+        t->appearance |= VectorAppearance;
+      else if (!m.isVector && m.pointer == Pointer::Weak)
+        t->appearance |= WeakAppearance;
+      else if (!m.isVector && m.pointer == Pointer::Unique)
+        t->appearance |= UniqueAppearance;
+      else if (!m.isVector && m.pointer == Pointer::Shared)
+        t->appearance |= SharedAppearance;
+      else
+        t->appearance |= PlainAppearance;
+    }
+  }
+  return true;
 }
