@@ -14,8 +14,8 @@ add_executable (CoreDataOutputTests test/basetype_tests.cpp test/enumtypes_tests
 target_link_libraries(CoreData coredata)
 target_link_libraries(CoreDataTests coredata)
 
-add_test(NAME BaseTypeBuild COMMAND $<TARGET_FILE:CoreData> ${PROJECT_SOURCE_DIR}/cd/basetype.cd ${PROJECT_SOURCE_DIR}/test/basetype.h)
-add_test(NAME EnumTypesBuild COMMAND $<TARGET_FILE:CoreData> ${PROJECT_SOURCE_DIR}/cd/enumtypes.cd ${PROJECT_SOURCE_DIR}/test/enumtypes.h)
+add_test(NAME BaseTypeBuild COMMAND $<TARGET_FILE:CoreData> ${PROJECT_SOURCE_DIR}/cor/basetypes.cor ${PROJECT_SOURCE_DIR}/test/basetypes.h)
+add_test(NAME EnumTypesBuild COMMAND $<TARGET_FILE:CoreData> ${PROJECT_SOURCE_DIR}/cor/enumtypes.cor ${PROJECT_SOURCE_DIR}/test/enumtypes.h)
 
 add_test(CoreDataTest CoreDataTests)
 add_test(CoreDataOutputTest CoreDataOutputTests)
