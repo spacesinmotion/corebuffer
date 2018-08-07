@@ -259,9 +259,8 @@ bool Parser::readEnumEntryList(Enum &e, int lastValue)
   const auto name = readIdentifier();
   if (!name.empty())
   {
-    if (!readEnumMemberDefault(lastValue))
-      ++lastValue;
-    e.entries.emplace_back(name, lastValue);
+    readEnumMemberDefault(lastValue);
+    e.entries.emplace_back(name, lastValue++);
     if (read(","))
     {
       if (readEnumEntryList(e, lastValue))
@@ -405,6 +404,12 @@ bool Parser::readBaseType(string &val)
   if (!bt)
     bt = readString(val);
 
+  if (!bt)
+  {
+    val = readIdentifier();
+    bt = !val.empty();
+  }
+
   return bt;
 }
 
@@ -516,6 +521,20 @@ void Parser::initBaseTypes()
   package.baseTypes.emplace_back("std::uint64_t");
 
   package.baseTypes.emplace_back("std::string");
+
+  defaults["float"] = "0.0f";
+  defaults["double"] = "0.0";
+
+  defaults["bool"] = "false";
+
+  defaults["std::int8_t"] = "0";
+  defaults["std::int16_t"] = "0";
+  defaults["std::int32_t"] = "0";
+  defaults["std::int64_t"] = "0";
+  defaults["std::uint8_t"] = "0u";
+  defaults["std::uint16_t"] = "0u";
+  defaults["std::uint32_t"] = "0u";
+  defaults["std::uint64_t"] = "0u";
 }
 
 Table *Parser::tableForType(const std::string &name)
@@ -526,6 +545,14 @@ Table *Parser::tableForType(const std::string &name)
   for (auto &t : package.baseTypes)
     if (t.name == name)
       return &t;
+  return nullptr;
+}
+
+Enum *Parser::enumForType(const std::string &name)
+{
+  for (auto &e : package.enums)
+    if (e.name == name)
+      return &e;
   return nullptr;
 }
 
@@ -540,10 +567,22 @@ bool Parser::updateTableAppearance()
         m.type = aliases.at(m.type);
         m.isBaseType = true;
       }
+      if (!m.isVector && m.pointer == Pointer::Plain && m.defaultValue.empty() &&
+          defaults.find(m.type) != defaults.end())
+      {
+        m.defaultValue = defaults[m.type];
+      }
+
+      auto *e = enumForType(m.type);
+      if (e)
+      {
+        m.defaultValue = fullPackageScope() + "::" + e->name +
+                         "::" + (m.defaultValue.empty() ? e->entries.front().first : m.defaultValue);
+      }
 
       auto *t = tableForType(m.type);
       if (!t)
-        return false;
+        continue;
       if (m.isVector && m.pointer == Pointer::Weak)
         t->appearance |= WeakVectorAppearance;
       else if (m.isVector && m.pointer == Pointer::Unique)
@@ -563,4 +602,20 @@ bool Parser::updateTableAppearance()
     }
   }
   return true;
+}
+
+std::string Parser::fullPackageScope() const
+{
+  auto pos = std::string::size_type(0);
+  auto end = package.path.find('.', pos);
+  std::string scope = package.path.substr(pos, end);
+  do
+  {
+    pos = end;
+    end = package.path.find('.', pos);
+    if (end == std::string::npos)
+      break;
+    scope += "::" + package.path.substr(pos, end);
+  } while (true);
+  return scope;
 }

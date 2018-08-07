@@ -1,0 +1,50 @@
+
+package CoreData;
+
+version "0.1";
+
+enum Pointer { Plain, Weak, Unique, Shared }
+
+enum PointerAppearance
+{
+  NoPointer,
+  WeakAppearance,
+  UniqueAppearance,
+  SharedAppearance,
+  VectorAppearance,
+  WeakVectorAppearance,
+  UniqueVectorAppearance,
+  SharedVectorAppearance,
+  PlainAppearance
+}
+
+table Enum {
+  name:string;
+}
+
+table Member {
+  name:string;
+  type:string;
+  defaultValue:string;
+  isVector:bool = false;
+  isBaseType:bool = false;
+  pointer:Pointer;
+}
+
+table Table {
+  name:string;
+  member:[Member];
+  appearance:ui8;
+}
+
+table Package {
+  path:string;
+  version:string;
+  root_type:string;
+
+  tables:[Table];
+  baseTypes:[Table];
+  enums:[Enum];
+}
+
+root_type Package;

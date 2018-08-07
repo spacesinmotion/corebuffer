@@ -64,13 +64,16 @@ private:
 
   void initBaseTypes();
   Table *tableForType(const std::string &t);
+  Enum *enumForType(const std::string &t);
   bool updateTableAppearance();
+  std::string fullPackageScope() const;
 
 private:
   const string &text;
   size_t pos{0};
 
   std::unordered_map<string, string> aliases;
+  std::unordered_map<string, string> defaults;
   Package &package;
 };
 

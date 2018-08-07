@@ -1,0 +1,21 @@
+package Scope;
+version "0.0";
+root_type BaseTypes;
+
+table BaseTypes {
+  a:int;
+  aa:short;
+  ab:long;
+  b:bool;
+  c:float;
+  d:double;
+  e:i8;
+  f:i16;
+  g:i32;
+  h:i64;
+  i:ui8;
+  j:ui16;
+  k:ui32;
+  l:ui64;
+  m:string;
+}

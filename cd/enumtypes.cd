@@ -1,0 +1,16 @@
+package Scope;
+version "0.0";
+root_type Dummy;
+
+enum EnumTypes
+{
+  alpha,
+  beta = 4,
+  gamma,
+  delta = 42
+}
+
+table Dummy {
+  en1:EnumTypes;
+  en2:EnumTypes=delta;
+}
