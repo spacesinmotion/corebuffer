@@ -1,8 +1,9 @@
-
 #define CATCH_CONFIG_FAST_COMPILE
 #include "catch/catch.hpp"
 
 #include "enumtypes.h"
+
+#include <sstream>
 
 TEST_CASE("EnumTypes test", "[]")
 {
@@ -14,10 +15,49 @@ TEST_CASE("EnumTypes test", "[]")
     CHECK(42 == int(Scope::EnumTypes::delta));
   }
 
-  SECTION("Default Values")
+  SECTION("defined value list")
+  {
+    auto definedValues = Scope::EnumTypesValues();
+
+    REQUIRE(definedValues.size() == 4);
+
+    CHECK(Scope::EnumTypes::alpha == definedValues[0]);
+    CHECK(Scope::EnumTypes::beta == definedValues[1]);
+    CHECK(Scope::EnumTypes::gamma == definedValues[2]);
+    CHECK(Scope::EnumTypes::delta == definedValues[3]);
+  }
+
+  SECTION("defined value names")
+  {
+    CHECK(Scope::ValueName(Scope::EnumTypes::alpha) == std::string("alpha"));
+    CHECK(Scope::ValueName(Scope::EnumTypes::beta) == std::string("beta"));
+    CHECK(Scope::ValueName(Scope::EnumTypes::gamma) == std::string("gamma"));
+    CHECK(Scope::ValueName(Scope::EnumTypes::delta) == std::string("delta"));
+  }
+
+  SECTION("default values")
   {
     Scope::Dummy d;
     CHECK(Scope::EnumTypes::alpha == d.en1);
     CHECK(Scope::EnumTypes::delta == d.en2);
+  }
+
+  SECTION("reading whats written")
+  {
+    Scope::Dummy dOut;
+    dOut.en1 = Scope::EnumTypes::beta;
+    dOut.en2 = Scope::EnumTypes::gamma;
+
+    std::stringstream sOut;
+    Scope::Dummy_io().WriteDummy(sOut, dOut);
+
+    const auto buffer = sOut.str();
+    std::stringstream sIn(buffer);
+
+    Scope::Dummy dIn;
+    Scope::Dummy_io().ReadDummy(sIn, dIn);
+
+    CHECK(Scope::EnumTypes::beta == dIn.en1);
+    CHECK(Scope::EnumTypes::gamma == dIn.en2);
   }
 }

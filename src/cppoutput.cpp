@@ -64,6 +64,7 @@ void WriteEnumFunctions(std::ostream &o, const Enum &e)
   for (const auto &v : e.entries)
     o << "    case " << e.name << "::" << v.first << ": return \"" << v.first << "\";" << endl;
   o << "  }" << endl;
+  o << "  return \"<error>\";" << endl;
   o << "};" << endl << endl;
 }
 

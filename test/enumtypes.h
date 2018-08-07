@@ -46,6 +46,7 @@ inline const char * ValueName(const EnumTypes &v) {
     case EnumTypes::gamma: return "gamma";
     case EnumTypes::delta: return "delta";
   }
+  return "<error>";
 };
 
 struct Dummy_io {
