@@ -162,7 +162,7 @@ template<typename T> void Read(std::istream &i, T &v) {
 }
 
 template<typename T> void Read(std::istream &i, std::vector<T> &v) {
-  std::vector<T>::size_type s{0};
+  typename std::vector<T>::size_type s{0};
   Read(i, s);
   v.resize(s);
   i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);

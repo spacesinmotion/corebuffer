@@ -127,7 +127,7 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "}" << endl << endl;
 
   o << "template<typename T> void Read(std::istream &i, std::vector<T> &v) {" << endl;
-  o << "  std::vector<T>::size_type s{0};" << endl;
+  o << "  typename std::vector<T>::size_type s{0};" << endl;
   o << "  Read(i, s);" << endl;
   o << "  v.resize(s);" << endl;
   o << "  i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);" << endl;
