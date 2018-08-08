@@ -35,6 +35,44 @@ private:
   friend struct BaseTypes_io;
 };
 
+bool operator==(const BaseTypes&l, const BaseTypes&r) {
+  return 
+    l.a == r.a
+    && l.aa == r.aa
+    && l.ab == r.ab
+    && l.b == r.b
+    && l.c == r.c
+    && l.d == r.d
+    && l.e == r.e
+    && l.f == r.f
+    && l.g == r.g
+    && l.h == r.h
+    && l.i == r.i
+    && l.j == r.j
+    && l.k == r.k
+    && l.l == r.l
+    && l.m == r.m;
+}
+
+bool operator!=(const BaseTypes&l, const BaseTypes&r) {
+  return 
+    l.a != r.a
+    || l.aa != r.aa
+    || l.ab != r.ab
+    || l.b != r.b
+    || l.c != r.c
+    || l.d != r.d
+    || l.e != r.e
+    || l.f != r.f
+    || l.g != r.g
+    || l.h != r.h
+    || l.i != r.i
+    || l.j != r.j
+    || l.k != r.k
+    || l.l != r.l
+    || l.m != r.m;
+}
+
 struct BaseTypes_io {
 private:
 template<typename T> void Write(std::ostream &o, const T *v) {

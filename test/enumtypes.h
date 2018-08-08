@@ -29,6 +29,18 @@ private:
   friend struct Dummy_io;
 };
 
+bool operator==(const Dummy&l, const Dummy&r) {
+  return 
+    l.en1 == r.en1
+    && l.en2 == r.en2;
+}
+
+bool operator!=(const Dummy&l, const Dummy&r) {
+  return 
+    l.en1 != r.en1
+    || l.en2 != r.en2;
+}
+
 inline const std::array<EnumTypes,4> & EnumTypesValues() {
   static const std::array<EnumTypes,4> values {
     EnumTypes::alpha,

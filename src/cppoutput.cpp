@@ -68,16 +68,10 @@ void WriteEnumFunctions(std::ostream &o, const Enum &e)
   o << "};" << endl << endl;
 }
 
-void WriteEnumOutputFunctions(std::ostream &o, const Enum &e) {}
-
-void WriteEnumInputFunctions(std::ostream &o, const Enum &e) {}
-
 void WriteEnumDeclarations(std::ostream &o, const vector<Enum> &enums)
 {
   for (const auto &e : enums)
-  {
     WriteEnumDeclaration(o, e);
-  }
 }
 
 void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
@@ -150,15 +144,6 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   {
     if (b.appearance == NoPointer)
       continue;
-  }
-}
-
-void WriteEnumIOFunctions(std::ostream &o, const vector<Enum> &enums)
-{
-  for (const auto &e : enums)
-  {
-    WriteEnumOutputFunctions(o, e);
-    WriteEnumInputFunctions(o, e);
   }
 }
 
@@ -297,10 +282,37 @@ void WriteTableInputFunctions(std::ostream &o, const Table &t)
   o << "}" << endl << endl;
 }
 
+void WriteTableCompareFunctions(std::ostream &o, const Table &t)
+{
+  o << "bool operator==(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
+  o << "  return ";
+  bool first = true;
+  for (const auto &m : t.member)
+  {
+    o << endl << "    " << (first ? "" : "&& ") << "l." << m.name << " == r." << m.name;
+    first = false;
+  }
+  o << ";" << endl;
+  o << "}" << endl << endl;
+
+  o << "bool operator!=(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
+  o << "  return ";
+  first = true;
+  for (const auto &m : t.member)
+  {
+    o << endl << "    " << (first ? "" : "|| ") << "l." << m.name << " != r." << m.name;
+    first = false;
+  }
+  o << ";" << endl;
+  o << "}" << endl << endl;
+}
+
 void WriteTableDeclarations(std::ostream &o, const Package &p)
 {
   for (const auto &t : p.tables)
     WriteTableDeclaration(o, t, p.root_type);
+  for (const auto &t : p.tables)
+    WriteTableCompareFunctions(o, t);
 }
 
 void WriteTables(std::ostream &o, const vector<Table> &tables)
@@ -367,7 +379,6 @@ void WriteCppCode(std::ostream &o, const Package &p)
 
   WriteBaseTypecIoFnuctions(o, p);
 
-  WriteEnumIOFunctions(o, p.enums);
   WriteTables(o, p.tables);
 
   for (const auto &t : p.tables)
