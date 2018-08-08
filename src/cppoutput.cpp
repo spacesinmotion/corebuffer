@@ -210,16 +210,18 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
     }
     else
     {
-      o << "  const auto t = " << n << (m.pointer == Pointer::Weak ? ".lock()" : "") << ";" << endl;
-      o << "  if (!t) {" << endl;
-      o << "    o.write(\"\\x0\", 1);" << endl;
-      o << "  } else if (t->io_counter_== 0) {" << endl;
-      o << "    o.write(\"\\x1\", 1);" << endl;
-      o << "    Write(o, *t);" << endl;
-      o << "    t->io_counter_ = ++" << m.type << "_count_;" << endl;
-      o << "  } else {" << endl;
-      o << "    o.write(\"\\x2\", 1);" << endl;
-      o << "    Write(o, t->io_counter_);" << endl;
+      o << "  {" << endl;
+      o << "    const auto t = " << n << (m.pointer == Pointer::Weak ? ".lock()" : "") << ";" << endl;
+      o << "    if (!t) {" << endl;
+      o << "      o.write(\"\\x0\", 1);" << endl;
+      o << "    } else if (t->io_counter_== 0) {" << endl;
+      o << "      o.write(\"\\x1\", 1);" << endl;
+      o << "      Write(o, *t);" << endl;
+      o << "      t->io_counter_ = ++" << m.type << "_count_;" << endl;
+      o << "    } else {" << endl;
+      o << "      o.write(\"\\x2\", 1);" << endl;
+      o << "      Write(o, t->io_counter_);" << endl;
+      o << "    }" << endl;
       o << "  }" << endl;
     }
     if (m.isVector && !m.isBaseType)
@@ -289,7 +291,8 @@ void WriteTableCompareFunctions(std::ostream &o, const Table &t)
   bool first = true;
   for (const auto &m : t.member)
   {
-    o << endl << "    " << (first ? "" : "&& ") << "l." << m.name << " == r." << m.name;
+    const auto suf = (m.pointer == Pointer::Weak) ? ".lock()" : "";
+    o << endl << "    " << (first ? "" : "&& ") << "l." << m.name << suf << " == r." << m.name << suf;
     first = false;
   }
   o << ";" << endl;
@@ -300,7 +303,8 @@ void WriteTableCompareFunctions(std::ostream &o, const Table &t)
   first = true;
   for (const auto &m : t.member)
   {
-    o << endl << "    " << (first ? "" : "|| ") << "l." << m.name << " != r." << m.name;
+    const auto suf = (m.pointer == Pointer::Weak) ? ".lock()" : "";
+    o << endl << "    " << (first ? "" : "|| ") << "l." << m.name << suf << " != r." << m.name << suf;
     first = false;
   }
   o << ";" << endl;

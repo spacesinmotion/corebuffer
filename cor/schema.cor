@@ -18,8 +18,14 @@ enum PointerAppearance
   PlainAppearance
 }
 
+table EnumEntry {
+  name:string;
+  value:int;
+}
+
 table Enum {
   name:string;
+  entries:[EnumEntry];
 }
 
 table Member {

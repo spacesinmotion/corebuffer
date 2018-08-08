@@ -1,0 +1,23 @@
+package Scope;
+version "0.0";
+root_type TableC;
+
+table TableA {
+  name: string;
+  d1:unique TableD;
+  d2:weak TableD;
+  d3:shared TableD;
+}
+
+table TableB {
+  name:string;
+}
+
+table TableD {
+  a:TableA;
+}
+
+table TableC {
+  a:[TableA];
+  b:[TableB];
+}

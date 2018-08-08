@@ -43,7 +43,7 @@ TEST_CASE("BaseType test", "[]")
     dOut.ab = 3;
     dOut.b = true;
     dOut.c = 0.1f;
-    dOut.d = 0.2f;
+    dOut.d = 0.2;
     dOut.e = 5;
     dOut.f = 6;
     dOut.g = 7;
