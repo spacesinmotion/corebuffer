@@ -77,7 +77,7 @@ void WriteEnumDeclarations(std::ostream &o, const vector<Enum> &enums)
 void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
 {
   o << "template<typename T> void Write(std::ostream &o, const T *v) {" << endl;
-  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const T &v) {" << endl;
@@ -90,35 +90,35 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {" << endl;
-  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {" << endl;
-  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {" << endl;
-  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {" << endl;
-  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {" << endl;
-  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {" << endl;
-  o << "  static_assert(false, \"Something not implemented\");" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
-  o << "template<> void Write(std::ostream &o, const std::string &v) {" << endl;
+  o << "void Write(std::ostream &o, const std::string &v) {" << endl;
   o << "  Write(o, v.size());" << endl;
   o << "  o.write(v.data(), v.size());" << endl;
   o << "}" << endl << endl;
 
-  o << "template<> void Write(std::ostream &o, const char *v) {" << endl;
+  o << "void Write(std::ostream &o, const char *v) {" << endl;
   o << "  Write(o, std::string(v));" << endl;
   o << "}" << endl << endl;
 
@@ -133,7 +133,7 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);" << endl;
   o << "}" << endl << endl;
 
-  o << "template<> void Read(std::istream &i, std::string &v) {" << endl;
+  o << "void Read(std::istream &i, std::string &v) {" << endl;
   o << "  std::string::size_type s{0};" << endl;
   o << "  Read(i, s);" << endl;
   o << "  v.resize(s);" << endl;
@@ -367,9 +367,13 @@ void WriteCppCode(std::ostream &o, const Package &p)
   o << "#include <ostream>" << endl;
   o << "#include <istream>" << endl;
   o << "#include <memory>" << endl;
+  o << "#include <type_traits>" << endl;
   o << "#include <array>" << endl << endl;
 
   WriteNameSpaceBegin(o, p.path);
+
+  o << "template<typename T>" << endl;
+  o << "struct AlwaysFalse : std::false_type {};" << endl;
 
   WriteForwardDeclarations(o, p);
   WriteEnumDeclarations(o, p.enums);

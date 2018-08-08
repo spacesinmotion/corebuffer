@@ -5,9 +5,12 @@
 #include <ostream>
 #include <istream>
 #include <memory>
+#include <type_traits>
 #include <array>
 
 namespace Scope {
+template<typename T>
+struct AlwaysFalse : std::false_type {};
 
 struct TableA;
 struct TableB;
@@ -109,7 +112,7 @@ bool operator!=(const TableC&l, const TableC&r) {
 struct TableC_io {
 private:
 template<typename T> void Write(std::ostream &o, const T *v) {
-  static_assert(false, "Something not implemented");
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
 template<typename T> void Write(std::ostream &o, const T &v) {
@@ -122,35 +125,35 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
 }
 
 template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
-  static_assert(false, "Something not implemented");
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
 template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {
-  static_assert(false, "Something not implemented");
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
 template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {
-  static_assert(false, "Something not implemented");
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
-  static_assert(false, "Something not implemented");
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
-  static_assert(false, "Something not implemented");
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
-  static_assert(false, "Something not implemented");
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<> void Write(std::ostream &o, const std::string &v) {
+void Write(std::ostream &o, const std::string &v) {
   Write(o, v.size());
   o.write(v.data(), v.size());
 }
 
-template<> void Write(std::ostream &o, const char *v) {
+void Write(std::ostream &o, const char *v) {
   Write(o, std::string(v));
 }
 
@@ -165,7 +168,7 @@ template<typename T> void Read(std::istream &i, std::vector<T> &v) {
   i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
 }
 
-template<> void Read(std::istream &i, std::string &v) {
+void Read(std::istream &i, std::string &v) {
   std::string::size_type s{0};
   Read(i, s);
   v.resize(s);
