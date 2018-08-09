@@ -129,6 +129,10 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "    Write(o, entry);" << endl;
   o << "}" << endl << endl;
 
+  o << "template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
   o << "template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
