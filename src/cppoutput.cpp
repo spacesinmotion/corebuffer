@@ -105,8 +105,12 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  }" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {" << endl;
+  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
+  o << "  Write(o, v.size());" << endl;
+  o << "  for (const auto &entry : v) {" << endl;
+  o << "    Write(o, entry);" << endl;
+  o << "  };" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {" << endl;
@@ -114,10 +118,6 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {" << endl;
-  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
-  o << "}" << endl << endl;
-
-  o << "template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
@@ -160,6 +160,14 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "    Read(s, index);" << endl;
   o << "    v = cache[index - 1];" << endl;
   o << "  }" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Read(std::istream &s, std::vector<std::shared_ptr<T>> &v) {" << endl;
+  o << "  auto size = v.size();" << endl;
+  o << "  Read(s, size);" << endl;
+  o << "  v.resize(size);" << endl;
+  o << "  for (auto &entry : v)" << endl;
+  o << "    Read(s, entry);" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Read(std::istream &i, std::vector<T> &v) {" << endl;
@@ -212,6 +220,11 @@ bool hasWeakAppearance(const Table &t)
          ((t.appearance & WeakVectorAppearance) == WeakVectorAppearance);
 }
 
+bool hasPlainVectorAppearance(const Table &t)
+{
+  return ((t.appearance & VectorAppearance) == VectorAppearance);
+}
+
 void WriteTableDeclaration(std::ostream &o, const Table &t, const std::string &root_type)
 {
   o << "struct " << t.name << " {" << endl;
@@ -237,19 +250,7 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
 {
   o << "void Write(std::ostream &o, const " << t.name << " &v) {" << endl;
   for (const auto &m : t.member)
-  {
-    auto n = "v." + m.name;
-    if (m.isVector && !m.isBaseType)
-    {
-      o << "  o << " << n << ".size();" << endl;
-      n = "entry";
-      o << "  for (const auto &" << n << " : v." << m.name << ") {" << endl;
-      o << "  ";
-    }
-    o << "  Write(o, " << n << ");" << endl;
-    if (m.isVector && !m.isBaseType)
-      o << "  };" << endl;
-  }
+    o << "  Write(o, v." << m.name << ");" << endl;
   o << "}" << endl << endl;
 
   if (hasSharedAppearance(t))
@@ -264,28 +265,21 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
     o << "  Write(o, v.lock(), " << t.name << "_count_);" << endl;
     o << "}" << endl << endl;
   }
+  if (hasPlainVectorAppearance(t))
+  {
+    o << "void Write(std::ostream &o, const std::vector<" << t.name << "> &v) {" << endl;
+    o << "  Write(o, v.size());" << endl;
+    o << "  for (const auto &entry : v)" << endl;
+    o << "    Write(o, entry);" << endl;
+    o << "}" << endl << endl;
+  }
 }
 
 void WriteTableInputFunctions(std::ostream &o, const Table &t)
 {
   o << "void Read(std::istream &s, " << t.name << " &v) {" << endl;
   for (const auto &m : t.member)
-  {
-    auto n = "v." + m.name;
-    if (m.isVector && !m.isBaseType)
-    {
-      n = "entry";
-      o << "  ";
-      WriteType(o, m) << "::size_type " << m.name << "_size{0};" << endl;
-      o << "  s >> " << m.name << "_size;" << endl;
-      o << "  v." << m.name << ".resize(" << m.name << "_size);" << endl;
-      o << "  for (auto &" << n << " : v." << m.name << ") {" << endl;
-      o << "  ";
-    }
-    o << "  Read(s, " << n << ");" << endl;
-    if (m.isVector && !m.isBaseType)
-      o << "  };" << endl;
-  }
+    o << "  Read(s, v." << m.name << ");" << endl;
   o << "}" << endl << endl;
 
   if (hasSharedAppearance(t))
@@ -300,6 +294,16 @@ void WriteTableInputFunctions(std::ostream &o, const Table &t)
     o << "  auto t = v.lock();" << endl;
     o << "  Read(s, t, " << t.name << "_references_);" << endl;
     o << "  v = t;" << endl;
+    o << "}" << endl << endl;
+  }
+  if (hasPlainVectorAppearance(t))
+  {
+    o << "void Read(std::istream &s, std::vector<" << t.name << "> &v) {" << endl;
+    o << "  auto size = v.size();" << endl;
+    o << "  Read(s, size);" << endl;
+    o << "  v.resize(size);" << endl;
+    o << "  for (auto &entry : v)" << endl;
+    o << "    Read(s, entry);" << endl;
     o << "}" << endl << endl;
   }
 }

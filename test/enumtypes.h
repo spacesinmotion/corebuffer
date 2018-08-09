@@ -95,8 +95,12 @@ template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, un
   }
 }
 
-template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
+template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  Write(o, v.size());
+  for (const auto &entry : v) {
+    Write(o, entry);
+  };
 }
 
 template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
@@ -104,10 +108,6 @@ template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
 }
 
 template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -149,6 +149,14 @@ template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vect
     Read(s, index);
     v = cache[index - 1];
   }
+}
+
+template<typename T> void Read(std::istream &s, std::vector<std::shared_ptr<T>> &v) {
+  auto size = v.size();
+  Read(s, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(s, entry);
 }
 
 template<typename T> void Read(std::istream &i, std::vector<T> &v) {

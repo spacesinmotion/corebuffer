@@ -21,8 +21,8 @@ table BaseTypes {
 }
 
 table PointerBaseTypes {
-  a:unique int;
-  b:unique int;
+  a1:unique int;
+  a2:unique int;
 }
 
 table Root {

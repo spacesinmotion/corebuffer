@@ -134,8 +134,12 @@ template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, un
   }
 }
 
-template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
+template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  Write(o, v.size());
+  for (const auto &entry : v) {
+    Write(o, entry);
+  };
 }
 
 template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
@@ -143,10 +147,6 @@ template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
 }
 
 template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -190,6 +190,14 @@ template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vect
   }
 }
 
+template<typename T> void Read(std::istream &s, std::vector<std::shared_ptr<T>> &v) {
+  auto size = v.size();
+  Read(s, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(s, entry);
+}
+
 template<typename T> void Read(std::istream &i, std::vector<T> &v) {
   typename std::vector<T>::size_type s{0};
   Read(i, s);
@@ -216,6 +224,12 @@ void Write(std::ostream &o, const std::shared_ptr<TableA> &v) {
   Write(o, v, TableA_count_);
 }
 
+void Write(std::ostream &o, const std::vector<TableA> &v) {
+  Write(o, v.size());
+  for (const auto &entry : v)
+    Write(o, entry);
+}
+
 void Read(std::istream &s, TableA &v) {
   Read(s, v.name);
   Read(s, v.d1);
@@ -228,12 +242,34 @@ void Read(std::istream &s, std::shared_ptr<TableA> &v) {
   Read(s, v, TableA_references_);
 }
 
+void Read(std::istream &s, std::vector<TableA> &v) {
+  auto size = v.size();
+  Read(s, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(s, entry);
+}
+
 void Write(std::ostream &o, const TableB &v) {
   Write(o, v.name);
 }
 
+void Write(std::ostream &o, const std::vector<TableB> &v) {
+  Write(o, v.size());
+  for (const auto &entry : v)
+    Write(o, entry);
+}
+
 void Read(std::istream &s, TableB &v) {
   Read(s, v.name);
+}
+
+void Read(std::istream &s, std::vector<TableB> &v) {
+  auto size = v.size();
+  Read(s, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(s, entry);
 }
 
 void Write(std::ostream &o, const TableD &v) {
@@ -265,29 +301,13 @@ void Read(std::istream &s, std::weak_ptr<TableD> &v) {
 }
 
 void Write(std::ostream &o, const TableC &v) {
-  o << v.a.size();
-  for (const auto &entry : v.a) {
-    Write(o, entry);
-  };
-  o << v.b.size();
-  for (const auto &entry : v.b) {
-    Write(o, entry);
-  };
+  Write(o, v.a);
+  Write(o, v.b);
 }
 
 void Read(std::istream &s, TableC &v) {
-  std::vector<TableA>::size_type a_size{0};
-  s >> a_size;
-  v.a.resize(a_size);
-  for (auto &entry : v.a) {
-    Read(s, entry);
-  };
-  std::vector<TableB>::size_type b_size{0};
-  s >> b_size;
-  v.b.resize(b_size);
-  for (auto &entry : v.b) {
-    Read(s, entry);
-  };
+  Read(s, v.a);
+  Read(s, v.b);
 }
 
   unsigned int TableA_count_{0};

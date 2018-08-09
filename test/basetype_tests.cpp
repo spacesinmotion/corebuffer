@@ -70,7 +70,7 @@ TEST_CASE("BaseType test", "[]")
   SECTION("reading whats written pointer")
   {
     Scope::Root dOut;
-    dOut.b.a = std::make_unique<int>(42);
+    dOut.b.a1 = std::make_unique<int>(42);
 
     Scope::Root dIn;
     CHECK_FALSE(dOut == dIn);

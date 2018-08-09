@@ -35,8 +35,8 @@ struct BaseTypes {
 };
 
 struct PointerBaseTypes {
-  std::unique_ptr<std::int32_t> a;
-  std::unique_ptr<std::int32_t> b;
+  std::unique_ptr<std::int32_t> a1;
+  std::unique_ptr<std::int32_t> a2;
 };
 
 struct Root {
@@ -84,14 +84,14 @@ bool operator!=(const BaseTypes&l, const BaseTypes&r) {
 
 bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
   return 
-    l.a == r.a
-    && l.b == r.b;
+    l.a1 == r.a1
+    && l.a2 == r.a2;
 }
 
 bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
   return 
-    l.a != r.a
-    || l.b != r.b;
+    l.a1 != r.a1
+    || l.a2 != r.a2;
 }
 
 bool operator==(const Root&l, const Root&r) {
@@ -143,8 +143,12 @@ template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, un
   }
 }
 
-template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
+template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  Write(o, v.size());
+  for (const auto &entry : v) {
+    Write(o, entry);
+  };
 }
 
 template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
@@ -152,10 +156,6 @@ template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
 }
 
 template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -197,6 +197,14 @@ template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vect
     Read(s, index);
     v = cache[index - 1];
   }
+}
+
+template<typename T> void Read(std::istream &s, std::vector<std::shared_ptr<T>> &v) {
+  auto size = v.size();
+  Read(s, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(s, entry);
 }
 
 template<typename T> void Read(std::istream &i, std::vector<T> &v) {
@@ -250,13 +258,13 @@ void Read(std::istream &s, BaseTypes &v) {
 }
 
 void Write(std::ostream &o, const PointerBaseTypes &v) {
-  Write(o, v.a);
-  Write(o, v.b);
+  Write(o, v.a1);
+  Write(o, v.a2);
 }
 
 void Read(std::istream &s, PointerBaseTypes &v) {
-  Read(s, v.a);
-  Read(s, v.b);
+  Read(s, v.a1);
+  Read(s, v.a2);
 }
 
 void Write(std::ostream &o, const Root &v) {
