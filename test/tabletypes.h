@@ -17,18 +17,6 @@ struct TableB;
 struct TableD;
 struct TableC;
 
-static void Write(std::ostream &, const TableA &);
-static void Read(std::istream &, TableA &);
-
-static void Write(std::ostream &, const TableB &);
-static void Read(std::istream &, TableB &);
-
-static void Write(std::ostream &, const TableD &);
-static void Read(std::istream &, TableD &);
-
-static void Write(std::ostream &, const TableC &);
-static void Read(std::istream &, TableC &);
-
 struct TableA {
   std::string name;
   std::unique_ptr<TableD> d1;

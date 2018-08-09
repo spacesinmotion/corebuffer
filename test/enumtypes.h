@@ -14,9 +14,6 @@ struct AlwaysFalse : std::false_type {};
 
 struct Dummy;
 
-static void Write(std::ostream &, const Dummy &);
-static void Read(std::istream &, Dummy &);
-
 enum class EnumTypes : unsigned int {
   alpha = 0,
   beta = 4,

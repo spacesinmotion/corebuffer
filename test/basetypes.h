@@ -14,9 +14,6 @@ struct AlwaysFalse : std::false_type {};
 
 struct BaseTypes;
 
-static void Write(std::ostream &, const BaseTypes &);
-static void Read(std::istream &, BaseTypes &);
-
 struct BaseTypes {
   std::int32_t a{0};
   std::int16_t aa{0};

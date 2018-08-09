@@ -32,12 +32,6 @@ void WriteForwardDeclarations(std::ostream &o, const Package &p)
     o << "struct " << t.name << ";" << endl;
   if (!p.tables.empty())
     o << endl;
-
-  for (const auto &t : p.tables)
-  {
-    o << "static void Write(std::ostream &, const " << t.name << " &);" << endl;
-    o << "static void Read(std::istream &, " << t.name << " &);" << endl << endl;
-  }
 }
 
 void WriteEnumDeclaration(std::ostream &o, const Enum &e)
