@@ -24,9 +24,6 @@ enum class EnumTypes : unsigned int {
 struct Dummy {
   EnumTypes en1{Scope::EnumTypes::alpha};
   EnumTypes en2{Scope::EnumTypes::delta};
-private:
-  unsigned int io_counter_{0};
-  friend struct Dummy_io;
 };
 
 bool operator==(const Dummy&l, const Dummy&r) {
@@ -63,7 +60,7 @@ inline const char * ValueName(const EnumTypes &v) {
 
 struct Dummy_io {
 private:
-template<typename T> void Write(std::ostream &o, const T *v) {
+template<typename T> void Write(std::ostream &, const T *) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -76,27 +73,27 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
   o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
-template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::unique_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::weak_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -137,12 +134,9 @@ void Read(std::istream &s, Dummy &v) {
   Read(s, v.en2);
 }
 
-  unsigned int Dummy_count_{0};
-  std::vector<std::shared_ptr<Dummy>> Dummy_references_;
 
 public:
 void WriteDummy(std::ostream &o, const Dummy &v) {
-  Dummy_count_ = 0;
 
   o.write("CORE", 4);
   o.write("0.0", 3);
@@ -150,7 +144,6 @@ void WriteDummy(std::ostream &o, const Dummy &v) {
 }
 
 bool ReadDummy(std::istream &i, Dummy &v) {
-  Dummy_references_.clear();
 
   std::string marker("0000");
   i.read(&marker[0], 4);

@@ -70,7 +70,7 @@ void WriteEnumDeclarations(std::ostream &o, const vector<Enum> &enums)
 
 void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
 {
-  o << "template<typename T> void Write(std::ostream &o, const T *v) {" << endl;
+  o << "template<typename T> void Write(std::ostream &, const T *) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
@@ -83,27 +83,27 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {" << endl;
+  o << "template<typename T> void Write(std::ostream &, const std::unique_ptr<T> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {" << endl;
+  o << "template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {" << endl;
+  o << "template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {" << endl;
+  o << "template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {" << endl;
+  o << "template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {" << endl;
+  o << "template<typename T> void Write(std::ostream &, const std::vector<std::weak_ptr<T>> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
@@ -159,6 +159,12 @@ std::ostream &WriteType(std::ostream &o, const Member &m)
   return o;
 }
 
+bool hasSharedAppearance(const Table &t)
+{
+  return ((t.appearance & SharedAppearance) == SharedAppearance) ||
+         ((t.appearance & SharedVectorAppearance) == SharedVectorAppearance);
+}
+
 void WriteTableDeclaration(std::ostream &o, const Table &t, const std::string &root_type)
 {
   o << "struct " << t.name << " {" << endl;
@@ -170,9 +176,13 @@ void WriteTableDeclaration(std::ostream &o, const Table &t, const std::string &r
       o << "{" << m.defaultValue << "}";
     o << ";" << endl;
   }
-  o << "private:" << endl;
-  o << "  unsigned int io_counter_{0};" << endl;
-  o << "  friend struct " << root_type << "_io;" << endl;
+
+  if (hasSharedAppearance(t))
+  {
+    o << "private:" << endl;
+    o << "  unsigned int io_counter_{0};" << endl;
+    o << "  friend struct " << root_type << "_io;" << endl;
+  }
   o << "};" << endl << endl;
 }
 
@@ -326,7 +336,8 @@ void WriteBaseIO(std::ostream &o, const Package &p)
 {
   o << "void Write" << p.root_type << "(std::ostream &o, const " << p.root_type << " &v) {" << endl;
   for (const auto &t : p.tables)
-    o << "  " << t.name << "_count_ = 0;" << endl;
+    if (hasSharedAppearance(t))
+      o << "  " << t.name << "_count_ = 0;" << endl;
 
   o << endl << "  o.write(\"CORE\", 4);" << endl;
   o << "  o.write(\"" << p.version << "\", " << p.version.size() << ");" << endl;
@@ -336,7 +347,8 @@ void WriteBaseIO(std::ostream &o, const Package &p)
   o << "bool Read" << p.root_type << "(std::istream &i, " << p.root_type << " &v) {" << endl;
 
   for (const auto &t : p.tables)
-    o << "  " << t.name << "_references_.clear();" << endl;
+    if (hasSharedAppearance(t))
+      o << "  " << t.name << "_references_.clear();" << endl;
 
   o << endl << "  std::string marker(\"0000\");" << endl;
   o << "  i.read(&marker[0], 4);" << endl;
@@ -384,9 +396,11 @@ void WriteCppCode(std::ostream &o, const Package &p)
   WriteTables(o, p.tables);
 
   for (const auto &t : p.tables)
-    o << "  unsigned int " << t.name << "_count_{0};" << endl;
+    if (hasSharedAppearance(t))
+      o << "  unsigned int " << t.name << "_count_{0};" << endl;
   for (const auto &t : p.tables)
-    o << "  std::vector<std::shared_ptr<" << t.name << ">> " << t.name << "_references_;" << endl;
+    if (hasSharedAppearance(t))
+      o << "  std::vector<std::shared_ptr<" << t.name << ">> " << t.name << "_references_;" << endl;
 
   o << endl << "public:" << endl;
   WriteBaseIO(o, p);

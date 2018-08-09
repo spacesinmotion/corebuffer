@@ -30,9 +30,6 @@ struct BaseTypes {
   std::uint32_t k{0u};
   std::uint64_t l{0u};
   std::string m;
-private:
-  unsigned int io_counter_{0};
-  friend struct BaseTypes_io;
 };
 
 bool operator==(const BaseTypes&l, const BaseTypes&r) {
@@ -75,7 +72,7 @@ bool operator!=(const BaseTypes&l, const BaseTypes&r) {
 
 struct BaseTypes_io {
 private:
-template<typename T> void Write(std::ostream &o, const T *v) {
+template<typename T> void Write(std::ostream &, const T *) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -88,27 +85,27 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
   o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
-template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::unique_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::weak_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -175,12 +172,9 @@ void Read(std::istream &s, BaseTypes &v) {
   Read(s, v.m);
 }
 
-  unsigned int BaseTypes_count_{0};
-  std::vector<std::shared_ptr<BaseTypes>> BaseTypes_references_;
 
 public:
 void WriteBaseTypes(std::ostream &o, const BaseTypes &v) {
-  BaseTypes_count_ = 0;
 
   o.write("CORE", 4);
   o.write("0.0", 3);
@@ -188,7 +182,6 @@ void WriteBaseTypes(std::ostream &o, const BaseTypes &v) {
 }
 
 bool ReadBaseTypes(std::istream &i, BaseTypes &v) {
-  BaseTypes_references_.clear();
 
   std::string marker("0000");
   i.read(&marker[0], 4);

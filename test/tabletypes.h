@@ -30,9 +30,6 @@ private:
 
 struct TableB {
   std::string name;
-private:
-  unsigned int io_counter_{0};
-  friend struct TableC_io;
 };
 
 struct TableD {
@@ -46,9 +43,6 @@ private:
 struct TableC {
   std::vector<TableA> a;
   std::vector<TableB> b;
-private:
-  unsigned int io_counter_{0};
-  friend struct TableC_io;
 };
 
 bool operator==(const TableA&l, const TableA&r) {
@@ -105,7 +99,7 @@ bool operator!=(const TableC&l, const TableC&r) {
 
 struct TableC_io {
 private:
-template<typename T> void Write(std::ostream &o, const T *v) {
+template<typename T> void Write(std::ostream &, const T *) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -118,27 +112,27 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
   o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
-template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::unique_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::weak_ptr<T> &v) {
+template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::shared_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
+template<typename T> void Write(std::ostream &, const std::vector<std::weak_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -342,20 +336,14 @@ void Read(std::istream &s, TableC &v) {
 }
 
   unsigned int TableA_count_{0};
-  unsigned int TableB_count_{0};
   unsigned int TableD_count_{0};
-  unsigned int TableC_count_{0};
   std::vector<std::shared_ptr<TableA>> TableA_references_;
-  std::vector<std::shared_ptr<TableB>> TableB_references_;
   std::vector<std::shared_ptr<TableD>> TableD_references_;
-  std::vector<std::shared_ptr<TableC>> TableC_references_;
 
 public:
 void WriteTableC(std::ostream &o, const TableC &v) {
   TableA_count_ = 0;
-  TableB_count_ = 0;
   TableD_count_ = 0;
-  TableC_count_ = 0;
 
   o.write("CORE", 4);
   o.write("0.0", 3);
@@ -364,9 +352,7 @@ void WriteTableC(std::ostream &o, const TableC &v) {
 
 bool ReadTableC(std::istream &i, TableC &v) {
   TableA_references_.clear();
-  TableB_references_.clear();
   TableD_references_.clear();
-  TableC_references_.clear();
 
   std::string marker("0000");
   i.read(&marker[0], 4);
