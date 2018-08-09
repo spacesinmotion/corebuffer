@@ -16,7 +16,7 @@ table TableB {
 
 table TableD {
   name:string;
-  a:TableA;
+  a:shared TableA;
 }
 
 table TableC {

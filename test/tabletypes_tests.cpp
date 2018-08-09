@@ -79,4 +79,40 @@ TEST_CASE("TableType test", "[]")
     CHECK(cIn.a.front().d2.lock() == cIn.a.front().d3);
     CHECK(cIn.a.front().d4 == cIn.a.front().d3);
   }
+
+  SECTION("reading whats written with shared data and cross releation ship")
+  {
+    Scope::TableC c;
+    c.a.emplace_back();
+    c.a.front().name = "TableA";
+    c.a.front().d3 = std::make_shared<Scope::TableD>();
+    c.a.front().d3->name = "TableD_3";
+    c.a.front().d3->a = std::make_shared<Scope::TableA>();
+    c.a.front().d3->a->d2 = c.a.front().d3;
+    c.a.front().d3->a->d3 = c.a.front().d3;
+    c.a.front().d3->a->d4 = c.a.front().d3;
+
+    std::stringstream sOut;
+    Scope::TableC_io().WriteTableC(sOut, c);
+
+    const auto buffer = sOut.str();
+    std::stringstream sIn(buffer);
+
+    Scope::TableC cIn;
+    Scope::TableC_io().ReadTableC(sIn, cIn);
+
+    REQUIRE(cIn.a.size() == 1);
+    CHECK(cIn.a.front().name == "TableA");
+
+    REQUIRE(cIn.a.front().d3);
+    CHECK(cIn.a.front().d3->name == "TableD_3");
+
+    REQUIRE(cIn.a.front().d3->a);
+    REQUIRE(cIn.a.front().d3->a->d2.lock());
+    REQUIRE(cIn.a.front().d3->a->d3);
+    REQUIRE(cIn.a.front().d3->a->d4);
+    CHECK(cIn.a.front().d3->a->d2.lock() == cIn.a.front().d3);
+    CHECK(cIn.a.front().d3->a->d3 == cIn.a.front().d3);
+    CHECK(cIn.a.front().d3->a->d4 == cIn.a.front().d3);
+  }
 }

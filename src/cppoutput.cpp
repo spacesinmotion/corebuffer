@@ -209,9 +209,9 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
       o << "    if (!t) {" << endl;
       o << "      o.write(\"\\x0\", 1);" << endl;
       o << "    } else if (t->io_counter_== 0) {" << endl;
+      o << "      t->io_counter_ = ++" << m.type << "_count_;" << endl;
       o << "      o.write(\"\\x1\", 1);" << endl;
       o << "      Write(o, *t);" << endl;
-      o << "      t->io_counter_ = ++" << m.type << "_count_;" << endl;
       o << "    } else {" << endl;
       o << "      o.write(\"\\x2\", 1);" << endl;
       o << "      Write(o, t->io_counter_);" << endl;
@@ -262,8 +262,8 @@ void WriteTableInputFunctions(std::ostream &o, const Table &t)
       o << "    s.read(&ref, 1);" << endl;
       o << "    if (ref == '\\x1') {" << endl;
       o << "      auto t = std::make_shared<" << m.type << ">();" << endl;
-      o << "      Read(s, *t);" << endl;
       o << "      " << m.type << "_references_.push_back(t);" << endl;
+      o << "      Read(s, *t);" << endl;
       o << "      " << n << " = t;" << endl;
       o << "    } else if (ref == '\\x2') {" << endl;
       o << "      unsigned int index = 0;" << endl;

@@ -37,7 +37,7 @@ private:
 
 struct TableD {
   std::string name;
-  TableA a;
+  std::shared_ptr<TableA> a;
 private:
   unsigned int io_counter_{0};
   friend struct TableC_io;
@@ -182,9 +182,9 @@ void Write(std::ostream &o, const TableA &v) {
     if (!t) {
       o.write("\x0", 1);
     } else if (t->io_counter_== 0) {
+      t->io_counter_ = ++TableD_count_;
       o.write("\x1", 1);
       Write(o, *t);
-      t->io_counter_ = ++TableD_count_;
     } else {
       o.write("\x2", 1);
       Write(o, t->io_counter_);
@@ -195,9 +195,9 @@ void Write(std::ostream &o, const TableA &v) {
     if (!t) {
       o.write("\x0", 1);
     } else if (t->io_counter_== 0) {
+      t->io_counter_ = ++TableD_count_;
       o.write("\x1", 1);
       Write(o, *t);
-      t->io_counter_ = ++TableD_count_;
     } else {
       o.write("\x2", 1);
       Write(o, t->io_counter_);
@@ -208,9 +208,9 @@ void Write(std::ostream &o, const TableA &v) {
     if (!t) {
       o.write("\x0", 1);
     } else if (t->io_counter_== 0) {
+      t->io_counter_ = ++TableD_count_;
       o.write("\x1", 1);
       Write(o, *t);
-      t->io_counter_ = ++TableD_count_;
     } else {
       o.write("\x2", 1);
       Write(o, t->io_counter_);
@@ -233,8 +233,8 @@ void Read(std::istream &s, TableA &v) {
     s.read(&ref, 1);
     if (ref == '\x1') {
       auto t = std::make_shared<TableD>();
-      Read(s, *t);
       TableD_references_.push_back(t);
+      Read(s, *t);
       v.d2 = t;
     } else if (ref == '\x2') {
       unsigned int index = 0;
@@ -247,8 +247,8 @@ void Read(std::istream &s, TableA &v) {
     s.read(&ref, 1);
     if (ref == '\x1') {
       auto t = std::make_shared<TableD>();
-      Read(s, *t);
       TableD_references_.push_back(t);
+      Read(s, *t);
       v.d3 = t;
     } else if (ref == '\x2') {
       unsigned int index = 0;
@@ -261,8 +261,8 @@ void Read(std::istream &s, TableA &v) {
     s.read(&ref, 1);
     if (ref == '\x1') {
       auto t = std::make_shared<TableD>();
-      Read(s, *t);
       TableD_references_.push_back(t);
+      Read(s, *t);
       v.d4 = t;
     } else if (ref == '\x2') {
       unsigned int index = 0;
@@ -282,12 +282,37 @@ void Read(std::istream &s, TableB &v) {
 
 void Write(std::ostream &o, const TableD &v) {
   Write(o, v.name);
-  Write(o, v.a);
+  {
+    const auto t = v.a;
+    if (!t) {
+      o.write("\x0", 1);
+    } else if (t->io_counter_== 0) {
+      t->io_counter_ = ++TableA_count_;
+      o.write("\x1", 1);
+      Write(o, *t);
+    } else {
+      o.write("\x2", 1);
+      Write(o, t->io_counter_);
+    }
+  }
 }
 
 void Read(std::istream &s, TableD &v) {
   Read(s, v.name);
-  Read(s, v.a);
+  {
+    char ref = 0;
+    s.read(&ref, 1);
+    if (ref == '\x1') {
+      auto t = std::make_shared<TableA>();
+      TableA_references_.push_back(t);
+      Read(s, *t);
+      v.a = t;
+    } else if (ref == '\x2') {
+      unsigned int index = 0;
+      Read(s, index);
+      v.a = TableA_references_[index - 1];
+    }
+  }
 }
 
 void Write(std::ostream &o, const TableC &v) {
