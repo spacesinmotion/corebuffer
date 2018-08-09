@@ -159,6 +159,14 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  }" << endl;
   o << "}" << endl << endl;
 
+  o << "template<typename T> void Read(std::istream &, std::shared_ptr<T> &) {" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Read(std::istream &, std::weak_ptr<T> &) {" << endl;
+  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
+  o << "}" << endl << endl;
+
   o << "template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vector<std::shared_ptr<T>> &cache) {"
     << endl;
   o << "  char ref = 0;" << endl;

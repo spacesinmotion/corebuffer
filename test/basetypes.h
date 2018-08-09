@@ -208,6 +208,14 @@ template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {
   }
 }
 
+template<typename T> void Read(std::istream &, std::shared_ptr<T> &) {
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
+}
+
+template<typename T> void Read(std::istream &, std::weak_ptr<T> &) {
+  static_assert(AlwaysFalse<T>::value, "Something not implemented");
+}
+
 template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vector<std::shared_ptr<T>> &cache) {
   char ref = 0;
   s.read(&ref, 1);
