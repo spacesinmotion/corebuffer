@@ -83,8 +83,13 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());" << endl;
   o << "}" << endl << endl;
 
-  o << "template<typename T> void Write(std::ostream &, const std::unique_ptr<T> &) {" << endl;
-  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
+  o << "template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {" << endl;
+  o << "  if (!v) {" << endl;
+  o << "    o.write(\"\\x0\", 1);" << endl;
+  o << "  } else {" << endl;
+  o << "    o.write(\"\\x1\", 1);" << endl;
+  o << "    Write(o, *v);" << endl;
+  o << "  }" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {" << endl;
@@ -118,6 +123,15 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
 
   o << "template<typename T> void Read(std::istream &i, T &v) {" << endl;
   o << "  i.read(reinterpret_cast<char *>(&v), sizeof(T));" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {" << endl;
+  o << "  char ref = 0;" << endl;
+  o << "  i.read(&ref, 1);" << endl;
+  o << "  if (ref == '\\x1') {" << endl;
+  o << "    v = std::make_unique<T>();" << endl;
+  o << "    Read(i, *v);" << endl;
+  o << "  }" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Read(std::istream &i, std::vector<T> &v) {" << endl;
@@ -199,18 +213,9 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
       o << "  for (const auto &" << n << " : v." << m.name << ") {" << endl;
       o << "  ";
     }
-    if (m.pointer == Pointer::Plain || m.isBaseType)
+    if (m.pointer == Pointer::Plain || m.isBaseType || m.pointer == Pointer::Unique)
     {
       o << "  Write(o, " << n << ");" << endl;
-    }
-    else if (m.pointer == Pointer::Unique)
-    {
-      o << "  if (!" << n << ") {" << endl;
-      o << "    o.write(\"\\x0\", 1);" << endl;
-      o << "  } else {" << endl;
-      o << "    o.write(\"\\x1\", 1);" << endl;
-      o << "    Write(o, *" << n << ");" << endl;
-      o << "  }" << endl;
     }
     else
     {
@@ -250,20 +255,9 @@ void WriteTableInputFunctions(std::ostream &o, const Table &t)
       o << "  for (auto &" << n << " : v." << m.name << ") {" << endl;
       o << "  ";
     }
-    if (m.pointer == Pointer::Plain || m.isBaseType)
+    if (m.pointer == Pointer::Plain || m.isBaseType || m.pointer == Pointer::Unique)
     {
       o << "  Read(s, " << n << ");" << endl;
-    }
-    else if (m.pointer == Pointer::Unique)
-    {
-      o << "  {" << endl;
-      o << "    char ref = 0;" << endl;
-      o << "    s.read(&ref, 1);" << endl;
-      o << "    if (ref == '\\x1') {" << endl;
-      o << "      " << n << " = std::make_unique<" << m.type << ">();" << endl;
-      o << "      Read(s, *" << n << ");" << endl;
-      o << "    }" << endl;
-      o << "  }" << endl;
     }
     else
     {

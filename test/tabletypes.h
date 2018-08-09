@@ -112,8 +112,13 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
   o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
-template<typename T> void Write(std::ostream &, const std::unique_ptr<T> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
+template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
+  if (!v) {
+    o.write("\x0", 1);
+  } else {
+    o.write("\x1", 1);
+    Write(o, *v);
+  }
 }
 
 template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
@@ -149,6 +154,15 @@ template<typename T> void Read(std::istream &i, T &v) {
   i.read(reinterpret_cast<char *>(&v), sizeof(T));
 }
 
+template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {
+  char ref = 0;
+  i.read(&ref, 1);
+  if (ref == '\x1') {
+    v = std::make_unique<T>();
+    Read(i, *v);
+  }
+}
+
 template<typename T> void Read(std::istream &i, std::vector<T> &v) {
   typename std::vector<T>::size_type s{0};
   Read(i, s);
@@ -165,12 +179,7 @@ void Read(std::istream &i, std::string &v) {
 
 void Write(std::ostream &o, const TableA &v) {
   Write(o, v.name);
-  if (!v.d1) {
-    o.write("\x0", 1);
-  } else {
-    o.write("\x1", 1);
-    Write(o, *v.d1);
-  }
+  Write(o, v.d1);
   {
     const auto t = v.d2.lock();
     if (!t) {
@@ -214,14 +223,7 @@ void Write(std::ostream &o, const TableA &v) {
 
 void Read(std::istream &s, TableA &v) {
   Read(s, v.name);
-  {
-    char ref = 0;
-    s.read(&ref, 1);
-    if (ref == '\x1') {
-      v.d1 = std::make_unique<TableD>();
-      Read(s, *v.d1);
-    }
-  }
+  Read(s, v.d1);
   {
     char ref = 0;
     s.read(&ref, 1);

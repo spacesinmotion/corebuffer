@@ -1,6 +1,6 @@
 package Scope;
 version "0.0";
-root_type BaseTypes;
+root_type Root;
 
 table BaseTypes {
   a:int;
@@ -18,4 +18,14 @@ table BaseTypes {
   k:ui32;
   l:ui64;
   m:string;
+}
+
+table PointerBaseTypes {
+  a:unique int;
+  b:unique int;
+}
+
+table Root {
+  a:BaseTypes;
+  b:PointerBaseTypes;
 }

@@ -37,33 +37,52 @@ TEST_CASE("BaseType test", "[]")
 
   SECTION("reading whats written")
   {
-    Scope::BaseTypes dOut;
-    dOut.a = 1;
-    dOut.aa = 2;
-    dOut.ab = 3;
-    dOut.b = true;
-    dOut.c = 0.1f;
-    dOut.d = 0.2;
-    dOut.e = 5;
-    dOut.f = 6;
-    dOut.g = 7;
-    dOut.h = 8;
-    dOut.i = 9;
-    dOut.j = 10;
-    dOut.k = 11;
-    dOut.l = 12;
+    Scope::Root dOut;
+    dOut.a.a = 1;
+    dOut.a.aa = 2;
+    dOut.a.ab = 3;
+    dOut.a.b = true;
+    dOut.a.c = 0.1f;
+    dOut.a.d = 0.2;
+    dOut.a.e = 5;
+    dOut.a.f = 6;
+    dOut.a.g = 7;
+    dOut.a.h = 8;
+    dOut.a.i = 9;
+    dOut.a.j = 10;
+    dOut.a.k = 11;
+    dOut.a.l = 12;
 
-    Scope::BaseTypes dIn;
+    Scope::Root dIn;
     CHECK_FALSE(dOut == dIn);
 
     std::stringstream sOut;
-    Scope::BaseTypes_io().WriteBaseTypes(sOut, dOut);
+    Scope::Root_io().WriteRoot(sOut, dOut);
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
 
-    Scope::BaseTypes_io().ReadBaseTypes(sIn, dIn);
+    Scope::Root_io().ReadRoot(sIn, dIn);
 
     CHECK(dOut == dIn);
+  }
+
+  SECTION("reading whats written pointer")
+  {
+    Scope::Root dOut;
+    dOut.b.a = std::make_unique<int>(42);
+
+    Scope::Root dIn;
+    CHECK_FALSE(dOut == dIn);
+
+    std::stringstream sOut;
+    Scope::Root_io().WriteRoot(sOut, dOut);
+
+    const auto buffer = sOut.str();
+    std::stringstream sIn(buffer);
+
+    Scope::Root_io().ReadRoot(sIn, dIn);
+
+    // CHECK(dOut == dIn);
   }
 }

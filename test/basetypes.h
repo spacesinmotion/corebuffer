@@ -13,6 +13,8 @@ template<typename T>
 struct AlwaysFalse : std::false_type {};
 
 struct BaseTypes;
+struct PointerBaseTypes;
+struct Root;
 
 struct BaseTypes {
   std::int32_t a{0};
@@ -30,6 +32,16 @@ struct BaseTypes {
   std::uint32_t k{0u};
   std::uint64_t l{0u};
   std::string m;
+};
+
+struct PointerBaseTypes {
+  std::unique_ptr<std::int32_t> a;
+  std::unique_ptr<std::int32_t> b;
+};
+
+struct Root {
+  BaseTypes a;
+  PointerBaseTypes b;
 };
 
 bool operator==(const BaseTypes&l, const BaseTypes&r) {
@@ -70,7 +82,31 @@ bool operator!=(const BaseTypes&l, const BaseTypes&r) {
     || l.m != r.m;
 }
 
-struct BaseTypes_io {
+bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
+  return 
+    l.a == r.a
+    && l.b == r.b;
+}
+
+bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
+  return 
+    l.a != r.a
+    || l.b != r.b;
+}
+
+bool operator==(const Root&l, const Root&r) {
+  return 
+    l.a == r.a
+    && l.b == r.b;
+}
+
+bool operator!=(const Root&l, const Root&r) {
+  return 
+    l.a != r.a
+    || l.b != r.b;
+}
+
+struct Root_io {
 private:
 template<typename T> void Write(std::ostream &, const T *) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
@@ -85,8 +121,13 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
   o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
-template<typename T> void Write(std::ostream &, const std::unique_ptr<T> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
+template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
+  if (!v) {
+    o.write("\x0", 1);
+  } else {
+    o.write("\x1", 1);
+    Write(o, *v);
+  }
 }
 
 template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
@@ -120,6 +161,15 @@ void Write(std::ostream &o, const char *v) {
 
 template<typename T> void Read(std::istream &i, T &v) {
   i.read(reinterpret_cast<char *>(&v), sizeof(T));
+}
+
+template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {
+  char ref = 0;
+  i.read(&ref, 1);
+  if (ref == '\x1') {
+    v = std::make_unique<T>();
+    Read(i, *v);
+  }
 }
 
 template<typename T> void Read(std::istream &i, std::vector<T> &v) {
@@ -172,16 +222,36 @@ void Read(std::istream &s, BaseTypes &v) {
   Read(s, v.m);
 }
 
+void Write(std::ostream &o, const PointerBaseTypes &v) {
+  Write(o, v.a);
+  Write(o, v.b);
+}
+
+void Read(std::istream &s, PointerBaseTypes &v) {
+  Read(s, v.a);
+  Read(s, v.b);
+}
+
+void Write(std::ostream &o, const Root &v) {
+  Write(o, v.a);
+  Write(o, v.b);
+}
+
+void Read(std::istream &s, Root &v) {
+  Read(s, v.a);
+  Read(s, v.b);
+}
+
 
 public:
-void WriteBaseTypes(std::ostream &o, const BaseTypes &v) {
+void WriteRoot(std::ostream &o, const Root &v) {
 
   o.write("CORE", 4);
   o.write("0.0", 3);
   Write(o, v);
 }
 
-bool ReadBaseTypes(std::istream &i, BaseTypes &v) {
+bool ReadRoot(std::istream &i, Root &v) {
 
   std::string marker("0000");
   i.read(&marker[0], 4);
