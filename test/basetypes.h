@@ -37,6 +37,7 @@ struct BaseTypes {
 struct PointerBaseTypes {
   std::unique_ptr<std::int32_t> a1;
   std::unique_ptr<std::int32_t> a2;
+  std::vector<std::string> b1;
 };
 
 struct Root {
@@ -93,13 +94,15 @@ bool operator!=(const BaseTypes&l, const BaseTypes&r) {
 bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
   return 
     l.a1 == r.a1
-    && l.a2 == r.a2;
+    && l.a2 == r.a2
+    && l.b1 == r.b1;
 }
 
 bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
   return 
     l.a1 != r.a1
-    || l.a2 != r.a2;
+    || l.a2 != r.a2
+    || l.b1 != r.b1;
 }
 
 bool operator==(const Root&l, const Root&r) {
@@ -129,6 +132,12 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
   o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
+void Write(std::ostream &o, const std::vector<std::string> &v) {
+  Write(o, v.size());
+  for (const auto &entry : v)
+    Write(o, entry);
+}
+
 template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
   if (!v) {
     o.write("\x0", 1);
@@ -153,23 +162,20 @@ template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, un
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
   Write(o, v.size());
-  for (const auto &entry : v) {
+  for (const auto &entry : v)
     Write(o, entry);
-  };
 }
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
   Write(o, v.size());
-  for (const auto &entry : v) {
+  for (const auto &entry : v)
     Write(o, entry);
-  };
 }
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
   Write(o, v.size());
-  for (const auto &entry : v) {
+  for (const auto &entry : v)
     Write(o, entry);
-  };
 }
 
 template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
@@ -243,6 +249,14 @@ template<typename T> void Read(std::istream &i, std::vector<T> &v) {
   i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
 }
 
+void Read(std::istream &i, std::vector<std::string> &v) {
+  auto size = v.size();
+  Read(i, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(i, entry);
+}
+
 void Read(std::istream &i, std::string &v) {
   std::string::size_type s{0};
   Read(i, s);
@@ -289,11 +303,13 @@ void Read(std::istream &s, BaseTypes &v) {
 void Write(std::ostream &o, const PointerBaseTypes &v) {
   Write(o, v.a1);
   Write(o, v.a2);
+  Write(o, v.b1);
 }
 
 void Read(std::istream &s, PointerBaseTypes &v) {
   Read(s, v.a1);
   Read(s, v.a2);
+  Read(s, v.b1);
 }
 
 void Write(std::ostream &o, const Root &v) {

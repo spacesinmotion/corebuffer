@@ -83,6 +83,12 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());" << endl;
   o << "}" << endl << endl;
 
+  o << "void Write(std::ostream &o, const std::vector<std::string> &v) {" << endl;
+  o << "  Write(o, v.size());" << endl;
+  o << "  for (const auto &entry : v)" << endl;
+  o << "    Write(o, entry);" << endl;
+  o << "}" << endl << endl;
+
   o << "template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {" << endl;
   o << "  if (!v) {" << endl;
   o << "    o.write(\"\\x0\", 1);" << endl;
@@ -107,23 +113,20 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
 
   o << "template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {" << endl;
   o << "  Write(o, v.size());" << endl;
-  o << "  for (const auto &entry : v) {" << endl;
+  o << "  for (const auto &entry : v)" << endl;
   o << "    Write(o, entry);" << endl;
-  o << "  };" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {" << endl;
   o << "  Write(o, v.size());" << endl;
-  o << "  for (const auto &entry : v) {" << endl;
+  o << "  for (const auto &entry : v)" << endl;
   o << "    Write(o, entry);" << endl;
-  o << "  };" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {" << endl;
   o << "  Write(o, v.size());" << endl;
-  o << "  for (const auto &entry : v) {" << endl;
+  o << "  for (const auto &entry : v)" << endl;
   o << "    Write(o, entry);" << endl;
-  o << "  };" << endl;
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {" << endl;
@@ -196,6 +199,14 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  Read(i, s);" << endl;
   o << "  v.resize(s);" << endl;
   o << "  i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);" << endl;
+  o << "}" << endl << endl;
+
+  o << "void Read(std::istream &i, std::vector<std::string> &v) {" << endl;
+  o << "  auto size = v.size();" << endl;
+  o << "  Read(i, size);" << endl;
+  o << "  v.resize(size);" << endl;
+  o << "  for (auto &entry : v)" << endl;
+  o << "    Read(i, entry);" << endl;
   o << "}" << endl << endl;
 
   o << "void Read(std::istream &i, std::string &v) {" << endl;

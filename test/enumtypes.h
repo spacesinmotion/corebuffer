@@ -81,6 +81,12 @@ template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
   o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
 }
 
+void Write(std::ostream &o, const std::vector<std::string> &v) {
+  Write(o, v.size());
+  for (const auto &entry : v)
+    Write(o, entry);
+}
+
 template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
   if (!v) {
     o.write("\x0", 1);
@@ -105,23 +111,20 @@ template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, un
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
   Write(o, v.size());
-  for (const auto &entry : v) {
+  for (const auto &entry : v)
     Write(o, entry);
-  };
 }
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
   Write(o, v.size());
-  for (const auto &entry : v) {
+  for (const auto &entry : v)
     Write(o, entry);
-  };
 }
 
 template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
   Write(o, v.size());
-  for (const auto &entry : v) {
+  for (const auto &entry : v)
     Write(o, entry);
-  };
 }
 
 template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
@@ -193,6 +196,14 @@ template<typename T> void Read(std::istream &i, std::vector<T> &v) {
   Read(i, s);
   v.resize(s);
   i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
+}
+
+void Read(std::istream &i, std::vector<std::string> &v) {
+  auto size = v.size();
+  Read(i, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(i, entry);
 }
 
 void Read(std::istream &i, std::string &v) {

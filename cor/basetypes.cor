@@ -23,6 +23,8 @@ table BaseTypes {
 table PointerBaseTypes {
   a1:unique int;
   a2:unique int;
+
+  b1:[string];
 }
 
 table Root {
