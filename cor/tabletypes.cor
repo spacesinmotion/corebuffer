@@ -7,6 +7,7 @@ table TableA {
   d1:unique TableD;
   d2:weak TableD;
   d3:shared TableD;
+  d4:shared TableD;
 }
 
 table TableB {
@@ -14,6 +15,7 @@ table TableB {
 }
 
 table TableD {
+  name:string;
   a:TableA;
 }
 

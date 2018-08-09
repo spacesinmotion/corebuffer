@@ -22,6 +22,7 @@ struct TableA {
   std::unique_ptr<TableD> d1;
   std::weak_ptr<TableD> d2;
   std::shared_ptr<TableD> d3;
+  std::shared_ptr<TableD> d4;
 private:
   unsigned int io_counter_{0};
   friend struct TableC_io;
@@ -35,6 +36,7 @@ private:
 };
 
 struct TableD {
+  std::string name;
   TableA a;
 private:
   unsigned int io_counter_{0};
@@ -54,7 +56,8 @@ bool operator==(const TableA&l, const TableA&r) {
     l.name == r.name
     && l.d1 == r.d1
     && l.d2.lock() == r.d2.lock()
-    && l.d3 == r.d3;
+    && l.d3 == r.d3
+    && l.d4 == r.d4;
 }
 
 bool operator!=(const TableA&l, const TableA&r) {
@@ -62,7 +65,8 @@ bool operator!=(const TableA&l, const TableA&r) {
     l.name != r.name
     || l.d1 != r.d1
     || l.d2.lock() != r.d2.lock()
-    || l.d3 != r.d3;
+    || l.d3 != r.d3
+    || l.d4 != r.d4;
 }
 
 bool operator==(const TableB&l, const TableB&r) {
@@ -77,12 +81,14 @@ bool operator!=(const TableB&l, const TableB&r) {
 
 bool operator==(const TableD&l, const TableD&r) {
   return 
-    l.a == r.a;
+    l.name == r.name
+    && l.a == r.a;
 }
 
 bool operator!=(const TableD&l, const TableD&r) {
   return 
-    l.a != r.a;
+    l.name != r.name
+    || l.a != r.a;
 }
 
 bool operator==(const TableC&l, const TableC&r) {
@@ -197,6 +203,19 @@ void Write(std::ostream &o, const TableA &v) {
       Write(o, t->io_counter_);
     }
   }
+  {
+    const auto t = v.d4;
+    if (!t) {
+      o.write("\x0", 1);
+    } else if (t->io_counter_== 0) {
+      o.write("\x1", 1);
+      Write(o, *t);
+      t->io_counter_ = ++TableD_count_;
+    } else {
+      o.write("\x2", 1);
+      Write(o, t->io_counter_);
+    }
+  }
 }
 
 void Read(std::istream &s, TableA &v) {
@@ -237,6 +256,20 @@ void Read(std::istream &s, TableA &v) {
       v.d3 = TableD_references_[index - 1];
     }
   }
+  {
+    char ref = 0;
+    s.read(&ref, 1);
+    if (ref == '\x1') {
+      auto t = std::make_shared<TableD>();
+      Read(s, *t);
+      TableD_references_.push_back(t);
+      v.d4 = t;
+    } else if (ref == '\x2') {
+      unsigned int index = 0;
+      Read(s, index);
+      v.d4 = TableD_references_[index - 1];
+    }
+  }
 }
 
 void Write(std::ostream &o, const TableB &v) {
@@ -248,10 +281,12 @@ void Read(std::istream &s, TableB &v) {
 }
 
 void Write(std::ostream &o, const TableD &v) {
+  Write(o, v.name);
   Write(o, v.a);
 }
 
 void Read(std::istream &s, TableD &v) {
+  Read(s, v.name);
   Read(s, v.a);
 }
 
