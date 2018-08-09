@@ -82,6 +82,19 @@ template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
   }
 }
 
+template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, unsigned int &counter) {
+  if (!v) {
+    o.write("\x0", 1);
+  } else if (v->io_counter_== 0) {
+    v->io_counter_ = ++counter;
+    o.write("\x1", 1);
+    Write(o, *v);
+  } else {
+    o.write("\x2", 1);
+    Write(o, v->io_counter_);
+  }
+}
+
 template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
@@ -121,6 +134,20 @@ template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {
   if (ref == '\x1') {
     v = std::make_unique<T>();
     Read(i, *v);
+  }
+}
+
+template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vector<std::shared_ptr<T>> &cache) {
+  char ref = 0;
+  s.read(&ref, 1);
+  if (ref == '\x1') {
+    v = std::make_shared<T>();
+    cache.push_back(v);
+    Read(s, *v);
+  } else if (ref == '\x2') {
+    unsigned int index = 0;
+    Read(s, index);
+    v = cache[index - 1];
   }
 }
 

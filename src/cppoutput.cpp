@@ -92,6 +92,19 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  }" << endl;
   o << "}" << endl << endl;
 
+  o << "template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, unsigned int &counter) {" << endl;
+  o << "  if (!v) {" << endl;
+  o << "    o.write(\"\\x0\", 1);" << endl;
+  o << "  } else if (v->io_counter_== 0) {" << endl;
+  o << "    v->io_counter_ = ++counter;" << endl;
+  o << "    o.write(\"\\x1\", 1);" << endl;
+  o << "    Write(o, *v);" << endl;
+  o << "  } else {" << endl;
+  o << "    o.write(\"\\x2\", 1);" << endl;
+  o << "    Write(o, v->io_counter_);" << endl;
+  o << "  }" << endl;
+  o << "}" << endl << endl;
+
   o << "template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
@@ -131,6 +144,21 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  if (ref == '\\x1') {" << endl;
   o << "    v = std::make_unique<T>();" << endl;
   o << "    Read(i, *v);" << endl;
+  o << "  }" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vector<std::shared_ptr<T>> &cache) {"
+    << endl;
+  o << "  char ref = 0;" << endl;
+  o << "  s.read(&ref, 1);" << endl;
+  o << "  if (ref == '\\x1') {" << endl;
+  o << "    v = std::make_shared<T>();" << endl;
+  o << "    cache.push_back(v);" << endl;
+  o << "    Read(s, *v);" << endl;
+  o << "  } else if (ref == '\\x2') {" << endl;
+  o << "    unsigned int index = 0;" << endl;
+  o << "    Read(s, index);" << endl;
+  o << "    v = cache[index - 1];" << endl;
   o << "  }" << endl;
   o << "}" << endl << endl;
 
@@ -178,6 +206,11 @@ bool hasSharedAppearance(const Table &t)
   return ((t.appearance & SharedAppearance) == SharedAppearance) ||
          ((t.appearance & SharedVectorAppearance) == SharedVectorAppearance);
 }
+bool hasWeakAppearance(const Table &t)
+{
+  return ((t.appearance & WeakAppearance) == WeakAppearance) ||
+         ((t.appearance & WeakVectorAppearance) == WeakVectorAppearance);
+}
 
 void WriteTableDeclaration(std::ostream &o, const Table &t, const std::string &root_type)
 {
@@ -213,30 +246,24 @@ void WriteTableOutputFunctions(std::ostream &o, const Table &t)
       o << "  for (const auto &" << n << " : v." << m.name << ") {" << endl;
       o << "  ";
     }
-    if (m.pointer == Pointer::Plain || m.isBaseType || m.pointer == Pointer::Unique)
-    {
-      o << "  Write(o, " << n << ");" << endl;
-    }
-    else
-    {
-      o << "  {" << endl;
-      o << "    const auto t = " << n << (m.pointer == Pointer::Weak ? ".lock()" : "") << ";" << endl;
-      o << "    if (!t) {" << endl;
-      o << "      o.write(\"\\x0\", 1);" << endl;
-      o << "    } else if (t->io_counter_== 0) {" << endl;
-      o << "      t->io_counter_ = ++" << m.type << "_count_;" << endl;
-      o << "      o.write(\"\\x1\", 1);" << endl;
-      o << "      Write(o, *t);" << endl;
-      o << "    } else {" << endl;
-      o << "      o.write(\"\\x2\", 1);" << endl;
-      o << "      Write(o, t->io_counter_);" << endl;
-      o << "    }" << endl;
-      o << "  }" << endl;
-    }
+    o << "  Write(o, " << n << ");" << endl;
     if (m.isVector && !m.isBaseType)
       o << "  };" << endl;
   }
   o << "}" << endl << endl;
+
+  if (hasSharedAppearance(t))
+  {
+    o << "void Write(std::ostream &o, const std::shared_ptr<" << t.name << "> &v) {" << endl;
+    o << "  Write(o, v, " << t.name << "_count_);" << endl;
+    o << "}" << endl << endl;
+  }
+  if (hasWeakAppearance(t))
+  {
+    o << "void Write(std::ostream &o, const std::weak_ptr<" << t.name << "> &v) {" << endl;
+    o << "  Write(o, v.lock(), " << t.name << "_count_);" << endl;
+    o << "}" << endl << endl;
+  }
 }
 
 void WriteTableInputFunctions(std::ostream &o, const Table &t)
@@ -255,31 +282,26 @@ void WriteTableInputFunctions(std::ostream &o, const Table &t)
       o << "  for (auto &" << n << " : v." << m.name << ") {" << endl;
       o << "  ";
     }
-    if (m.pointer == Pointer::Plain || m.isBaseType || m.pointer == Pointer::Unique)
-    {
-      o << "  Read(s, " << n << ");" << endl;
-    }
-    else
-    {
-      o << "  {" << endl;
-      o << "    char ref = 0;" << endl;
-      o << "    s.read(&ref, 1);" << endl;
-      o << "    if (ref == '\\x1') {" << endl;
-      o << "      auto t = std::make_shared<" << m.type << ">();" << endl;
-      o << "      " << m.type << "_references_.push_back(t);" << endl;
-      o << "      Read(s, *t);" << endl;
-      o << "      " << n << " = t;" << endl;
-      o << "    } else if (ref == '\\x2') {" << endl;
-      o << "      unsigned int index = 0;" << endl;
-      o << "      Read(s, index);" << endl;
-      o << "      " << n << " = " << m.type << "_references_[index - 1];" << endl;
-      o << "    }" << endl;
-      o << "  }" << endl;
-    }
+    o << "  Read(s, " << n << ");" << endl;
     if (m.isVector && !m.isBaseType)
       o << "  };" << endl;
   }
   o << "}" << endl << endl;
+
+  if (hasSharedAppearance(t))
+  {
+    o << "void Read(std::istream &s, std::shared_ptr<" << t.name << "> &v) {" << endl;
+    o << "  Read(s, v, " << t.name << "_references_);" << endl;
+    o << "}" << endl << endl;
+  }
+  if (hasWeakAppearance(t))
+  {
+    o << "void Read(std::istream &s, std::weak_ptr<" << t.name << "> &v) {" << endl;
+    o << "  auto t = v.lock();" << endl;
+    o << "  Read(s, t, " << t.name << "_references_);" << endl;
+    o << "  v = t;" << endl;
+    o << "}" << endl << endl;
+  }
 }
 
 void WriteTableCompareFunctions(std::ostream &o, const Table &t)

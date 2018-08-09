@@ -121,6 +121,19 @@ template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
   }
 }
 
+template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, unsigned int &counter) {
+  if (!v) {
+    o.write("\x0", 1);
+  } else if (v->io_counter_== 0) {
+    v->io_counter_ = ++counter;
+    o.write("\x1", 1);
+    Write(o, *v);
+  } else {
+    o.write("\x2", 1);
+    Write(o, v->io_counter_);
+  }
+}
+
 template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
@@ -163,6 +176,20 @@ template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {
   }
 }
 
+template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vector<std::shared_ptr<T>> &cache) {
+  char ref = 0;
+  s.read(&ref, 1);
+  if (ref == '\x1') {
+    v = std::make_shared<T>();
+    cache.push_back(v);
+    Read(s, *v);
+  } else if (ref == '\x2') {
+    unsigned int index = 0;
+    Read(s, index);
+    v = cache[index - 1];
+  }
+}
+
 template<typename T> void Read(std::istream &i, std::vector<T> &v) {
   typename std::vector<T>::size_type s{0};
   Read(i, s);
@@ -180,92 +207,25 @@ void Read(std::istream &i, std::string &v) {
 void Write(std::ostream &o, const TableA &v) {
   Write(o, v.name);
   Write(o, v.d1);
-  {
-    const auto t = v.d2.lock();
-    if (!t) {
-      o.write("\x0", 1);
-    } else if (t->io_counter_== 0) {
-      t->io_counter_ = ++TableD_count_;
-      o.write("\x1", 1);
-      Write(o, *t);
-    } else {
-      o.write("\x2", 1);
-      Write(o, t->io_counter_);
-    }
-  }
-  {
-    const auto t = v.d3;
-    if (!t) {
-      o.write("\x0", 1);
-    } else if (t->io_counter_== 0) {
-      t->io_counter_ = ++TableD_count_;
-      o.write("\x1", 1);
-      Write(o, *t);
-    } else {
-      o.write("\x2", 1);
-      Write(o, t->io_counter_);
-    }
-  }
-  {
-    const auto t = v.d4;
-    if (!t) {
-      o.write("\x0", 1);
-    } else if (t->io_counter_== 0) {
-      t->io_counter_ = ++TableD_count_;
-      o.write("\x1", 1);
-      Write(o, *t);
-    } else {
-      o.write("\x2", 1);
-      Write(o, t->io_counter_);
-    }
-  }
+  Write(o, v.d2);
+  Write(o, v.d3);
+  Write(o, v.d4);
+}
+
+void Write(std::ostream &o, const std::shared_ptr<TableA> &v) {
+  Write(o, v, TableA_count_);
 }
 
 void Read(std::istream &s, TableA &v) {
   Read(s, v.name);
   Read(s, v.d1);
-  {
-    char ref = 0;
-    s.read(&ref, 1);
-    if (ref == '\x1') {
-      auto t = std::make_shared<TableD>();
-      TableD_references_.push_back(t);
-      Read(s, *t);
-      v.d2 = t;
-    } else if (ref == '\x2') {
-      unsigned int index = 0;
-      Read(s, index);
-      v.d2 = TableD_references_[index - 1];
-    }
-  }
-  {
-    char ref = 0;
-    s.read(&ref, 1);
-    if (ref == '\x1') {
-      auto t = std::make_shared<TableD>();
-      TableD_references_.push_back(t);
-      Read(s, *t);
-      v.d3 = t;
-    } else if (ref == '\x2') {
-      unsigned int index = 0;
-      Read(s, index);
-      v.d3 = TableD_references_[index - 1];
-    }
-  }
-  {
-    char ref = 0;
-    s.read(&ref, 1);
-    if (ref == '\x1') {
-      auto t = std::make_shared<TableD>();
-      TableD_references_.push_back(t);
-      Read(s, *t);
-      v.d4 = t;
-    } else if (ref == '\x2') {
-      unsigned int index = 0;
-      Read(s, index);
-      v.d4 = TableD_references_[index - 1];
-    }
-  }
+  Read(s, v.d2);
+  Read(s, v.d3);
+  Read(s, v.d4);
+}
+
+void Read(std::istream &s, std::shared_ptr<TableA> &v) {
+  Read(s, v, TableA_references_);
 }
 
 void Write(std::ostream &o, const TableB &v) {
@@ -278,37 +238,30 @@ void Read(std::istream &s, TableB &v) {
 
 void Write(std::ostream &o, const TableD &v) {
   Write(o, v.name);
-  {
-    const auto t = v.a;
-    if (!t) {
-      o.write("\x0", 1);
-    } else if (t->io_counter_== 0) {
-      t->io_counter_ = ++TableA_count_;
-      o.write("\x1", 1);
-      Write(o, *t);
-    } else {
-      o.write("\x2", 1);
-      Write(o, t->io_counter_);
-    }
-  }
+  Write(o, v.a);
+}
+
+void Write(std::ostream &o, const std::shared_ptr<TableD> &v) {
+  Write(o, v, TableD_count_);
+}
+
+void Write(std::ostream &o, const std::weak_ptr<TableD> &v) {
+  Write(o, v.lock(), TableD_count_);
 }
 
 void Read(std::istream &s, TableD &v) {
   Read(s, v.name);
-  {
-    char ref = 0;
-    s.read(&ref, 1);
-    if (ref == '\x1') {
-      auto t = std::make_shared<TableA>();
-      TableA_references_.push_back(t);
-      Read(s, *t);
-      v.a = t;
-    } else if (ref == '\x2') {
-      unsigned int index = 0;
-      Read(s, index);
-      v.a = TableA_references_[index - 1];
-    }
-  }
+  Read(s, v.a);
+}
+
+void Read(std::istream &s, std::shared_ptr<TableD> &v) {
+  Read(s, v, TableD_references_);
+}
+
+void Read(std::istream &s, std::weak_ptr<TableD> &v) {
+  auto t = v.lock();
+  Read(s, t, TableD_references_);
+  v = t;
 }
 
 void Write(std::ostream &o, const TableC &v) {
