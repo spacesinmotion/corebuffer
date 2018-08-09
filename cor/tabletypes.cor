@@ -22,4 +22,8 @@ table TableD {
 table TableC {
   a:[TableA];
   b:[TableB];
+
+  c:[unique TableA];
+  d:[shared TableB];
+  e:[weak TableB];
 }

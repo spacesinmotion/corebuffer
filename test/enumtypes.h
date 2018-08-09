@@ -26,6 +26,14 @@ struct Dummy {
   EnumTypes en2{Scope::EnumTypes::delta};
 };
 
+template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
+  return l.lock() == r.lock();
+}
+
+template<typename T> bool operator!=(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
+  return l.lock() != r.lock();
+}
+
 bool operator==(const Dummy&l, const Dummy&r) {
   return 
     l.en1 == r.en1
@@ -95,8 +103,21 @@ template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, un
   }
 }
 
+template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
+  Write(o, v.size());
+  for (const auto &entry : v) {
+    Write(o, entry);
+  };
+}
+
 template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  Write(o, v.size());
+  for (const auto &entry : v) {
+    Write(o, entry);
+  };
+}
+
+template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
   Write(o, v.size());
   for (const auto &entry : v) {
     Write(o, entry);
@@ -104,14 +125,6 @@ template<typename T> void Write(std::ostream &o, const std::vector<std::shared_p
 }
 
 template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Write(std::ostream &, const std::vector<std::weak_ptr<T>> &) {
   static_assert(AlwaysFalse<T>::value, "Something not implemented");
 }
 
@@ -151,7 +164,23 @@ template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vect
   }
 }
 
+template<typename T> void Read(std::istream &s, std::vector<std::unique_ptr<T>> &v) {
+  auto size = v.size();
+  Read(s, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(s, entry);
+}
+
 template<typename T> void Read(std::istream &s, std::vector<std::shared_ptr<T>> &v) {
+  auto size = v.size();
+  Read(s, size);
+  v.resize(size);
+  for (auto &entry : v)
+    Read(s, entry);
+}
+
+template<typename T> void Read(std::istream &s, std::vector<std::weak_ptr<T>> &v) {
   auto size = v.size();
   Read(s, size);
   v.resize(size);

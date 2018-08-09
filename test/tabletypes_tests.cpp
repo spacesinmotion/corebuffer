@@ -115,4 +115,41 @@ TEST_CASE("TableType test", "[]")
     CHECK(cIn.a.front().d3->a->d3 == cIn.a.front().d3);
     CHECK(cIn.a.front().d3->a->d4 == cIn.a.front().d3);
   }
+
+  SECTION("reading whats written with shared data in vectors")
+  {
+    Scope::TableC c;
+    c.c.emplace_back(new Scope::TableA);
+    c.c.back()->name = "TableA_c";
+    c.d.emplace_back(new Scope::TableB);
+    c.d.back()->name = "TableB_d";
+    c.d.push_back(c.d.front());
+    c.e.push_back(c.d.front());
+    c.e.push_back(c.d.front());
+
+    std::stringstream sOut;
+    Scope::TableC_io().WriteTableC(sOut, c);
+
+    const auto buffer = sOut.str();
+    std::stringstream sIn(buffer);
+
+    Scope::TableC cIn;
+    Scope::TableC_io().ReadTableC(sIn, cIn);
+
+    REQUIRE(cIn.c.size() == 1);
+    REQUIRE(cIn.d.size() == 2);
+    REQUIRE(cIn.e.size() == 2);
+
+    REQUIRE(cIn.c.front());
+    REQUIRE(cIn.d[0]);
+    REQUIRE(cIn.d[1]);
+    REQUIRE(cIn.e[0].lock());
+    REQUIRE(cIn.e[1].lock());
+
+    CHECK(cIn.c.back()->name == "TableA_c");
+    CHECK(cIn.d.back()->name == "TableB_d");
+    CHECK(cIn.d[0] == cIn.d[1]);
+    CHECK(cIn.e[1].lock() == cIn.d[1]);
+    CHECK(cIn.e[1].lock() == cIn.d[1]);
+  }
 }

@@ -105,8 +105,21 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  }" << endl;
   o << "}" << endl << endl;
 
+  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {" << endl;
+  o << "  Write(o, v.size());" << endl;
+  o << "  for (const auto &entry : v) {" << endl;
+  o << "    Write(o, entry);" << endl;
+  o << "  };" << endl;
+  o << "}" << endl << endl;
+
   o << "template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {" << endl;
-  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
+  o << "  Write(o, v.size());" << endl;
+  o << "  for (const auto &entry : v) {" << endl;
+  o << "    Write(o, entry);" << endl;
+  o << "  };" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {" << endl;
   o << "  Write(o, v.size());" << endl;
   o << "  for (const auto &entry : v) {" << endl;
   o << "    Write(o, entry);" << endl;
@@ -114,14 +127,6 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "}" << endl << endl;
 
   o << "template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {" << endl;
-  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
-  o << "}" << endl << endl;
-
-  o << "template<typename T> void Write(std::ostream &, const std::vector<std::unique_ptr<T>> &) {" << endl;
-  o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
-  o << "}" << endl << endl;
-
-  o << "template<typename T> void Write(std::ostream &, const std::vector<std::weak_ptr<T>> &) {" << endl;
   o << "  static_assert(AlwaysFalse<T>::value, \"Something not implemented\");" << endl;
   o << "}" << endl << endl;
 
@@ -162,7 +167,23 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  }" << endl;
   o << "}" << endl << endl;
 
+  o << "template<typename T> void Read(std::istream &s, std::vector<std::unique_ptr<T>> &v) {" << endl;
+  o << "  auto size = v.size();" << endl;
+  o << "  Read(s, size);" << endl;
+  o << "  v.resize(size);" << endl;
+  o << "  for (auto &entry : v)" << endl;
+  o << "    Read(s, entry);" << endl;
+  o << "}" << endl << endl;
+
   o << "template<typename T> void Read(std::istream &s, std::vector<std::shared_ptr<T>> &v) {" << endl;
+  o << "  auto size = v.size();" << endl;
+  o << "  Read(s, size);" << endl;
+  o << "  v.resize(size);" << endl;
+  o << "  for (auto &entry : v)" << endl;
+  o << "    Read(s, entry);" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> void Read(std::istream &s, std::vector<std::weak_ptr<T>> &v) {" << endl;
   o << "  auto size = v.size();" << endl;
   o << "  Read(s, size);" << endl;
   o << "  v.resize(size);" << endl;
@@ -183,12 +204,6 @@ void WriteBaseTypecIoFnuctions(std::ostream &o, const Package &p)
   o << "  v.resize(s);" << endl;
   o << "  i.read(&v[0], s);" << endl;
   o << "}" << endl << endl;
-
-  for (const auto &b : p.baseTypes)
-  {
-    if (b.appearance == NoPointer)
-      continue;
-  }
 }
 
 std::ostream &WriteType(std::ostream &o, const Member &m)
@@ -315,8 +330,7 @@ void WriteTableCompareFunctions(std::ostream &o, const Table &t)
   bool first = true;
   for (const auto &m : t.member)
   {
-    const auto suf = (m.pointer == Pointer::Weak) ? ".lock()" : "";
-    o << endl << "    " << (first ? "" : "&& ") << "l." << m.name << suf << " == r." << m.name << suf;
+    o << endl << "    " << (first ? "" : "&& ") << "l." << m.name << " == r." << m.name;
     first = false;
   }
   o << ";" << endl;
@@ -327,8 +341,7 @@ void WriteTableCompareFunctions(std::ostream &o, const Table &t)
   first = true;
   for (const auto &m : t.member)
   {
-    const auto suf = (m.pointer == Pointer::Weak) ? ".lock()" : "";
-    o << endl << "    " << (first ? "" : "|| ") << "l." << m.name << suf << " != r." << m.name << suf;
+    o << endl << "    " << (first ? "" : "|| ") << "l." << m.name << " != r." << m.name;
     first = false;
   }
   o << ";" << endl;
@@ -339,6 +352,15 @@ void WriteTableDeclarations(std::ostream &o, const Package &p)
 {
   for (const auto &t : p.tables)
     WriteTableDeclaration(o, t, p.root_type);
+
+  o << "template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {" << endl;
+  o << "  return l.lock() == r.lock();" << endl;
+  o << "}" << endl << endl;
+
+  o << "template<typename T> bool operator!=(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {" << endl;
+  o << "  return l.lock() != r.lock();" << endl;
+  o << "}" << endl << endl;
+
   for (const auto &t : p.tables)
     WriteTableCompareFunctions(o, t);
 }
