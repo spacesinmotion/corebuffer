@@ -1,8 +1,8 @@
 
-##  What's  the  CoreData?
+##  What's  the  CoreBuffer?
 Is a code generation tool that is highly inspired by [Protocol Buffers](https://developers.google.com/protocol-buffers/)
 and [FlatBuffers](https://google.github.io/flatbuffers/). But as these tools concentrate on fast information transfer,
-CoreData is designed to automatically generate binary serialization of complex data structures.
+CoreBuffer is designed to automatically generate binary serialization of complex data structures.
 
 ### Features
 * automatic generation of [c++](https://en.wikipedia.org/wiki/C++) code from a simple
@@ -11,7 +11,7 @@ CoreData is designed to automatically generate binary serialization of complex d
 * directly manipulate and create `structs` in your code
 * provide *read* and *write* functions
 
-##  Build CoreData compiler
+##  Build CoreBuffer compiler
 
 ```sh
 $  mkdir  build
@@ -23,7 +23,7 @@ $  cmake.exe  --build  .  --target  all
 ##  Usage
 
 ```sh
-$  CoreData <input.cor> <output.h>
+$  CoreBufferC <input.cor> <output.h>
 ```
 
 ##  Example
@@ -66,7 +66,7 @@ table Shop {
 Lets say the code above is in a file named `shop.cor`. Then we create the c++ code with:
 
 ```sh
-$ CoreData shop.cor shop.h
+$ CoreBufferC shop.cor shop.h
 ```
 
 ### Code usage
