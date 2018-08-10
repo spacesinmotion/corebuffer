@@ -311,4 +311,14 @@ en2:EnumTypes=delta;
     CHECK(p.tables[0].member[0].defaultValue == "Scope::EnumTypes::alpha");
     CHECK(p.tables[0].member[1].defaultValue == "Scope::EnumTypes::delta");
   }
+
+  SECTION("empty table")
+  {
+    const auto source = R"(
+table Dummy {}
+)";
+
+    Package p;
+    CHECK(Parser(source, p).parse());
+  }
 }

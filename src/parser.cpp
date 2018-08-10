@@ -26,12 +26,19 @@ bool Parser::parse()
 
 char Parser::front() const
 {
-  return text[pos];
+  return text[_state.pos];
 }
 
-void Parser::skip(size_t count)
+void Parser::skip()
 {
-  pos += count;
+  if (front() == '\n')
+  {
+    ++_state.line;
+    _state.column = 0;
+  }
+  else
+    ++_state.column;
+  ++_state.pos;
 }
 
 string Parser::take(size_t count)
@@ -45,19 +52,19 @@ string Parser::take(size_t count)
   return e;
 }
 
-size_t Parser::state() const
+Parser::state_type Parser::state() const
 {
-  return pos;
+  return _state;
 }
 
-void Parser::rewind(size_t p)
+void Parser::rewind(state_type p)
 {
-  pos = p;
+  _state = p;
 }
 
 bool Parser::end() const
 {
-  return pos >= text.size();
+  return _state.pos >= text.size();
 }
 
 bool Parser::contains(const std::string &s, char c)
@@ -137,8 +144,15 @@ bool Parser::readPackage()
 {
   auto s = state();
 
-  if (read("package") && readPackagePath() && read(";"))
+  if (read("package"))
+  {
+    if (!readPackagePath())
+      throw ParserError("Expected package name after 'package'.", state());
+
+    if (!read(";"))
+      throw ParserError("Expected ';' after package statement.", state());
     return true;
+  }
 
   rewind(s);
   return false;
@@ -172,8 +186,12 @@ bool Parser::readVersion()
 
   if (read("version"))
   {
-    if (readString(package.version) && read(";"))
-      return true;
+    if (!readString(package.version))
+      throw ParserError("Expected version string after 'version'.", state());
+
+    if (!read(";"))
+      throw ParserError("Expected ';' after version statement.", state());
+    return true;
   }
 
   rewind(s);
@@ -187,8 +205,11 @@ bool Parser::readRootType()
   if (read("root_type"))
   {
     package.root_type = readIdentifier();
-    if (!package.root_type.empty() && read(";"))
-      return true;
+    if (package.root_type.empty())
+      throw ParserError("Expected table name after 'root_type'.", state());
+    if (!read(";"))
+      throw ParserError("Expected ';' after root_type statement.", state());
+    return true;
   }
 
   rewind(s);
@@ -208,21 +229,21 @@ bool Parser::readTable()
   {
     Table t;
     t.name = readIdentifier();
-    if (!t.name.empty())
-    {
-      bool ok = true;
-      //      if (read(":"))
-      //        ok = readClassBaseList(_class);
+    if (t.name.empty())
+      throw ParserError("Expected table name after 'table'.", state());
 
-      if (ok && readScopeStatement([this, &t]() {
-            while (readTableMember(t))
-              ;
-            return true;
-          }))
-      {
-        package.tables.push_back(t);
-        return true;
-      }
+    bool ok = true;
+    //      if (read(":"))
+    //        ok = readClassBaseList(_class);
+
+    if (ok && readScopeStatement([this, &t]() {
+          while (readTableMember(t))
+            ;
+          return true;
+        }))
+    {
+      package.tables.push_back(t);
+      return true;
     }
   }
 
@@ -238,13 +259,13 @@ bool Parser::readEnum()
   {
     Enum e;
     e.name = readIdentifier();
-    if (!e.name.empty())
+    if (e.name.empty())
+      throw ParserError("Expected enum name after 'enum'.", state());
+
+    if (readScopeStatement([this, &e]() { return readEnumEntryList(e, 0); }))
     {
-      if (readScopeStatement([this, &e]() { return readEnumEntryList(e, 0); }))
-      {
-        package.enums.push_back(e);
-        return true;
-      }
+      package.enums.push_back(e);
+      return true;
     }
   }
 
@@ -285,12 +306,20 @@ bool Parser::readTableMember(Table &t)
     if (read(":") && readTypeDefinition(m))
     {
       readTableMemberDefault(m);
-      if (read(";"))
-      {
-        t.member.push_back(m);
-        return true;
-      }
+      if (!read(";"))
+        throw ParserError("Expected ';' after member definition.", state());
+
+      t.member.push_back(m);
+      return true;
     }
+  }
+  else
+  {
+    auto xx = state();
+    if (!read("}") && !end())
+      throw ParserError("Missing name for member definition.", state());
+    else
+      rewind(xx);
   }
 
   rewind(s);
@@ -301,9 +330,12 @@ bool Parser::readTableMemberDefault(Member &m)
 {
   auto s = state();
 
-  string val;
-  if (read("=") && readBaseType(val))
+  if (read("="))
   {
+    string val;
+    if (!readBaseType(val))
+      throw ParserError("Missing default value.", state());
+
     m.defaultValue = val;
     return true;
   }
@@ -387,8 +419,12 @@ bool Parser::readScopeStatement(const std::function<bool()> &scopeContent)
 
   if (read("{"))
   {
-    if (scopeContent() && read("}"))
+    if (scopeContent())
+    {
+      if (!read("}"))
+        throw ParserError("Missing closing '}'.", state());
       return true;
+    }
   }
 
   rewind(s);
@@ -619,3 +655,5 @@ std::string Parser::fullPackageScope() const
   } while (true);
   return scope;
 }
+
+ParserError::ParserError(const std::string &m, const ParserState &s) : std::runtime_error(m), _state(s) {}

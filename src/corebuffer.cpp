@@ -19,8 +19,16 @@ int main(int argc, char *argv[])
   std::string source((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
   Package p;
-  if (!Parser(source, p).parse())
+  try
+  {
+    if (!Parser(source, p).parse())
+      return 3;
+  }
+  catch (const ParserError &pe)
+  {
+    cerr << argv[0] << ":" << pe._state.line << ":" << pe._state.column << ": " << pe.what() << endl;
     return 3;
+  }
 
   std::ofstream o(argv[2]);
   if (!o)

@@ -8,7 +8,7 @@ include_directories(src/ ./)
 add_library(CoreBuffer STATIC src/parser.cpp src/cppoutput.cpp src/package.cpp)
 
 add_executable (CoreBufferC src/corebuffer.cpp)
-add_executable (CoreBufferTests test/parser_tests.cpp test/corebuffer_tests.cpp)
+add_executable (CoreBufferTests test/parser_tests.cpp test/parser_error_tests.cpp test/corebuffer_tests.cpp)
 add_executable (CoreBufferOutputTests test/shop_tests.cpp test/tabletypes_tests.cpp test/basetype_tests.cpp test/enumtypes_tests.cpp test/corebufferoutput_tests.cpp)
 
 target_link_libraries(CoreBufferC CoreBuffer)

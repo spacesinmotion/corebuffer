@@ -11,8 +11,24 @@
 using std::string;
 using std::unique_ptr;
 
+struct ParserState
+{
+  size_t pos{0};
+  size_t line{0};
+  size_t column{0};
+};
+
+struct ParserError : std::runtime_error
+{
+  ParserError(const string &m, const ParserState &s);
+
+  ParserState _state;
+};
+
 class Parser
 {
+  using state_type = ParserState;
+
 public:
   Parser(const string &t, Package &p);
 
@@ -20,10 +36,10 @@ public:
 
 private:
   char front() const;
-  void skip(size_t count = 1);
+  void skip();
   string take(size_t count = 1);
-  size_t state() const;
-  void rewind(size_t p);
+  state_type state() const;
+  void rewind(state_type p);
   bool end() const;
 
   static bool contains(const string &s, char c);
@@ -70,7 +86,7 @@ private:
 
 private:
   const string &text;
-  size_t pos{0};
+  state_type _state;
 
   std::unordered_map<string, string> aliases;
   std::unordered_map<string, string> defaults;
