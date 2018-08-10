@@ -26,6 +26,10 @@ $  cmake.exe  --build  .  --target  all
 $  CoreBufferC <input.cor> <output.h>
 ```
 
+## Documentation
+
+* [IDL documentation](doc/idl.md) - structures used to define *CoreBuffer*
+
 ##  Example
 
 ### IDL
@@ -117,6 +121,6 @@ The reading and writing methods are provided in a struct with suffix `_io`:
 
 ## ToDo
 
-* writing documentation for IDL
+* write more documentation
 * providing error messages for incorrect IDL input
 * more convenient types and functions ...
