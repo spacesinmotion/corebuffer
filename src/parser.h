@@ -70,7 +70,7 @@ private:
   bool readTableMemberDefault(Member &m);
   bool readTypeDefinition(Member &m);
   bool readTypeVector(Member &m);
-  Pointer readTypePointer();
+  std::pair<Pointer, bool> readTypePointer();
   bool readTypeIdentifier(Member &m);
 
   bool readBaseType(std::string &val);

@@ -385,34 +385,47 @@ bool Parser::readTypeVector(Member &m)
   return false;
 }
 
-Pointer Parser::readTypePointer()
+std::pair<Pointer, bool> Parser::readTypePointer()
 {
   auto s = state();
 
   const auto id = readIdentifier();
   if (id == "weak")
-    return Pointer::Weak;
+    return std::make_pair(Pointer::Weak, false);
   else if (id == "unique")
-    return Pointer::Unique;
+    return std::make_pair(Pointer::Unique, false);
   else if (id == "shared")
-    return Pointer::Shared;
+    return std::make_pair(Pointer::Shared, false);
   else if (id == "plain")
-    return Pointer::Plain;
+    return std::make_pair(Pointer::Plain, false);
 
   rewind(s);
-  return Pointer::Plain;
+  return std::make_pair(Pointer::Plain, true);
 }
 
 bool Parser::readTypeIdentifier(Member &m)
 {
   auto s = state();
 
-  m.pointer = readTypePointer();
+  auto pointerRes = readTypePointer();
+  m.pointer = pointerRes.first;
   const auto id = readIdentifier();
+
   if (!id.empty())
   {
     m.type = id;
     return true;
+  }
+  else
+  {
+    if (m.pointer == Pointer::Unique)
+      throw ParserError("Missing type for unique member.", state());
+    else if (m.pointer == Pointer::Weak)
+      throw ParserError("Missing type for weak member.", state());
+    else if (m.pointer == Pointer::Shared)
+      throw ParserError("Missing type for shared member.", state());
+    else if (!pointerRes.second)
+      throw ParserError("Missing type for plain member.", state());
   }
 
   rewind(s);

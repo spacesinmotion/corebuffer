@@ -121,4 +121,32 @@ table A {
 }
   )",
              "Missing type for vector definition.");
+
+  parseError(R"(
+   table A {
+    a:unique;
+  }
+    )",
+             "Missing type for unique member.");
+
+  parseError(R"(
+   table A {
+    a:weak;
+  }
+    )",
+             "Missing type for weak member.");
+
+  parseError(R"(
+   table A {
+    a:shared;
+  }
+    )",
+             "Missing type for shared member.");
+
+  parseError(R"(
+   table A {
+    a:plain;
+  }
+    )",
+             "Missing type for plain member.");
 }
