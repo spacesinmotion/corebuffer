@@ -369,8 +369,14 @@ bool Parser::readTypeVector(Member &m)
 {
   auto s = state();
 
-  if (read("[") && readTypeIdentifier(m) && read("]"))
+  if (read("["))
   {
+    if (!readTypeIdentifier(m))
+      throw ParserError("Missing type for vector definition.", state());
+
+    if (!read("]"))
+      throw ParserError("Missing ']' for vector definition.", state());
+
     m.isVector = true;
     return true;
   }

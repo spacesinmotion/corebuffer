@@ -107,4 +107,18 @@ table {}
 enum {}
 )",
              "Expected enum name after 'enum'.");
+
+  parseError(R"(
+table A {
+  a:[int;
+}
+  )",
+             "Missing ']' for vector definition.");
+
+  parseError(R"(
+table A {
+  a:[];
+}
+  )",
+             "Missing type for vector definition.");
 }
