@@ -109,6 +109,27 @@ enum {}
              "Expected enum name after 'enum'.");
 
   parseError(R"(
+enum Dummy {
+  a = ,
+}
+)",
+             "Missing value for enumeration.");
+
+  parseError(R"(
+table A {
+  a;
+}
+  )",
+             "Expected ':' and type definition after member.");
+
+  parseError(R"(
+table A {
+  a:;
+}
+  )",
+             "Expected type definition for member.");
+
+  parseError(R"(
 table A {
   a:[int;
 }

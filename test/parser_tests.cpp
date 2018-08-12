@@ -321,4 +321,14 @@ table Dummy {}
     Package p;
     CHECK(Parser(source, p).parse());
   }
+
+  SECTION("empty enum")
+  {
+    const auto source = R"(
+enum Dummy {}
+)";
+
+    Package p;
+    CHECK(Parser(source, p).parse());
+  }
 }

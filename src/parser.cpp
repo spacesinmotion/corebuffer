@@ -262,7 +262,10 @@ bool Parser::readEnum()
     if (e.name.empty())
       throw ParserError("Expected enum name after 'enum'.", state());
 
-    if (readScopeStatement([this, &e]() { return readEnumEntryList(e, 0); }))
+    if (readScopeStatement([this, &e]() {
+          readEnumEntryList(e, 0);
+          return true;
+        }))
     {
       package.enums.push_back(e);
       return true;
@@ -303,15 +306,18 @@ bool Parser::readTableMember(Table &t)
   m.name = readIdentifier();
   if (!m.name.empty())
   {
-    if (read(":") && readTypeDefinition(m))
-    {
-      readTableMemberDefault(m);
-      if (!read(";"))
-        throw ParserError("Expected ';' after member definition.", state());
+    if (!read(":"))
+      throw ParserError("Expected ':' and type definition after member.", state());
+    if (!readTypeDefinition(m))
+      throw ParserError("Expected type definition for member.", state());
 
-      t.member.push_back(m);
-      return true;
-    }
+    readTableMemberDefault(m);
+
+    if (!read(";"))
+      throw ParserError("Expected ';' after member definition.", state());
+
+    t.member.push_back(m);
+    return true;
   }
   else
   {
@@ -349,8 +355,11 @@ bool Parser::readEnumMemberDefault(int &v)
   auto s = state();
 
   string val;
-  if (read("=") && readNumber(val))
+  if (read("="))
   {
+    if (!readNumber(val))
+      throw ParserError("Missing value for enumeration.", state());
+
     std::stringstream ss(val);
     if (ss >> v)
       return true;
