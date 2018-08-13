@@ -16,7 +16,7 @@ void checkErrorIn(const std::string &error, size_t line, size_t column, const st
   CHECK(errors.front()._state.column == column);
 }
 
-TEST_CASE("Check structure errors", "[]")
+TEST_CASE("Check structure errors", "[error, parsing, structure]")
 {
   SECTION("table structure errors")
   {
@@ -25,7 +25,7 @@ TEST_CASE("Check structure errors", "[]")
                  "table Table2 { c:int; }\n"
                  "table Table1 { a:int; }\n");
 
-    checkErrorIn("Empty table 'Table2'.", 2, 1, "\ntable Table2 {}");
+    checkErrorIn("Empty table 'Table2'.", 2, 2, "\n table Table2 {}");
   }
 
   SECTION("enum structure errors")
@@ -37,4 +37,6 @@ TEST_CASE("Check structure errors", "[]")
 
     checkErrorIn("Empty enum 'E2'.", 1, 4, "   enum E2 {}");
   }
+
+  SECTION("root_type errors") {}
 }

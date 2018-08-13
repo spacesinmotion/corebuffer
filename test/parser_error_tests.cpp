@@ -1,173 +1,127 @@
 #define CATCH_CONFIG_FAST_COMPILE
 #include "catch/catch.hpp"
 
+#include "fileerror.h"
 #include "parser.h"
 
-void parseError(const std::string &source, const std::string &error)
+void checkThrowIn(const std::string &error, size_t line, size_t column, const std::string &source)
 {
   Package p;
-  CHECK_THROWS_WITH(Parser(source, p).parse(), error);
-}
-
-void parseErrorThrow(const std::string &source, const std::string &)
-{
-  Package p;
-  Parser(source, p).parse();
+  try
+  {
+    Parser(source, p).parse();
+    WARN("Never reach this Location");
+    CHECK(false);
+  }
+  catch (const FileError &fe)
+  {
+    CHECK(fe.what() == error);
+    CHECK(fe._state.line == line);
+    CHECK(fe._state.column == column);
+  }
 }
 
 TEST_CASE("Parsing idls with error", "[]")
 {
-  parseError(R"(
-table Dummy {
-  a:int;)",
-             "Missing closing '}'.");
+  checkThrowIn("Missing closing '}'.", 2, 9,
+               "table Dummy {\n"
+               "  a:int;\n");
 
-  parseError(R"(
-enum E {
-  a
-)",
-             "Missing closing '}'.");
+  checkThrowIn("Missing closing '}'.", 2, 4,
+               "enum E {\n"
+               "  a\n");
 
-  parseError(R"(
-package Scope
-version "0.0";
-)",
-             "Expected ';' after package statement.");
+  checkThrowIn("Expected ';' after package statement.", 1, 14,
+               "package Scope\n"
+               "version \"0.0\"");
 
-  parseError(R"(
-version "0.0"
-package Scope;
-)",
-             "Expected ';' after version statement.");
+  checkThrowIn("Expected ';' after version statement.", 1, 14,
+               "version \"0.0\"\n"
+               "package Scope;");
 
-  parseError(R"(
-root_type Dummy
-package Scope;
-)",
-             "Expected ';' after root_type statement.");
+  checkThrowIn("Expected ';' after root_type statement.", 1, 16,
+               "root_type Dummy\n"
+               "package Scope;");
 
-  parseError(R"(
-table A {
-  a:int
-}
-)",
-             "Expected ';' after member definition.");
+  checkThrowIn("Expected ';' after member definition.", 2, 8,
+               "table A {\n"
+               "  a:int\n"
+               "}");
 
-  parseError(R"(
-table A {
-  a:int
-  b:int;
-}
-)",
-             "Expected ';' after member definition.");
+  checkThrowIn("Expected ';' after member definition.", 2, 8,
+               "table A {\n"
+               "  a:int\n"
+               "  b:int;\n"
+               "}");
 
-  parseError(R"(
-table A {
-  a:int = ;
-}
-)",
-             "Missing default value.");
+  checkThrowIn("Missing default value.", 2, 11,
+               "table A {\n"
+               "  a:int = ;\n"
+               "}\n");
 
-  parseError(R"(
-table A {
-  :int;
-}
-)",
-             "Missing name for member definition.");
+  checkThrowIn("Missing name for member definition.", 2, 3,
+               "table A {\n"
+               "  :int;\n"
+               "}");
 
-  parseError(R"(
-table A {
-  a:int =
-  b:int;
-}
-  )",
-             "Expected ';' after member definition.");
+  checkThrowIn("Expected ';' after member definition.", 3, 4,
+               "table A {\n"
+               "  a:int =\n"
+               "  b:int;\n"
+               "}");
 
-  parseError(R"(
-package ;
-)",
-             "Expected package name after 'package'.");
+  checkThrowIn("Expected package name after 'package'.", 1, 8, "package ;");
 
-  parseError(R"(
-version ;
-)",
-             "Expected version string after 'version'.");
+  checkThrowIn("Expected version string after 'version'.", 1, 8, "version ;");
 
-  parseError(R"(
-root_type ;
-)",
-             "Expected table name after 'root_type'.");
+  checkThrowIn("Expected table name after 'root_type'.", 1, 11, "root_type ;");
 
-  parseError(R"(
-table {}
-)",
-             "Expected table name after 'table'.");
+  checkThrowIn("Expected table name after 'table'.", 1, 7, "table {}");
 
-  parseError(R"(
-enum {}
-)",
-             "Expected enum name after 'enum'.");
+  checkThrowIn("Expected enum name after 'enum'.", 1, 6, "enum {}");
 
-  parseError(R"(
-enum Dummy {
-  a = ,
-}
-)",
-             "Missing value for enumeration.");
+  checkThrowIn("Missing value for enumeration.", 2, 6,
+               "enum Dummy {\n"
+               "  a = ,\n"
+               "}");
 
-  parseError(R"(
-table A {
-  a;
-}
-  )",
-             "Expected ':' and type definition after member.");
+  checkThrowIn("Expected ':' and type definition after member.", 2, 4,
+               "table A {\n"
+               "  a;\n"
+               "}");
 
-  parseError(R"(
-table A {
-  a:;
-}
-  )",
-             "Expected type definition for member.");
+  checkThrowIn("Expected type definition for member.", 2, 6,
+               "table A {\n"
+               "  a : ;\n"
+               "}");
 
-  parseError(R"(
-table A {
-  a:[int;
-}
-  )",
-             "Missing ']' for vector definition.");
+  checkThrowIn("Missing ']' for vector definition.", 2, 9,
+               "table A {\n"
+               "  a:[int;\n"
+               "}");
 
-  parseError(R"(
-table A {
-  a:[];
-}
-  )",
-             "Missing type for vector definition.");
+  checkThrowIn("Missing type for vector definition.", 2, 6,
+               "table A {\n"
+               "  a:[ ];\n"
+               "}");
 
-  parseError(R"(
-   table A {
-    a:unique;
-  }
-    )",
-             "Missing type for unique member.");
+  checkThrowIn("Missing type for unique member.", 2, 12,
+               "table A {\n"
+               "  a:unique ;\n"
+               "}");
 
-  parseError(R"(
-   table A {
-    a:weak;
-  }
-    )",
-             "Missing type for weak member.");
+  checkThrowIn("Missing type for weak member.", 2, 10,
+               "table A {\n"
+               "  a:weak ;\n"
+               "}");
 
-  parseError(R"(
-   table A {
-    a:shared;
-  }
-    )",
-             "Missing type for shared member.");
+  checkThrowIn("Missing type for shared member.", 2, 12,
+               "table A {\n"
+               "  a:shared ;\n"
+               "}");
 
-  parseError(R"(
-   table A {
-    a:plain;
-  }
-    )",
-             "Missing type for plain member.");
+  checkThrowIn("Missing type for plain member.", 2, 10,
+               "table A {\n"
+               "  a:plain;\n"
+               "}");
 }

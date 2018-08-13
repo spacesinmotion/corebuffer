@@ -140,9 +140,10 @@ string Parser::readIdentifier()
 
 bool Parser::read(const string &key)
 {
+  auto s = state();
+
   skipComment();
 
-  auto s = state();
   if (take(key.size()) == key)
     return true;
 
