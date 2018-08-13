@@ -23,6 +23,7 @@ add_test(NAME BaseTypeBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_
 add_test(NAME EnumTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/enumtypes.cor ${PROJECT_SOURCE_DIR}/test/enumtypes.h)
 add_test(NAME TableTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/tabletypes.cor ${PROJECT_SOURCE_DIR}/test/tabletypes.h)
 add_test(NAME ShopExampleBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/shop.cor ${PROJECT_SOURCE_DIR}/test/shop.h)
+add_test(NAME SchemaBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/schema.cor ${PROJECT_SOURCE_DIR}/test/schema.h)
 
 add_test(CoreBufferTest CoreBufferTests)
 add_test(CoreBufferOutputTest CoreBufferOutputTests)
