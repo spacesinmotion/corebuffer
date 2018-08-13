@@ -67,27 +67,6 @@ TEST_CASE("BaseType test", "[]")
     CHECK(dOut == dIn);
   }
 
-  SECTION("reading whats written pointer")
-  {
-    Scope::Root dOut;
-    dOut.b.a1 = std::make_unique<int>(42);
-
-    Scope::Root dIn;
-    CHECK_FALSE(dOut == dIn);
-
-    std::stringstream sOut;
-    Scope::Root_io().WriteRoot(sOut, dOut);
-
-    const auto buffer = sOut.str();
-    std::stringstream sIn(buffer);
-
-    Scope::Root_io().ReadRoot(sIn, dIn);
-
-    REQUIRE(dIn.b.a1);
-    CHECK(*dOut.b.a1 == *dIn.b.a1);
-    CHECK_FALSE(dIn.b.a2);
-  }
-
   SECTION("reading whats written vector of strings")
   {
     Scope::Root dOut;

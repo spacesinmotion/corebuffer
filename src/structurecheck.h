@@ -34,6 +34,8 @@ private:
   void checkPackage();
   void checkRootType();
 
+  void checkBaseTypePointer();
+
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
   bool enumExists(const std::string &name);

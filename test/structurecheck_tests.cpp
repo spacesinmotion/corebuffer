@@ -84,4 +84,22 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
 
     checkErrorInPure("No package defined.", 1, 1, allText);
   }
+
+  SECTION("no pointer for base types")
+  {
+    checkErrorIn("base types cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:shared int;\n"
+                 "}\n");
+
+    checkErrorIn("base types cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:weak f32;\n"
+                 "}\n");
+
+    checkErrorIn("base types cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:unique string;\n"
+                 "}\n");
+  }
 }

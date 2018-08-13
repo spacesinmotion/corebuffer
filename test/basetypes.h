@@ -35,8 +35,6 @@ struct BaseTypes {
 };
 
 struct PointerBaseTypes {
-  std::unique_ptr<std::int32_t> a1;
-  std::unique_ptr<std::int32_t> a2;
   std::vector<std::string> b1;
 };
 
@@ -93,16 +91,12 @@ bool operator!=(const BaseTypes&l, const BaseTypes&r) {
 
 bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
   return 
-    l.a1 == r.a1
-    && l.a2 == r.a2
-    && l.b1 == r.b1;
+    l.b1 == r.b1;
 }
 
 bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
   return 
-    l.a1 != r.a1
-    || l.a2 != r.a2
-    || l.b1 != r.b1;
+    l.b1 != r.b1;
 }
 
 bool operator==(const Root&l, const Root&r) {
@@ -313,14 +307,10 @@ void Read(std::istream &s, BaseTypes &v) {
 }
 
 void Write(std::ostream &o, const PointerBaseTypes &v) {
-  Write(o, v.a1);
-  Write(o, v.a2);
   Write(o, v.b1);
 }
 
 void Read(std::istream &s, PointerBaseTypes &v) {
-  Read(s, v.a1);
-  Read(s, v.a2);
   Read(s, v.b1);
 }
 

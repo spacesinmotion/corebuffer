@@ -12,6 +12,7 @@ const std::vector<FileError> &StructureCheck::check()
   checkEnums();
   checkPackage();
   checkRootType();
+  checkBaseTypePointer();
 
   return _errors;
 }
@@ -118,6 +119,14 @@ void StructureCheck::checkRootType()
     else
       _errors.emplace_back("root_type '" + _package.root_type.value + "' is an enum.", _package.root_type.location);
   }
+}
+
+void StructureCheck::checkBaseTypePointer()
+{
+  for (const auto &t : _package.tables)
+    for (const auto &m : t.member)
+      if (m.isBaseType && m.pointer != Pointer::Plain)
+        _errors.emplace_back("base types cannot be pointer.", m.location);
 }
 
 bool StructureCheck::isBaseType(const string &name)
