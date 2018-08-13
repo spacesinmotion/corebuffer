@@ -60,6 +60,7 @@ private:
   bool readTypeVector(Member &m);
   std::pair<Pointer, bool> readTypePointer();
   bool readTypeIdentifier(Member &m);
+  string readIdentifierGroup();
 
   bool readBaseType(std::string &val);
   bool readBool(std::string &val);

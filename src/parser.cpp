@@ -125,6 +125,8 @@ void Parser::skipComment()
 
 string Parser::readIdentifier()
 {
+  const auto s = state();
+
   skipComment();
   if (!end() && contains(IDENTIFIER_BEGIN, front()))
   {
@@ -135,6 +137,8 @@ string Parser::readIdentifier()
     }
     return e;
   }
+
+  rewind(s);
   return "";
 }
 
@@ -331,14 +335,6 @@ bool Parser::readTableMember(Table &t)
     t.member.push_back(m);
     return true;
   }
-  else
-  {
-    auto xx = state();
-    if (!read("}") && !end())
-      throw FileError("Missing name for member definition.", state());
-    else
-      rewind(xx);
-  }
 
   rewind(s);
   return false;
@@ -430,7 +426,8 @@ bool Parser::readTypeIdentifier(Member &m)
 
   auto pointerRes = readTypePointer();
   m.pointer = pointerRes.first;
-  const auto id = readIdentifier();
+
+  string id = readIdentifierGroup();
 
   if (!id.empty())
   {
@@ -453,16 +450,31 @@ bool Parser::readTypeIdentifier(Member &m)
   return false;
 }
 
+std::string Parser::readIdentifierGroup()
+{
+  string id = readIdentifier();
+
+  string t = readIdentifier();
+  while (!t.empty())
+  {
+    id += " " + t;
+    t = readIdentifier();
+  }
+
+  return id;
+}
+
 bool Parser::readScopeStatement(const std::function<bool()> &scopeContent)
 {
   auto s = state();
 
   if (read("{"))
   {
+    const auto location = state();
     if (scopeContent())
     {
       if (!read("}"))
-        throw FileError("Missing closing '}'.", state());
+        throw FileError("Missing closing '}'.", location);
       return true;
     }
   }
@@ -562,8 +574,16 @@ void Parser::initBaseTypes()
   package.baseTypes.clear();
 
   aliases["int"] = "std::int32_t";
+  aliases["byte"] = "std::int8_t";
+  aliases["char"] = "std::int8_t";
   aliases["short"] = "std::int16_t";
   aliases["long"] = "std::int64_t";
+  aliases["unsigned"] = "std::uint32_t";
+  aliases["unsigned int"] = "std::uint32_t";
+  aliases["unsigned char"] = "std::uint8_t";
+  aliases["unsigned byte"] = "std::uint8_t";
+  aliases["unsigned short"] = "std::uint16_t";
+  aliases["unsigned long"] = "std::uint64_t";
 
   aliases["i8"] = "std::int8_t";
   aliases["i16"] = "std::int16_t";
@@ -573,6 +593,15 @@ void Parser::initBaseTypes()
   aliases["ui16"] = "std::uint16_t";
   aliases["ui32"] = "std::uint32_t";
   aliases["ui64"] = "std::uint64_t";
+
+  aliases["int8_t"] = "std::int8_t";
+  aliases["int16_t"] = "std::int16_t";
+  aliases["int32_t"] = "std::int32_t";
+  aliases["int64_t"] = "std::int64_t";
+  aliases["uint8_t"] = "std::uint8_t";
+  aliases["uint16_t"] = "std::uint16_t";
+  aliases["uint32_t"] = "std::uint32_t";
+  aliases["uint64_t"] = "std::uint64_t";
 
   aliases["f32"] = "float";
   aliases["f64"] = "double";

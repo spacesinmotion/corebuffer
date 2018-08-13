@@ -10,6 +10,24 @@ Package parse(const std::string &source)
   return p;
 }
 
+void checkBaseType(const std::string &member, const std::string &type, const std::string &defValue)
+{
+  const auto p = parse(R"(
+package Scope;
+version "0.0";
+root_type BaseTypes;
+
+table BaseTypes {)" + member +
+                       "\n}");
+
+  REQUIRE((p.tables.size() == 1 && p.tables.front().member.size() == 1));
+  CHECK(p.tables.front().member[0].isBaseType);
+  CHECK_FALSE(p.tables.front().member[0].isVector);
+  CHECK(p.tables.front().member[0].pointer == Pointer::Plain);
+  CHECK(p.tables.front().member[0].type == type);
+  CHECK(p.tables.front().member[0].defaultValue == defValue);
+}
+
 TEST_CASE("Parsing packages", "[]")
 {
   SECTION("Simple start up test ")
@@ -116,77 +134,46 @@ enum Access { Private, Public = 3, Protected }
     }
   }
 
-  SECTION("Base types")
+  SECTION("base types")
   {
-    const auto p = parse(R"(
-package Scope;
-version "0.0";
-root_type BaseTypes;
+    checkBaseType("m:int;", "std::int32_t", "0");
+    checkBaseType("m:byte;", "std::int8_t", "0");
+    checkBaseType("m:short;", "std::int16_t", "0");
+    checkBaseType("m:long;", "std::int64_t", "0");
+    checkBaseType("m:unsigned;", "std::uint32_t", "0u");
+    checkBaseType("m:unsigned int;", "std::uint32_t", "0u");
+    checkBaseType("m:unsigned byte;", "std::uint8_t", "0u");
+    checkBaseType("m:unsigned char;", "std::uint8_t", "0u");
+    checkBaseType("m:unsigned short;", "std::uint16_t", "0u");
+    checkBaseType("m:unsigned long;", "std::uint64_t", "0u");
 
-table BaseTypes {
-  a:int;
-  aa:short;
-  ab:long;
-  b:bool;
-  c:float;
-  d:double;
-  e:i8;
-  f:i16;
-  g:i32;
-  h:i64;
-  i:ui8;
-  j:ui16;
-  k:ui32;
-  l:ui64;
-  m:string;
-})");
+    checkBaseType("m: i8;", "std::int8_t", "0");
+    checkBaseType("m:i16;", "std::int16_t", "0");
+    checkBaseType("m:i32;", "std::int32_t", "0");
+    checkBaseType("m:i64;", "std::int64_t", "0");
+    checkBaseType("m: ui8;", "std::uint8_t", "0u");
+    checkBaseType("m:ui16;", "std::uint16_t", "0u");
+    checkBaseType("m:ui32;", "std::uint32_t", "0u");
+    checkBaseType("m:ui64;", "std::uint64_t", "0u");
 
-    REQUIRE((p.tables.size() == 1 && p.tables.front().member.size() == 15));
+    checkBaseType("m:int8_t;", "std::int8_t", "0");
+    checkBaseType("m:int16_t;", "std::int16_t", "0");
+    checkBaseType("m:int32_t;", "std::int32_t", "0");
+    checkBaseType("m:int64_t;", "std::int64_t", "0");
+    checkBaseType("m:uint8_t;", "std::uint8_t", "0u");
+    checkBaseType("m:uint16_t;", "std::uint16_t", "0u");
+    checkBaseType("m:uint32_t;", "std::uint32_t", "0u");
+    checkBaseType("m:uint64_t;", "std::uint64_t", "0u");
 
-    CHECK(p.tables.front().member[0].isBaseType);
-    CHECK(p.tables.front().member[0].defaultValue == "0");
+    checkBaseType("m:float;", "float", "0.0f");
+    checkBaseType("m:f32;", "float", "0.0f");
 
-    CHECK(p.tables.front().member[1].isBaseType);
-    CHECK(p.tables.front().member[1].defaultValue == "0");
+    checkBaseType("m:double;", "double", "0.0");
+    checkBaseType("m:f64;", "double", "0.0");
 
-    CHECK(p.tables.front().member[2].isBaseType);
-    CHECK(p.tables.front().member[2].defaultValue == "0");
+    checkBaseType("m:bool;", "bool", "false");
 
-    CHECK(p.tables.front().member[3].isBaseType);
-    CHECK(p.tables.front().member[3].defaultValue == "false");
-
-    CHECK(p.tables.front().member[4].isBaseType);
-    CHECK(p.tables.front().member[4].defaultValue == "0.0f");
-
-    CHECK(p.tables.front().member[5].isBaseType);
-    CHECK(p.tables.front().member[5].defaultValue == "0.0");
-
-    CHECK(p.tables.front().member[6].isBaseType);
-    CHECK(p.tables.front().member[6].defaultValue == "0");
-
-    CHECK(p.tables.front().member[7].isBaseType);
-    CHECK(p.tables.front().member[7].defaultValue == "0");
-
-    CHECK(p.tables.front().member[8].isBaseType);
-    CHECK(p.tables.front().member[8].defaultValue == "0");
-
-    CHECK(p.tables.front().member[9].isBaseType);
-    CHECK(p.tables.front().member[9].defaultValue == "0");
-
-    CHECK(p.tables.front().member[10].isBaseType);
-    CHECK(p.tables.front().member[10].defaultValue == "0u");
-
-    CHECK(p.tables.front().member[11].isBaseType);
-    CHECK(p.tables.front().member[11].defaultValue == "0u");
-
-    CHECK(p.tables.front().member[12].isBaseType);
-    CHECK(p.tables.front().member[12].defaultValue == "0u");
-
-    CHECK(p.tables.front().member[13].isBaseType);
-    CHECK(p.tables.front().member[13].defaultValue == "0u");
-
-    CHECK(p.tables.front().member[14].isBaseType);
-    CHECK(p.tables.front().member[14].defaultValue.empty());
+    checkBaseType("m:string;", "std::string", "");
   }
 
   SECTION("Pointer types")
@@ -303,4 +290,6 @@ en2:EnumTypes=delta;
   }
 
   SECTION("trailing ',' enum") { parse("enum Dummy {a,b,}"); }
+
+  SECTION("base type names with more than one identifier") { parse("table Dummy {a:unsigned int;}"); }
 }

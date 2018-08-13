@@ -15,6 +15,7 @@ void checkThrowIn(const std::string &error, size_t line, size_t column, const st
   }
   catch (const FileError &fe)
   {
+    INFO(error);
     CHECK(fe.what() == error);
     CHECK(fe._state.line == line);
     CHECK(fe._state.column == column);
@@ -23,11 +24,16 @@ void checkThrowIn(const std::string &error, size_t line, size_t column, const st
 
 TEST_CASE("Parsing idls with error", "[]")
 {
-  checkThrowIn("Missing closing '}'.", 2, 9,
+  checkThrowIn("Missing closing '}'.", 1, 14,
                "table Dummy {\n"
                "  a:int;\n");
 
-  checkThrowIn("Missing closing '}'.", 2, 4,
+  checkThrowIn("Missing closing '}'.", 1, 10,
+               "table A {\n"
+               "  :int;\n"
+               "}");
+
+  checkThrowIn("Missing closing '}'.", 1, 9,
                "enum E {\n"
                "  a\n");
 
@@ -48,21 +54,16 @@ TEST_CASE("Parsing idls with error", "[]")
                "  a:int\n"
                "}");
 
-  checkThrowIn("Expected ';' after member definition.", 2, 8,
+  checkThrowIn("Expected ';' after member definition.", 3, 4,
                "table A {\n"
                "  a:int\n"
                "  b:int;\n"
                "}");
 
-  checkThrowIn("Missing default value.", 2, 11,
+  checkThrowIn("Missing default value.", 2, 10,
                "table A {\n"
-               "  a:int = ;\n"
+               "  a:int =  ;\n"
                "}\n");
-
-  checkThrowIn("Missing name for member definition.", 2, 3,
-               "table A {\n"
-               "  :int;\n"
-               "}");
 
   checkThrowIn("Expected ';' after member definition.", 3, 4,
                "table A {\n"
@@ -70,15 +71,15 @@ TEST_CASE("Parsing idls with error", "[]")
                "  b:int;\n"
                "}");
 
-  checkThrowIn("Expected package name after 'package'.", 1, 8, "package ;");
+  checkThrowIn("Expected package name after 'package'.", 1, 8, "package  ;");
 
-  checkThrowIn("Expected version string after 'version'.", 1, 8, "version ;");
+  checkThrowIn("Expected version string after 'version'.", 1, 8, "version   ;");
 
-  checkThrowIn("Expected table name after 'root_type'.", 1, 11, "root_type ;");
+  checkThrowIn("Expected table name after 'root_type'.", 1, 10, "root_type   ;");
 
-  checkThrowIn("Expected table name after 'table'.", 1, 7, "table {}");
+  checkThrowIn("Expected table name after 'table'.", 1, 6, "table   {}");
 
-  checkThrowIn("Expected enum name after 'enum'.", 1, 6, "enum {}");
+  checkThrowIn("Expected enum name after 'enum'.", 1, 5, "enum  {}");
 
   checkThrowIn("Missing value for enumeration.", 2, 6,
                "enum Dummy {\n"
@@ -105,19 +106,19 @@ TEST_CASE("Parsing idls with error", "[]")
                "  a:[ ];\n"
                "}");
 
-  checkThrowIn("Missing type for unique member.", 2, 12,
+  checkThrowIn("Missing type for unique member.", 2, 11,
                "table A {\n"
-               "  a:unique ;\n"
+               "  a:unique   ;\n"
                "}");
 
-  checkThrowIn("Missing type for weak member.", 2, 10,
+  checkThrowIn("Missing type for weak member.", 2, 9,
                "table A {\n"
-               "  a:weak ;\n"
+               "  a:weak  ;\n"
                "}");
 
-  checkThrowIn("Missing type for shared member.", 2, 12,
+  checkThrowIn("Missing type for shared member.", 2, 11,
                "table A {\n"
-               "  a:shared ;\n"
+               "  a:shared;\n"
                "}");
 
   checkThrowIn("Missing type for plain member.", 2, 10,
