@@ -3,11 +3,18 @@
 
 #include "parser.h"
 
+Package parse(const std::string &source)
+{
+  Package p;
+  REQUIRE(Parser(source, p).parse());
+  return p;
+}
+
 TEST_CASE("Parsing packages", "[]")
 {
   SECTION("Simple start up test ")
   {
-    const auto source = R"(
+    const auto p = parse(R"(
 package SubC.scope;
 version "0.1.203";
 root_type YYY;
@@ -25,10 +32,7 @@ sub:[shared YYY];
 }
 
 enum Access { Private, Public = 3, Protected }
-)";
-
-    Package p;
-    REQUIRE(Parser(source, p).parse());
+)");
 
     SECTION("Checking parsed structure")
     {
@@ -114,7 +118,7 @@ enum Access { Private, Public = 3, Protected }
 
   SECTION("Base types")
   {
-    const auto source = R"(
+    const auto p = parse(R"(
 package Scope;
 version "0.0";
 root_type BaseTypes;
@@ -135,11 +139,7 @@ table BaseTypes {
   k:ui32;
   l:ui64;
   m:string;
-}
-)";
-
-    Package p;
-    REQUIRE(Parser(source, p).parse());
+})");
 
     REQUIRE((p.tables.size() == 1 && p.tables.front().member.size() == 15));
 
@@ -191,7 +191,7 @@ table BaseTypes {
 
   SECTION("Pointer types")
   {
-    const auto source = R"(
+    const auto p = parse(R"(
 package Scope;
 version "0.0";
 root_type PointerTypes;
@@ -202,11 +202,7 @@ table PointerTypes {
   a:unique Test;
   b:shared Test;
   c:weak Test;
-}
-)";
-
-    Package p;
-    REQUIRE(Parser(source, p).parse());
+})");
 
     REQUIRE((p.tables.size() == 2 && p.tables.back().member.size() == 3));
 
@@ -222,7 +218,7 @@ table PointerTypes {
 
   SECTION("Vector types")
   {
-    const auto source = R"(
+    const auto p = parse(R"(
 package Scope;
 version "0.0";
 root_type VectorTypes;
@@ -234,11 +230,7 @@ table VectorTypes {
   b:[shared Test];
   c:[weak Test];
   d:[float];
-}
-)";
-
-    Package p;
-    REQUIRE(Parser(source, p).parse());
+})");
 
     REQUIRE((p.tables.size() == 2 && p.tables.back().member.size() == 4));
 
@@ -261,7 +253,7 @@ table VectorTypes {
 
   SECTION("Enums as member")
   {
-    const auto source = R"(
+    const auto p = parse(R"(
 package Scope;
 version "0.0";
 root_type VectorTypes;
@@ -270,19 +262,15 @@ enum Test { a, b, c }
 
 table VectorTypes {
   a:Test;
-}
-)";
+})");
 
-    Package p;
-    REQUIRE(Parser(source, p).parse());
-
-    REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 3));
-    REQUIRE((p.tables.size() == 1 && p.tables.back().member.size() == 1));
+    CHECK((p.enums.size() == 1 && p.enums.back().entries.size() == 3));
+    CHECK((p.tables.size() == 1 && p.tables.back().member.size() == 1));
   }
 
   SECTION("Defautl values for enums")
   {
-    const auto source = R"(
+    const auto p = parse(R"(
 package Scope;
 version "0.0";
 root_type Dummy;
@@ -299,11 +287,7 @@ table Dummy
 {
 en1:EnumTypes;
 en2:EnumTypes=delta;
-}
-)";
-
-    Package p;
-    REQUIRE(Parser(source, p).parse());
+})");
 
     REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 4));
     REQUIRE((p.tables.size() == 1 && p.tables.back().member.size() == 2));
@@ -312,33 +296,11 @@ en2:EnumTypes=delta;
     CHECK(p.tables[0].member[1].defaultValue == "Scope::EnumTypes::delta");
   }
 
-  SECTION("empty table")
+  SECTION("empty table or enum")
   {
-    const auto source = R"(
-table Dummy {}
-)";
-
-    Package p;
-    CHECK(Parser(source, p).parse());
+    parse("table Dummy {}");
+    parse("enum Dummy {}");
   }
 
-  SECTION("empty enum")
-  {
-    const auto source = R"(
-enum Dummy {}
-)";
-
-    Package p;
-    CHECK(Parser(source, p).parse());
-  }
-
-  SECTION("trailing ',' enum")
-  {
-    const auto source = R"(
-enum Dummy {a,b,}
-)";
-
-    Package p;
-    CHECK(Parser(source, p).parse());
-  }
+  SECTION("trailing ',' enum") { parse("enum Dummy {a,b,}"); }
 }
