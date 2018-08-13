@@ -374,7 +374,7 @@ void WriteTableCompareFunctions(std::ostream &o, const Table &t)
 void WriteTableDeclarations(std::ostream &o, const Package &p)
 {
   for (const auto &t : p.tables)
-    WriteTableDeclaration(o, t, p.root_type);
+    WriteTableDeclaration(o, t, p.root_type.value);
 
   o << "template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {" << endl;
   o << "  return l.lock() == r.lock();" << endl;
@@ -399,17 +399,17 @@ void WriteTables(std::ostream &o, const vector<Table> &tables)
 
 void WriteBaseIO(std::ostream &o, const Package &p)
 {
-  o << "void Write" << p.root_type << "(std::ostream &o, const " << p.root_type << " &v) {" << endl;
+  o << "void Write" << p.root_type.value << "(std::ostream &o, const " << p.root_type.value << " &v) {" << endl;
   for (const auto &t : p.tables)
     if (hasSharedAppearance(t))
       o << "  " << t.name << "_count_ = 0;" << endl;
 
   o << endl << "  o.write(\"CORE\", 4);" << endl;
-  o << "  o.write(\"" << p.version << "\", " << p.version.size() << ");" << endl;
+  o << "  o.write(\"" << p.version.value << "\", " << p.version.value.size() << ");" << endl;
   o << "  Write(o, v);" << endl;
   o << "}" << endl << endl;
 
-  o << "bool Read" << p.root_type << "(std::istream &i, " << p.root_type << " &v) {" << endl;
+  o << "bool Read" << p.root_type.value << "(std::istream &i, " << p.root_type.value << " &v) {" << endl;
 
   for (const auto &t : p.tables)
     if (hasSharedAppearance(t))
@@ -420,9 +420,9 @@ void WriteBaseIO(std::ostream &o, const Package &p)
   o << "  if (marker != \"CORE\")" << endl;
   o << "    return false;" << endl;
 
-  o << "  std::string version(" << p.version.size() << ", '_');" << endl;
-  o << "  i.read(&version[0], " << p.version.size() << ");" << endl;
-  o << "  if (version != \"" << p.version << "\")" << endl;
+  o << "  std::string version(" << p.version.value.size() << ", '_');" << endl;
+  o << "  i.read(&version[0], " << p.version.value.size() << ");" << endl;
+  o << "  if (version != \"" << p.version.value << "\")" << endl;
   o << "    return false;" << endl;
 
   o << "  Read(i, v);" << endl;
@@ -441,7 +441,7 @@ void WriteCppCode(std::ostream &o, const Package &p)
   o << "#include <type_traits>" << endl;
   o << "#include <array>" << endl << endl;
 
-  WriteNameSpaceBegin(o, p.path);
+  WriteNameSpaceBegin(o, p.path.value);
 
   o << "template<typename T>" << endl;
   o << "struct AlwaysFalse : std::false_type {};" << endl;
@@ -453,7 +453,7 @@ void WriteCppCode(std::ostream &o, const Package &p)
   for (const auto &e : p.enums)
     WriteEnumFunctions(o, e);
 
-  o << "struct " << p.root_type << "_io {" << endl;
+  o << "struct " << p.root_type.value << "_io {" << endl;
   o << "private:" << endl;
 
   WriteBaseTypecIoFnuctions(o, p);
@@ -472,5 +472,5 @@ void WriteCppCode(std::ostream &o, const Package &p)
 
   o << "};" << endl;
 
-  WriteNameSpaceEnd(o, p.path);
+  WriteNameSpaceEnd(o, p.path.value);
 }

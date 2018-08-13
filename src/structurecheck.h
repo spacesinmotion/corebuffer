@@ -3,6 +3,7 @@
 
 #include "fileerror.h"
 
+#include <unordered_set>
 #include <vector>
 
 struct Package;
@@ -21,9 +22,15 @@ private:
   void checkDuplicateEnums();
   void checkEmptyEnums();
 
+  void checkPackage();
+  void checkRootType();
+
 private:
   Package &_package;
   std::vector<FileError> _errors;
+
+  std::unordered_set<std::string> _tableNames;
+  std::unordered_set<std::string> _enumNames;
 };
 
 #endif  // STURCTURECHECK_H

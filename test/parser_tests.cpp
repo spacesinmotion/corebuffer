@@ -32,9 +32,9 @@ enum Access { Private, Public = 3, Protected }
 
     SECTION("Checking parsed structure")
     {
-      CHECK(p.path == "SubC.scope");
-      CHECK(p.version == "0.1.203");
-      CHECK(p.root_type == "YYY");
+      CHECK(p.path.value == "SubC.scope");
+      CHECK(p.version.value == "0.1.203");
+      CHECK(p.root_type.value == "YYY");
     }
 
     SECTION("Checking parsed enum")

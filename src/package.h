@@ -60,11 +60,20 @@ struct Table
   FilePosition location;
 };
 
+struct Attribute
+{
+  Attribute() = default;
+  Attribute(const string &v, const FilePosition &fp) : value(v), location(fp) {}
+
+  string value;
+  FilePosition location;
+};
+
 struct Package
 {
-  string path;
-  string version;
-  string root_type;
+  Attribute path;
+  Attribute version;
+  Attribute root_type;
   vector<Table> tables;
   vector<Table> baseTypes;
   vector<Enum> enums;

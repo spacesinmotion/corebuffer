@@ -157,6 +157,7 @@ bool Parser::readPackage()
 
   if (read("package"))
   {
+    package.path = Attribute(string(), stateBefor(7));
     if (!readPackagePath())
       throw FileError("Expected package name after 'package'.", state());
 
@@ -176,10 +177,10 @@ bool Parser::readPackagePath()
   const auto name = readIdentifier();
   if (!name.empty())
   {
-    package.path += name;
+    package.path.value += name;
     if (read("."))
     {
-      package.path += ".";
+      package.path.value += ".";
       if (readPackagePath())
         return true;
     }
@@ -197,7 +198,8 @@ bool Parser::readVersion()
 
   if (read("version"))
   {
-    if (!readString(package.version))
+    package.version = Attribute(string(), stateBefor(7));
+    if (!readString(package.version.value))
       throw FileError("Expected version string after 'version'.", state());
 
     if (!read(";"))
@@ -215,8 +217,8 @@ bool Parser::readRootType()
 
   if (read("root_type"))
   {
-    package.root_type = readIdentifier();
-    if (package.root_type.empty())
+    package.root_type = Attribute(readIdentifier(), stateBefor(9));
+    if (package.root_type.value.empty())
       throw FileError("Expected table name after 'root_type'.", state());
     if (!read(";"))
       throw FileError("Expected ';' after root_type statement.", state());
@@ -680,15 +682,15 @@ bool Parser::updateTableAppearance()
 std::string Parser::fullPackageScope() const
 {
   auto pos = std::string::size_type(0);
-  auto end = package.path.find('.', pos);
-  std::string scope = package.path.substr(pos, end);
+  auto end = package.path.value.find('.', pos);
+  std::string scope = package.path.value.substr(pos, end);
   do
   {
     pos = end;
-    end = package.path.find('.', pos);
+    end = package.path.value.find('.', pos);
     if (end == std::string::npos)
       break;
-    scope += "::" + package.path.substr(pos, end);
+    scope += "::" + package.path.value.substr(pos, end);
   } while (true);
   return scope;
 }

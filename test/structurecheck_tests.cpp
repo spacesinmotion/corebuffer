@@ -4,7 +4,7 @@
 #include "parser.h"
 #include "structurecheck.h"
 
-void checkErrorIn(const std::string &error, size_t line, size_t column, const std::string &source)
+void checkErrorInPure(const std::string &error, size_t line, size_t column, const std::string &source)
 {
   Package p;
   REQUIRE(Parser(source, p).parse());
@@ -14,6 +14,18 @@ void checkErrorIn(const std::string &error, size_t line, size_t column, const st
   CHECK(errors.front().what() == error);
   CHECK(errors.front()._state.line == line);
   CHECK(errors.front()._state.column == column);
+}
+
+void checkErrorIn(const std::string &error, size_t line, size_t column, std::string source)
+{
+  source +=
+      "\n"
+      "package Scope;\n"
+      "version \"3.2.1\";\n"
+      "root_type Dummy;\n"
+      "table Dummy { x:int; }\n";
+
+  checkErrorInPure(error, line, column, source);
 }
 
 TEST_CASE("Check structure errors", "[error, parsing, structure]")
@@ -35,8 +47,38 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                  "enum E2 { c }\n"
                  " enum E1 { a }\n");
 
+    checkErrorIn("enum 'E1' already defined as table.", 3, 2,
+                 "table E1 { c:int; }\n"
+                 "enum E2 { c }\n"
+                 " enum E1 { a }\n");
+
     checkErrorIn("Empty enum 'E2'.", 1, 4, "   enum E2 {}");
   }
 
-  SECTION("root_type errors") {}
+  SECTION("root_type errors")
+  {
+    string allText =
+        "\n"
+        "package Scope;\n"
+        "version \"3.2.1\";\n"
+        "table Dummy { x:int; }\n";
+
+    checkErrorInPure("No root_type defined.", 1, 1, allText);
+    checkErrorInPure("Unknown root_type 'Failure'.", 1, 1, "root_type Failure;" + allText);
+    checkErrorInPure("root_type 'Failure' is an enum.", 1, 1,
+                     "root_type Failure;\n"
+                     "enum Failure { k }" +
+                         allText);
+  }
+
+  SECTION("package errors")
+  {
+    string allText =
+        "\n"
+        "version \"3.2.1\";\n"
+        "root_type Dummy;\n"
+        "table Dummy { x:int; }\n";
+
+    checkErrorInPure("No package defined.", 1, 1, allText);
+  }
 }

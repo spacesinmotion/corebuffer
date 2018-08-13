@@ -26,5 +26,5 @@ add_test(NAME TableTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURC
 add_test(NAME ShopExampleBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/shop.cor ${PROJECT_SOURCE_DIR}/test/shop.h)
 add_test(NAME SchemaBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/schema.cor ${PROJECT_SOURCE_DIR}/test/schema.h)
 
-add_test(CoreBufferTest CoreBufferTests)
+add_test(CoreBufferTest CoreBufferTests -r compact)
 add_test(CoreBufferOutputTest CoreBufferOutputTests)
