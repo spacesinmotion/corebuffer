@@ -39,7 +39,7 @@ void WriteEnumDeclaration(std::ostream &o, const Enum &e)
   o << "enum class " << e.name << " : "
     << "unsigned int {" << endl;
   for (const auto &v : e.entries)
-    o << "  " << v.first << " = " << v.second << "," << endl;
+    o << "  " << v.name << " = " << v.value << "," << endl;
   o << "};" << endl << endl;
 }
 
@@ -48,7 +48,7 @@ void WriteEnumFunctions(std::ostream &o, const Enum &e)
   o << "inline const std::array<" << e.name << "," << e.entries.size() << "> & " << e.name << "Values() {" << endl;
   o << "  static const std::array<" << e.name << "," << e.entries.size() << "> values {" << endl;
   for (const auto &v : e.entries)
-    o << "    " << e.name << "::" << v.first << "," << endl;
+    o << "    " << e.name << "::" << v.name << "," << endl;
   o << "  };" << endl;
   o << "  return values;" << endl;
   o << "};" << endl << endl;
@@ -56,7 +56,7 @@ void WriteEnumFunctions(std::ostream &o, const Enum &e)
   o << "inline const char * ValueName(const " << e.name << " &v) {" << endl;
   o << "  switch(v) {" << endl;
   for (const auto &v : e.entries)
-    o << "    case " << e.name << "::" << v.first << ": return \"" << v.first << "\";" << endl;
+    o << "    case " << e.name << "::" << v.name << ": return \"" << v.name << "\";" << endl;
   o << "  }" << endl;
   o << "  return \"<error>\";" << endl;
   o << "};" << endl << endl;

@@ -294,8 +294,9 @@ bool Parser::readEnumEntryList(Enum &e, int lastValue)
   const auto name = readIdentifier();
   if (!name.empty())
   {
+    const auto location = stateBefor(name.size());
     readEnumMemberDefault(lastValue);
-    e.entries.emplace_back(name, lastValue++);
+    e.entries.emplace_back(name, lastValue++, location);
     if (read(","))
     {
       if (readEnumEntryList(e, lastValue))
@@ -313,10 +314,10 @@ bool Parser::readTableMember(Table &t)
 {
   auto s = state();
 
-  Member m;
-  m.name = readIdentifier();
-  if (!m.name.empty())
+  auto name = readIdentifier();
+  if (!name.empty())
   {
+    Member m(name, stateBefor(name.size()));
     if (!read(":"))
       throw FileError("Expected ':' and type definition after member.", state());
     if (!readTypeDefinition(m))
@@ -652,7 +653,7 @@ bool Parser::updateTableAppearance()
       if (e)
       {
         m.defaultValue = fullPackageScope() + "::" + e->name +
-                         "::" + (m.defaultValue.empty() ? e->entries.front().first : m.defaultValue);
+                         "::" + (m.defaultValue.empty() ? e->entries.front().name : m.defaultValue);
       }
 
       auto *t = tableForType(m.type);

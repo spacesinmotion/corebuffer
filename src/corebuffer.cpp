@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -46,17 +47,19 @@ int main(int argc, char *argv[])
       usage(string("parsing faild for '") + argv[1] + "'.", argv[0]);
       return 3;
     }
-    const auto &errors = StructureCheck(p).check();
+    auto errors = StructureCheck(p).check();
+    std::sort(errors.begin(), errors.end(),
+              [](const FileError &l, const FileError &r) { return l._state.pos < r._state.pos; });
     if (!errors.empty())
     {
       for (const auto &pe : errors)
-        logError(argv[0], pe);
+        logError(argv[1], pe);
       return 3;
     }
   }
   catch (const FileError &pe)
   {
-    logError(argv[0], pe);
+    logError(argv[1], pe);
     return 3;
   }
 

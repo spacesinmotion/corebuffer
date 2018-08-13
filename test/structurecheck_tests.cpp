@@ -36,8 +36,12 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                  "table Table1 { c:int; }\n"
                  "table Table2 { c:int; }\n"
                  "table Table1 { a:int; }\n");
-
     checkErrorIn("Empty table 'Table2'.", 2, 2, "\n table Table2 {}");
+    checkErrorIn("table member 'a' already defined for 'T1'.", 1, 24, "table T1 {a:int; b:i8; a:float;}");
+    checkErrorIn("Unknown type 'xxx'.", 1, 11, "table T1 {a:xxx;}");
+    checkErrorIn("Unknown type 'xxx'.", 2, 16,
+                 "enum E{a,b,c}\n"
+                 "table T1 {e:E; a:xxx;}");
   }
 
   SECTION("enum structure errors")
@@ -46,13 +50,12 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                  "enum E1 { c }\n"
                  "enum E2 { c }\n"
                  " enum E1 { a }\n");
-
     checkErrorIn("enum 'E1' already defined as table.", 3, 2,
                  "table E1 { c:int; }\n"
                  "enum E2 { c }\n"
                  " enum E1 { a }\n");
-
     checkErrorIn("Empty enum 'E2'.", 1, 4, "   enum E2 {}");
+    checkErrorIn("enum value 'a' already defined for 'E2'.", 1, 14, "enum E2 {a,b,a}");
   }
 
   SECTION("root_type errors")

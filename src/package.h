@@ -10,12 +10,21 @@ using std::pair;
 using std::string;
 using std::vector;
 
+struct EnumEntry
+{
+  EnumEntry(const std::string &n, int v, const FilePosition &fp) : name(n), value(v), location(fp) {}
+
+  string name;
+  int value;
+  FilePosition location;
+};
+
 struct Enum
 {
   explicit Enum(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
 
   string name;
-  vector<pair<string, int>> entries;
+  vector<EnumEntry> entries;
   FilePosition location;
 };
 
@@ -42,12 +51,15 @@ enum PointerAppearance
 
 struct Member
 {
+  Member(const std::string &n, const FilePosition &fp) : name(n), location(fp) {}
+
   string name;
   string type;
   string defaultValue;
   bool isVector{false};
   bool isBaseType{false};
   Pointer pointer{Pointer::Plain};
+  FilePosition location;
 };
 
 struct Table

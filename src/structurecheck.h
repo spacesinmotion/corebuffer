@@ -7,6 +7,8 @@
 #include <vector>
 
 struct Package;
+struct Table;
+struct Enum;
 
 class StructureCheck
 {
@@ -16,14 +18,25 @@ public:
   const std::vector<FileError> &check();
 
 private:
+  void initNameSets();
   void checkDuplicateTables();
-  void checkEmptyTables();
-
   void checkDuplicateEnums();
+
+  void checkTables();
+  void checkEmptyTables();
+  void checkDuplicateTableMembers(const Table &t);
+  void checkMemberTypes(const Table &t);
+
+  void checkEnums();
   void checkEmptyEnums();
+  void checkDuplicateEnumEntries(const Enum &e);
 
   void checkPackage();
   void checkRootType();
+
+  bool isBaseType(const std::string &name);
+  bool tableExists(const std::string &name);
+  bool enumExists(const std::string &name);
 
 private:
   Package &_package;

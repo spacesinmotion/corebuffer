@@ -43,12 +43,12 @@ enum Access { Private, Public = 3, Protected }
       CHECK(p.enums.front().name == "Access");
 
       REQUIRE(p.enums.front().entries.size() == 3);
-      CHECK(p.enums.front().entries[0].first == "Private");
-      CHECK(p.enums.front().entries[0].second == 0);
-      CHECK(p.enums.front().entries[1].first == "Public");
-      CHECK(p.enums.front().entries[1].second == 3);
-      CHECK(p.enums.front().entries[2].first == "Protected");
-      CHECK(p.enums.front().entries[2].second == 4);
+      CHECK(p.enums.front().entries[0].name == "Private");
+      CHECK(p.enums.front().entries[0].value == 0);
+      CHECK(p.enums.front().entries[1].name == "Public");
+      CHECK(p.enums.front().entries[1].value == 3);
+      CHECK(p.enums.front().entries[2].name == "Protected");
+      CHECK(p.enums.front().entries[2].value == 4);
     }
 
     SECTION("Checking parsed XXX")
