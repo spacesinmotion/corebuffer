@@ -34,5 +34,4 @@ table Dummy {
   en1:EnumTypes;
   en2:EnumTypes=delta;
   en3:[EnumTypes];
-  en4:unique EnumTypes;
 }

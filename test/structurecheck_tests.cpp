@@ -101,4 +101,25 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                  "  c:unique string;\n"
                  "}\n");
   }
+
+  SECTION("no pointer for enums")
+  {
+    checkErrorIn("enums cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:shared E;\n"
+                 "}\n"
+                 "enum E {a,b}\n");
+
+    checkErrorIn("enums cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:weak E;\n"
+                 "}\n"
+                 "enum E {a,b}\n");
+
+    checkErrorIn("enums cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:unique E;\n"
+                 "}\n"
+                 "enum E {a,b}\n");
+  }
 }

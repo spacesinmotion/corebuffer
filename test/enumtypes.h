@@ -41,7 +41,6 @@ struct Dummy {
   EnumTypes en1{Scope::EnumTypes::alpha};
   EnumTypes en2{Scope::EnumTypes::delta};
   std::vector<EnumTypes> en3;
-  std::unique_ptr<EnumTypes> en4;
 };
 
 template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
@@ -56,16 +55,14 @@ bool operator==(const Dummy&l, const Dummy&r) {
   return 
     l.en1 == r.en1
     && l.en2 == r.en2
-    && l.en3 == r.en3
-    && l.en4 == r.en4;
+    && l.en3 == r.en3;
 }
 
 bool operator!=(const Dummy&l, const Dummy&r) {
   return 
     l.en1 != r.en1
     || l.en2 != r.en2
-    || l.en3 != r.en3
-    || l.en4 != r.en4;
+    || l.en3 != r.en3;
 }
 
 inline const std::array<EnumTypes,4> & EnumTypesValues() {
@@ -307,14 +304,12 @@ void Write(std::ostream &o, const Dummy &v) {
   Write(o, v.en1);
   Write(o, v.en2);
   Write(o, v.en3);
-  Write(o, v.en4);
 }
 
 void Read(std::istream &s, Dummy &v) {
   Read(s, v.en1);
   Read(s, v.en2);
   Read(s, v.en3);
-  Read(s, v.en4);
 }
 
 

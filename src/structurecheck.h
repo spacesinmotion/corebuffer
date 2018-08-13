@@ -35,6 +35,7 @@ private:
   void checkRootType();
 
   void checkBaseTypePointer();
+  void checkEnumTypePointer();
 
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
