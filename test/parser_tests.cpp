@@ -292,4 +292,16 @@ en2:EnumTypes=delta;
   SECTION("trailing ',' enum") { parse("enum Dummy {a,b,}"); }
 
   SECTION("base type names with more than one identifier") { parse("table Dummy {a:unsigned int;}"); }
+
+  SECTION("comments available")
+  {
+    parse(
+        "table /* comment */ Dummy { //line comment \n"
+        "a:unsigned int;\n"
+        "} /* at end */");
+
+    parse(
+        "table D { a:unsigned int;} \n"
+        "// line comment at end");
+  }
 }
