@@ -28,7 +28,7 @@ table BaseTypes {)" + member +
   CHECK(p.tables.front().member[0].defaultValue == defValue);
 }
 
-TEST_CASE("Parsing packages", "[]")
+TEST_CASE("Parsing packages", "[parser]")
 {
   SECTION("Simple start up test ")
   {

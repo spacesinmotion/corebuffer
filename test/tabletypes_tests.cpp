@@ -5,7 +5,7 @@
 
 #include <sstream>
 
-TEST_CASE("TableType test", "[]")
+TEST_CASE("TableType test", "[output, table]")
 {
   SECTION("Compare operator")
   {

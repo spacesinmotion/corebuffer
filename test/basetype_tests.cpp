@@ -5,7 +5,7 @@
 
 #include <sstream>
 
-TEST_CASE("BaseType test", "[]")
+TEST_CASE("base type output test", "[output, base types]")
 {
   SECTION("default values")
   {

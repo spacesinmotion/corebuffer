@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-TEST_CASE("Shop example test", "[]")
+TEST_CASE("Shop example test", "[output]")
 {
   using namespace Example::Shop;
 

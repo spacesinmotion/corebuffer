@@ -22,7 +22,7 @@ void checkThrowIn(const std::string &error, size_t line, size_t column, const st
   }
 }
 
-TEST_CASE("Parsing idls with error", "[]")
+TEST_CASE("Parsing idls with error", "[parsing, error, syntax]")
 {
   checkThrowIn("Missing closing '}'.", 1, 14,
                "table Dummy {\n"

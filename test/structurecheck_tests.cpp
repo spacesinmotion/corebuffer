@@ -1,6 +1,5 @@
 #define CATCH_CONFIG_FAST_COMPILE
 #include "catch/catch.hpp"
-
 #include "parser.h"
 #include "structurecheck.h"
 

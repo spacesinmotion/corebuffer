@@ -5,7 +5,7 @@
 
 #include <sstream>
 
-TEST_CASE("EnumTypes test", "[]")
+TEST_CASE("EnumTypes test", "[output, enum]")
 {
   SECTION("defined values")
   {
