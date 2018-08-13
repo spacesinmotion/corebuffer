@@ -1,6 +1,8 @@
 #ifndef PACKAGE_H
 #define PACKAGE_H
 
+#include "fileposition.h"
+
 #include <string>
 #include <vector>
 
@@ -10,8 +12,11 @@ using std::vector;
 
 struct Enum
 {
+  explicit Enum(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
+
   string name;
   vector<pair<string, int>> entries;
+  FilePosition location;
 };
 
 enum class Pointer : unsigned char
@@ -47,12 +52,12 @@ struct Member
 
 struct Table
 {
-  Table() = default;
-  explicit Table(const string &n) : name(n) {}
+  explicit Table(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
 
   string name;
   vector<Member> member;
   unsigned char appearance{0};
+  FilePosition location;
 };
 
 struct Package

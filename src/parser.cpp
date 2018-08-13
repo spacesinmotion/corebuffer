@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "fileerror.h"
 
 #include <cassert>
 #include <sstream>
@@ -34,7 +35,7 @@ void Parser::skip()
   if (front() == '\n')
   {
     ++_state.line;
-    _state.column = 0;
+    _state.column = 1;
   }
   else
     ++_state.column;
@@ -55,6 +56,15 @@ string Parser::take(size_t count)
 Parser::state_type Parser::state() const
 {
   return _state;
+}
+
+Parser::state_type Parser::stateBefor(size_t letters) const
+{
+  auto s = _state;
+  s.pos -= letters;
+  s.column -= letters;
+  assert(s.column >= 1);
+  return s;
 }
 
 void Parser::rewind(state_type p)
@@ -147,10 +157,10 @@ bool Parser::readPackage()
   if (read("package"))
   {
     if (!readPackagePath())
-      throw ParserError("Expected package name after 'package'.", state());
+      throw FileError("Expected package name after 'package'.", state());
 
     if (!read(";"))
-      throw ParserError("Expected ';' after package statement.", state());
+      throw FileError("Expected ';' after package statement.", state());
     return true;
   }
 
@@ -187,10 +197,10 @@ bool Parser::readVersion()
   if (read("version"))
   {
     if (!readString(package.version))
-      throw ParserError("Expected version string after 'version'.", state());
+      throw FileError("Expected version string after 'version'.", state());
 
     if (!read(";"))
-      throw ParserError("Expected ';' after version statement.", state());
+      throw FileError("Expected ';' after version statement.", state());
     return true;
   }
 
@@ -206,9 +216,9 @@ bool Parser::readRootType()
   {
     package.root_type = readIdentifier();
     if (package.root_type.empty())
-      throw ParserError("Expected table name after 'root_type'.", state());
+      throw FileError("Expected table name after 'root_type'.", state());
     if (!read(";"))
-      throw ParserError("Expected ';' after root_type statement.", state());
+      throw FileError("Expected ';' after root_type statement.", state());
     return true;
   }
 
@@ -227,10 +237,9 @@ bool Parser::readTable()
 
   if (read("table"))
   {
-    Table t;
-    t.name = readIdentifier();
+    Table t(readIdentifier(), stateBefor(5));
     if (t.name.empty())
-      throw ParserError("Expected table name after 'table'.", state());
+      throw FileError("Expected table name after 'table'.", state());
 
     bool ok = true;
     //      if (read(":"))
@@ -257,10 +266,9 @@ bool Parser::readEnum()
 
   if (read("enum"))
   {
-    Enum e;
-    e.name = readIdentifier();
+    Enum e(readIdentifier(), stateBefor(4));
     if (e.name.empty())
-      throw ParserError("Expected enum name after 'enum'.", state());
+      throw FileError("Expected enum name after 'enum'.", state());
 
     if (readScopeStatement([this, &e]() {
           readEnumEntryList(e, 0);
@@ -307,14 +315,14 @@ bool Parser::readTableMember(Table &t)
   if (!m.name.empty())
   {
     if (!read(":"))
-      throw ParserError("Expected ':' and type definition after member.", state());
+      throw FileError("Expected ':' and type definition after member.", state());
     if (!readTypeDefinition(m))
-      throw ParserError("Expected type definition for member.", state());
+      throw FileError("Expected type definition for member.", state());
 
     readTableMemberDefault(m);
 
     if (!read(";"))
-      throw ParserError("Expected ';' after member definition.", state());
+      throw FileError("Expected ';' after member definition.", state());
 
     t.member.push_back(m);
     return true;
@@ -323,7 +331,7 @@ bool Parser::readTableMember(Table &t)
   {
     auto xx = state();
     if (!read("}") && !end())
-      throw ParserError("Missing name for member definition.", state());
+      throw FileError("Missing name for member definition.", state());
     else
       rewind(xx);
   }
@@ -340,7 +348,7 @@ bool Parser::readTableMemberDefault(Member &m)
   {
     string val;
     if (!readBaseType(val))
-      throw ParserError("Missing default value.", state());
+      throw FileError("Missing default value.", state());
 
     m.defaultValue = val;
     return true;
@@ -358,7 +366,7 @@ bool Parser::readEnumMemberDefault(int &v)
   if (read("="))
   {
     if (!readNumber(val))
-      throw ParserError("Missing value for enumeration.", state());
+      throw FileError("Missing value for enumeration.", state());
 
     std::stringstream ss(val);
     if (ss >> v)
@@ -381,10 +389,10 @@ bool Parser::readTypeVector(Member &m)
   if (read("["))
   {
     if (!readTypeIdentifier(m))
-      throw ParserError("Missing type for vector definition.", state());
+      throw FileError("Missing type for vector definition.", state());
 
     if (!read("]"))
-      throw ParserError("Missing ']' for vector definition.", state());
+      throw FileError("Missing ']' for vector definition.", state());
 
     m.isVector = true;
     return true;
@@ -428,13 +436,13 @@ bool Parser::readTypeIdentifier(Member &m)
   else
   {
     if (m.pointer == Pointer::Unique)
-      throw ParserError("Missing type for unique member.", state());
+      throw FileError("Missing type for unique member.", state());
     else if (m.pointer == Pointer::Weak)
-      throw ParserError("Missing type for weak member.", state());
+      throw FileError("Missing type for weak member.", state());
     else if (m.pointer == Pointer::Shared)
-      throw ParserError("Missing type for shared member.", state());
+      throw FileError("Missing type for shared member.", state());
     else if (!pointerRes.second)
-      throw ParserError("Missing type for plain member.", state());
+      throw FileError("Missing type for plain member.", state());
   }
 
   rewind(s);
@@ -450,7 +458,7 @@ bool Parser::readScopeStatement(const std::function<bool()> &scopeContent)
     if (scopeContent())
     {
       if (!read("}"))
-        throw ParserError("Missing closing '}'.", state());
+        throw FileError("Missing closing '}'.", state());
       return true;
     }
   }
@@ -684,4 +692,4 @@ std::string Parser::fullPackageScope() const
   return scope;
 }
 
-ParserError::ParserError(const std::string &m, const ParserState &s) : std::runtime_error(m), _state(s) {}
+FileError::FileError(const std::string &m, const FilePosition &s) : std::runtime_error(m), _state(s) {}

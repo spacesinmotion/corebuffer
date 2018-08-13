@@ -3,7 +3,9 @@
 #include <sstream>
 
 #include "cppoutput.h"
+#include "fileerror.h"
 #include "parser.h"
+#include "structurecheck.h"
 
 using namespace std;
 
@@ -12,6 +14,11 @@ void usage(const std::string &msg, const std::string &program)
   cerr << msg << endl << endl;
   cerr << "usage:" << endl;
   cerr << "  " << program << " <input.cor> <ouput.h>" << endl;
+}
+
+void logError(const std::string &file, const FileError &pe)
+{
+  cerr << file << ":" << pe._state.line << ":" << pe._state.column << ": " << pe.what() << endl;
 }
 
 int main(int argc, char *argv[])
@@ -39,10 +46,17 @@ int main(int argc, char *argv[])
       usage(string("parsing faild for '") + argv[1] + "'.", argv[0]);
       return 3;
     }
+    const auto &errors = StructureCheck(p).check();
+    if (!errors.empty())
+    {
+      for (const auto &pe : errors)
+        logError(argv[0], pe);
+      return 3;
+    }
   }
-  catch (const ParserError &pe)
+  catch (const FileError &pe)
   {
-    cerr << argv[0] << ":" << pe._state.line << ":" << pe._state.column << ": " << pe.what() << endl;
+    logError(argv[0], pe);
     return 3;
   }
 

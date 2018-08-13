@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "fileposition.h"
 #include "package.h"
 
 #include <functional>
@@ -11,23 +12,9 @@
 using std::string;
 using std::unique_ptr;
 
-struct ParserState
-{
-  size_t pos{0};
-  size_t line{0};
-  size_t column{0};
-};
-
-struct ParserError : std::runtime_error
-{
-  ParserError(const string &m, const ParserState &s);
-
-  ParserState _state;
-};
-
 class Parser
 {
-  using state_type = ParserState;
+  using state_type = FilePosition;
 
 public:
   Parser(const string &t, Package &p);
@@ -39,6 +26,7 @@ private:
   void skip();
   string take(size_t count = 1);
   state_type state() const;
+  state_type stateBefor(size_t letters) const;
   void rewind(state_type p);
   bool end() const;
 
