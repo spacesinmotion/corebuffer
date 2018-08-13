@@ -1,5 +1,8 @@
 #include "cppoutput.h"
 
+#include <algorithm>
+#include <limits>
+
 using std::endl;
 
 void WriteNameSpaceBegin(std::ostream &o, const string &path, int pos = 0)
@@ -36,8 +39,19 @@ void WriteForwardDeclarations(std::ostream &o, const Package &p)
 
 void WriteEnumDeclaration(std::ostream &o, const Enum &e)
 {
-  o << "enum class " << e.name << " : "
-    << "unsigned int {" << endl;
+  auto max = std::int64_t(0ul);
+  for (const auto &e : e.entries)
+    max = std::max(e.value, max);
+
+  std::string type = "std::int8_t";
+  if (max > std::numeric_limits<std::uint32_t>::max())
+    type = "std::int64_t";
+  else if (max > std::numeric_limits<std::uint16_t>::max())
+    type = "std::int32_t";
+  else if (max > std::numeric_limits<std::uint8_t>::max())
+    type = "std::int16_t";
+
+  o << "enum class " << e.name << " : " << type << " {" << endl;
   for (const auto &v : e.entries)
     o << "  " << v.name << " = " << v.value << "," << endl;
   o << "};" << endl << endl;

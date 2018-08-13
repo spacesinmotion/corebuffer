@@ -10,6 +10,26 @@ enum EnumTypes
   delta = 42
 }
 
+enum Enum16
+{
+  a = 512
+}
+
+enum Enum32
+{
+  a = 128000
+}
+
+enum Enum64
+{
+  a = 4294967297
+}
+
+enum EnumMinus8
+{
+  a = -1
+}
+
 table Dummy {
   en1:EnumTypes;
   en2:EnumTypes=delta;

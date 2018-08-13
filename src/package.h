@@ -12,10 +12,10 @@ using std::vector;
 
 struct EnumEntry
 {
-  EnumEntry(const std::string &n, int v, const FilePosition &fp) : name(n), value(v), location(fp) {}
+  EnumEntry(const std::string &n, std::size_t v, const FilePosition &fp) : name(n), value(v), location(fp) {}
 
   string name;
-  int value;
+  std::int64_t value;
   FilePosition location;
 };
 

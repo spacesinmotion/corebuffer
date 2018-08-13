@@ -51,8 +51,8 @@ private:
 
   bool readScopeStatement(const std::function<bool()> &scopeContent);
 
-  bool readEnumEntryList(Enum &e, int lastValue);
-  bool readEnumMemberDefault(int &v);
+  bool readEnumEntryList(Enum &e, size_t lastValue);
+  bool readEnumMemberDefault(size_t &v);
 
   bool readTableMember(Table &t);
   bool readTableMemberDefault(Member &m);

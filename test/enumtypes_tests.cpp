@@ -42,6 +42,14 @@ TEST_CASE("EnumTypes test", "[output, enum]")
     CHECK(Scope::EnumTypes::delta == d.en2);
   }
 
+  SECTION("enums have minimum sizes")
+  {
+    CHECK(sizeof(Scope::EnumTypes) == sizeof(std::int8_t));
+    CHECK(sizeof(Scope::Enum16) == sizeof(std::int16_t));
+    CHECK(sizeof(Scope::Enum32) == sizeof(std::int32_t));
+    CHECK(sizeof(Scope::EnumMinus8) == sizeof(std::int8_t));
+  }
+
   SECTION("reading whats written")
   {
     Scope::Dummy dOut;

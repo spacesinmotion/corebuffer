@@ -18,14 +18,14 @@ struct Member;
 struct Table;
 struct Package;
 
-enum class Pointer : unsigned int {
+enum class Pointer : std::int8_t {
   Plain = 0,
   Weak = 1,
   Unique = 2,
   Shared = 3,
 };
 
-enum class PointerAppearance : unsigned int {
+enum class PointerAppearance : std::int8_t {
   NoPointer = 0,
   WeakAppearance = 1,
   UniqueAppearance = 2,

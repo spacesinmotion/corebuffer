@@ -291,7 +291,7 @@ bool Parser::readEnum()
   return false;
 }
 
-bool Parser::readEnumEntryList(Enum &e, int lastValue)
+bool Parser::readEnumEntryList(Enum &e, std::size_t lastValue)
 {
   auto s = state();
 
@@ -358,7 +358,7 @@ bool Parser::readTableMemberDefault(Member &m)
   return false;
 }
 
-bool Parser::readEnumMemberDefault(int &v)
+bool Parser::readEnumMemberDefault(std::size_t &v)
 {
   auto s = state();
 

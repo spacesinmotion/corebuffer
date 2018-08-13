@@ -14,11 +14,27 @@ struct AlwaysFalse : std::false_type {};
 
 struct Dummy;
 
-enum class EnumTypes : unsigned int {
+enum class EnumTypes : std::int8_t {
   alpha = 0,
   beta = 4,
   gamma = 5,
   delta = 42,
+};
+
+enum class Enum16 : std::int16_t {
+  a = 512,
+};
+
+enum class Enum32 : std::int32_t {
+  a = 128000,
+};
+
+enum class Enum64 : std::int64_t {
+  a = 4294967297,
+};
+
+enum class EnumMinus8 : std::int8_t {
+  a = -1,
 };
 
 struct Dummy {
@@ -68,6 +84,62 @@ inline const char * ValueName(const EnumTypes &v) {
     case EnumTypes::beta: return "beta";
     case EnumTypes::gamma: return "gamma";
     case EnumTypes::delta: return "delta";
+  }
+  return "<error>";
+};
+
+inline const std::array<Enum16,1> & Enum16Values() {
+  static const std::array<Enum16,1> values {
+    Enum16::a,
+  };
+  return values;
+};
+
+inline const char * ValueName(const Enum16 &v) {
+  switch(v) {
+    case Enum16::a: return "a";
+  }
+  return "<error>";
+};
+
+inline const std::array<Enum32,1> & Enum32Values() {
+  static const std::array<Enum32,1> values {
+    Enum32::a,
+  };
+  return values;
+};
+
+inline const char * ValueName(const Enum32 &v) {
+  switch(v) {
+    case Enum32::a: return "a";
+  }
+  return "<error>";
+};
+
+inline const std::array<Enum64,1> & Enum64Values() {
+  static const std::array<Enum64,1> values {
+    Enum64::a,
+  };
+  return values;
+};
+
+inline const char * ValueName(const Enum64 &v) {
+  switch(v) {
+    case Enum64::a: return "a";
+  }
+  return "<error>";
+};
+
+inline const std::array<EnumMinus8,1> & EnumMinus8Values() {
+  static const std::array<EnumMinus8,1> values {
+    EnumMinus8::a,
+  };
+  return values;
+};
+
+inline const char * ValueName(const EnumMinus8 &v) {
+  switch(v) {
+    case EnumMinus8::a: return "a";
   }
   return "<error>";
 };
