@@ -270,7 +270,7 @@ void WriteTableDeclaration(std::ostream &o, const Table &t, const std::string &r
   {
     o << "  ";
     WriteType(o, m) << " " << m.name;
-    if (!m.defaultValue.empty())
+    if (!m.isVector && m.pointer == Pointer::Plain && !m.defaultValue.empty())
       o << "{" << m.defaultValue << "}";
     o << ";" << endl;
   }

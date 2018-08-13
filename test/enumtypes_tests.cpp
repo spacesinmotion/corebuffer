@@ -47,6 +47,9 @@ TEST_CASE("EnumTypes test", "[]")
     Scope::Dummy dOut;
     dOut.en1 = Scope::EnumTypes::beta;
     dOut.en2 = Scope::EnumTypes::gamma;
+    dOut.en3.emplace_back(Scope::EnumTypes::beta);
+    dOut.en3.emplace_back(Scope::EnumTypes::gamma);
+    dOut.en4 = std::make_unique<Scope::EnumTypes>(Scope::EnumTypes::gamma);
 
     std::stringstream sOut;
     Scope::Dummy_io().WriteDummy(sOut, dOut);
@@ -59,5 +62,12 @@ TEST_CASE("EnumTypes test", "[]")
 
     CHECK(Scope::EnumTypes::beta == dIn.en1);
     CHECK(Scope::EnumTypes::gamma == dIn.en2);
+
+    REQUIRE(dIn.en3.size() == 2);
+    CHECK(dIn.en3[0] == Scope::EnumTypes::beta);
+    CHECK(dIn.en3[1] == Scope::EnumTypes::gamma);
+
+    REQUIRE(dIn.en4 != nullptr);
+    CHECK(*dIn.en4 == Scope::EnumTypes::gamma);
   }
 }
