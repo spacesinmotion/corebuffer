@@ -299,8 +299,8 @@ bool Parser::readEnumEntryList(Enum &e, int lastValue)
     e.entries.emplace_back(name, lastValue++, location);
     if (read(","))
     {
-      if (readEnumEntryList(e, lastValue))
-        return true;
+      readEnumEntryList(e, lastValue);
+      return true;
     }
     else
       return true;

@@ -331,4 +331,14 @@ enum Dummy {}
     Package p;
     CHECK(Parser(source, p).parse());
   }
+
+  SECTION("trailing ',' enum")
+  {
+    const auto source = R"(
+enum Dummy {a,b,}
+)";
+
+    Package p;
+    CHECK(Parser(source, p).parse());
+  }
 }
