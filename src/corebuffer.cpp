@@ -19,7 +19,7 @@ void usage(const std::string &msg, const std::string &program)
 
 void logError(const std::string &file, const FileError &pe)
 {
-  cerr << file << ":" << pe._state.line << ":" << pe._state.column << ": " << pe.what() << endl;
+  cerr << file << ":" << pe._state.line << ":" << pe._state.column << ": error: " << pe.what() << endl;
 }
 
 int main(int argc, char *argv[])
