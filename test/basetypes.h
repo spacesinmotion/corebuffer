@@ -5,10 +5,11 @@
 #include <ostream>
 #include <istream>
 #include <memory>
-#include <type_traits>
 #include <array>
+#include <type_traits>
 
 namespace Scope {
+
 template<typename T>
 struct AlwaysFalse : std::false_type {};
 
@@ -42,14 +43,6 @@ struct Root {
   BaseTypes a;
   PointerBaseTypes b;
 };
-
-template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
-  return l.lock() == r.lock();
-}
-
-template<typename T> bool operator!=(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
-  return l.lock() != r.lock();
-}
 
 bool operator==(const BaseTypes&l, const BaseTypes&r) {
   return 
@@ -113,239 +106,139 @@ bool operator!=(const Root&l, const Root&r) {
 
 struct Root_io {
 private:
-template<typename T> void Write(std::ostream &, const T *) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Write(std::ostream &o, const T &v) {
-  o.write(reinterpret_cast<const char *>(&v), sizeof(T));
-}
-
-template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
-  Write(o, v.size());
-  o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
-}
-
-void Write(std::ostream &o, const std::vector<std::string> &v) {
-  Write(o, v.size());
-  for (const auto &entry : v)
-    Write(o, entry);
-}
-
-template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
-  if (!v) {
-    o.write("\x0", 1);
-  } else {
-    o.write("\x1", 1);
-    Write(o, *v);
+  template<typename T> void Write(std::ostream &, const T *) {
+    static_assert(AlwaysFalse<T>::value, "Something not implemented");
   }
-}
 
-template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, unsigned int &counter) {
-  if (!v) {
-    o.write("\x0", 1);
-  } else if (v->io_counter_== 0) {
-    v->io_counter_ = ++counter;
-    o.write("\x1", 1);
-    Write(o, *v);
-  } else {
-    o.write("\x2", 1);
-    Write(o, v->io_counter_);
+  template<typename T> void Write(std::ostream &o, const T &v) {
+    o.write(reinterpret_cast<const char *>(&v), sizeof(T));
   }
-}
 
-template<typename T> void Write(std::ostream &o, const std::vector<std::unique_ptr<T>> &v) {
-  Write(o, v.size());
-  for (const auto &entry : v)
-    Write(o, entry);
-}
-
-template<typename T> void Write(std::ostream &o, const std::vector<std::shared_ptr<T>> &v) {
-  Write(o, v.size());
-  for (const auto &entry : v)
-    Write(o, entry);
-}
-
-template<typename T> void Write(std::ostream &o, const std::vector<std::weak_ptr<T>> &v) {
-  Write(o, v.size());
-  for (const auto &entry : v)
-    Write(o, entry);
-}
-
-template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-void Write(std::ostream &o, const std::string &v) {
-  Write(o, v.size());
-  o.write(v.data(), v.size());
-}
-
-void Write(std::ostream &o, const char *v) {
-  Write(o, std::string(v));
-}
-
-template<typename T> void Read(std::istream &i, T &v) {
-  i.read(reinterpret_cast<char *>(&v), sizeof(T));
-}
-
-template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {
-  char ref = 0;
-  i.read(&ref, 1);
-  if (ref == '\x1') {
-    v = std::make_unique<T>();
-    Read(i, *v);
+  template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
+    Write(o, v.size());
+    o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
   }
-}
 
-template<typename T> void Read(std::istream &, std::shared_ptr<T> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Read(std::istream &, std::weak_ptr<T> &) {
-  static_assert(AlwaysFalse<T>::value, "Something not implemented");
-}
-
-template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vector<std::shared_ptr<T>> &cache) {
-  char ref = 0;
-  s.read(&ref, 1);
-  if (ref == '\x1') {
-    v = std::make_shared<T>();
-    cache.push_back(v);
-    Read(s, *v);
-  } else if (ref == '\x2') {
-    unsigned int index = 0;
-    Read(s, index);
-    v = cache[index - 1];
+  void Write(std::ostream &o, const std::vector<std::string> &v) {
+    Write(o, v.size());
+    for (const auto &entry : v)
+      Write(o, entry);
   }
-}
 
-template<typename T> void Read(std::istream &s, std::vector<std::unique_ptr<T>> &v) {
-  auto size = v.size();
-  Read(s, size);
-  v.resize(size);
-  for (auto &entry : v)
-    Read(s, entry);
-}
+  template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
+    static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  }
 
-template<typename T> void Read(std::istream &s, std::vector<std::shared_ptr<T>> &v) {
-  auto size = v.size();
-  Read(s, size);
-  v.resize(size);
-  for (auto &entry : v)
-    Read(s, entry);
-}
+  void Write(std::ostream &o, const std::string &v) {
+    Write(o, v.size());
+    o.write(v.data(), v.size());
+  }
 
-template<typename T> void Read(std::istream &s, std::vector<std::weak_ptr<T>> &v) {
-  auto size = v.size();
-  Read(s, size);
-  v.resize(size);
-  for (auto &entry : v)
-    Read(s, entry);
-}
+  template<typename T> void Read(std::istream &i, T &v) {
+    i.read(reinterpret_cast<char *>(&v), sizeof(T));
+  }
 
-template<typename T> void Read(std::istream &i, std::vector<T> &v) {
-  typename std::vector<T>::size_type s{0};
-  Read(i, s);
-  v.resize(s);
-  i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
-}
+  template<typename T> void Read(std::istream &, std::shared_ptr<T> &) {
+    static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  }
 
-void Read(std::istream &i, std::vector<std::string> &v) {
-  auto size = v.size();
-  Read(i, size);
-  v.resize(size);
-  for (auto &entry : v)
-    Read(i, entry);
-}
+  template<typename T> void Read(std::istream &i, std::vector<T> &v) {
+    typename std::vector<T>::size_type s{0};
+    Read(i, s);
+    v.resize(s);
+    i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
+  }
 
-void Read(std::istream &i, std::string &v) {
-  std::string::size_type s{0};
-  Read(i, s);
-  v.resize(s);
-  i.read(&v[0], s);
-}
+  void Read(std::istream &i, std::vector<std::string> &v) {
+    auto size = v.size();
+    Read(i, size);
+    v.resize(size);
+    for (auto &entry : v)
+      Read(i, entry);
+  }
 
-void Write(std::ostream &o, const BaseTypes &v) {
-  Write(o, v.a);
-  Write(o, v.aa);
-  Write(o, v.ab);
-  Write(o, v.b);
-  Write(o, v.c);
-  Write(o, v.d);
-  Write(o, v.e);
-  Write(o, v.f);
-  Write(o, v.g);
-  Write(o, v.h);
-  Write(o, v.i);
-  Write(o, v.j);
-  Write(o, v.k);
-  Write(o, v.l);
-  Write(o, v.m);
-}
+  void Read(std::istream &i, std::string &v) {
+    std::string::size_type s{0};
+    Read(i, s);
+    v.resize(s);
+    i.read(&v[0], s);
+  }
 
-void Read(std::istream &s, BaseTypes &v) {
-  Read(s, v.a);
-  Read(s, v.aa);
-  Read(s, v.ab);
-  Read(s, v.b);
-  Read(s, v.c);
-  Read(s, v.d);
-  Read(s, v.e);
-  Read(s, v.f);
-  Read(s, v.g);
-  Read(s, v.h);
-  Read(s, v.i);
-  Read(s, v.j);
-  Read(s, v.k);
-  Read(s, v.l);
-  Read(s, v.m);
-}
+  void Write(std::ostream &o, const BaseTypes &v) {
+    Write(o, v.a);
+    Write(o, v.aa);
+    Write(o, v.ab);
+    Write(o, v.b);
+    Write(o, v.c);
+    Write(o, v.d);
+    Write(o, v.e);
+    Write(o, v.f);
+    Write(o, v.g);
+    Write(o, v.h);
+    Write(o, v.i);
+    Write(o, v.j);
+    Write(o, v.k);
+    Write(o, v.l);
+    Write(o, v.m);
+  }
 
-void Write(std::ostream &o, const PointerBaseTypes &v) {
-  Write(o, v.b1);
-}
+  void Read(std::istream &s, BaseTypes &v) {
+    Read(s, v.a);
+    Read(s, v.aa);
+    Read(s, v.ab);
+    Read(s, v.b);
+    Read(s, v.c);
+    Read(s, v.d);
+    Read(s, v.e);
+    Read(s, v.f);
+    Read(s, v.g);
+    Read(s, v.h);
+    Read(s, v.i);
+    Read(s, v.j);
+    Read(s, v.k);
+    Read(s, v.l);
+    Read(s, v.m);
+  }
 
-void Read(std::istream &s, PointerBaseTypes &v) {
-  Read(s, v.b1);
-}
+  void Write(std::ostream &o, const PointerBaseTypes &v) {
+    Write(o, v.b1);
+  }
 
-void Write(std::ostream &o, const Root &v) {
-  Write(o, v.a);
-  Write(o, v.b);
-}
+  void Read(std::istream &s, PointerBaseTypes &v) {
+    Read(s, v.b1);
+  }
 
-void Read(std::istream &s, Root &v) {
-  Read(s, v.a);
-  Read(s, v.b);
-}
+  void Write(std::ostream &o, const Root &v) {
+    Write(o, v.a);
+    Write(o, v.b);
+  }
 
+  void Read(std::istream &s, Root &v) {
+    Read(s, v.a);
+    Read(s, v.b);
+  }
 
 public:
-void WriteRoot(std::ostream &o, const Root &v) {
+  void WriteRoot(std::ostream &o, const Root &v) {
 
-  o.write("CORE", 4);
-  o.write("0.0", 3);
-  Write(o, v);
-}
+    o.write("CORE", 4);
+    o.write("0.0", 3);
+    Write(o, v);
+  }
 
-bool ReadRoot(std::istream &i, Root &v) {
+  bool ReadRoot(std::istream &i, Root &v) {
 
-  std::string marker("0000");
-  i.read(&marker[0], 4);
-  if (marker != "CORE")
-    return false;
-  std::string version(3, '_');
-  i.read(&version[0], 3);
-  if (version != "0.0")
-    return false;
-  Read(i, v);
-  return true;
-}
+    std::string marker("0000");
+    i.read(&marker[0], 4);
+    if (marker != "CORE")
+      return false;
+    std::string version(3, '_');
+    i.read(&version[0], 3);
+    if (version != "0.0")
+      return false;
+    Read(i, v);
+    return true;
+  }
 
 };
 }

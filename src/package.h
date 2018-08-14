@@ -47,6 +47,8 @@ enum PointerAppearance
   UniqueVectorAppearance = 0x20,
   SharedVectorAppearance = 0x40,
   PlainAppearance = 0x80,
+
+  SomeVectorAppearance = VectorAppearance | WeakVectorAppearance | SharedVectorAppearance | UniqueVectorAppearance,
 };
 
 struct Member
