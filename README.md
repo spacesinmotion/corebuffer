@@ -1,14 +1,14 @@
 
-##  What's  the  CoreBuffer?
-Is a code generation tool that is highly inspired by [Protocol Buffers](https://developers.google.com/protocol-buffers/)
-and [FlatBuffers](https://google.github.io/flatbuffers/). But as these tools concentrate on fast information transfer,
+##  What is CoreBuffer?
+It is a code generation tool that is highly inspired by [Protocol Buffers](https://developers.google.com/protocol-buffers/)
+and [FlatBuffers](https://google.github.io/flatbuffers/). But these tools concentrate on fast information transfer,
 CoreBuffer is designed to automatically generate binary serialization of complex data structures.
 
 ### Features
 * automatic generation of [c++](https://en.wikipedia.org/wiki/C++) code from a simple
   [IDL](https://en.wikipedia.org/wiki/Interface_description_language)
-* code is generated into one header *(easy to use)*
-* directly manipulate and create `structs` in your code
+* generation into one header only *(easy to use)*
+* directly create and manipulate `structs` in your code
 * provide *read* and *write* functions
 
 ##  Build CoreBuffer compiler
@@ -122,5 +122,4 @@ The reading and writing methods are provided in a struct with suffix `_io`:
 ## ToDo
 
 * write more documentation
-* providing error messages for incorrect IDL input
 * more convenient types and functions ...
