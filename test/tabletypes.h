@@ -203,7 +203,7 @@ private:
     char ref = 0;
     i.read(&ref, 1);
     if (ref == '\x1') {
-      v = std::make_unique<T>();
+      v = std::unique_ptr<T>(new T);
       Read(i, *v);
     }
   }

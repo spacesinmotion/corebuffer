@@ -1,7 +1,9 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.1)
+
 project (CoreBuffer)
 
 enable_testing()
+set (CMAKE_CXX_STANDARD 11)
 
 include_directories(src/ ./)
 
@@ -28,3 +30,5 @@ add_test(NAME SchemaBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DI
 
 add_test(CoreBufferTest CoreBufferTests -r compact)
 add_test(CoreBufferOutputTest CoreBufferOutputTests)
+
+install (TARGETS CoreBufferC DESTINATION bin)

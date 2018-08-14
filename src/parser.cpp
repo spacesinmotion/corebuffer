@@ -1,7 +1,6 @@
 #include "parser.h"
 #include "fileerror.h"
 
-#include <cassert>
 #include <sstream>
 
 static string WHITESPACE = " \t\n\r";
@@ -53,21 +52,20 @@ string Parser::take(size_t count)
   return e;
 }
 
-Parser::state_type Parser::state() const
+const FilePosition &Parser::state() const
 {
   return _state;
 }
 
-Parser::state_type Parser::stateBefor(size_t letters) const
+FilePosition Parser::stateBefor(size_t letters) const
 {
   auto s = _state;
   s.pos -= letters;
   s.column -= letters;
-  assert(s.column >= 1);
   return s;
 }
 
-void Parser::rewind(state_type p)
+void Parser::rewind(const FilePosition &p)
 {
   _state = p;
 }
@@ -221,7 +219,8 @@ bool Parser::readRootType()
 
   if (read("root_type"))
   {
-    package.root_type = Attribute(readIdentifier(), stateBefor(9));
+    const auto location = stateBefor(9);
+    package.root_type = Attribute(readIdentifier(), location);
     if (package.root_type.value.empty())
       throw FileError("Expected table name after 'root_type'.", state());
     if (!read(";"))
@@ -244,7 +243,8 @@ bool Parser::readTable()
 
   if (read("table"))
   {
-    Table t(readIdentifier(), stateBefor(5));
+    const auto location = stateBefor(5);
+    Table t(readIdentifier(), location);
     if (t.name.empty())
       throw FileError("Expected table name after 'table'.", state());
 
@@ -273,7 +273,8 @@ bool Parser::readEnum()
 
   if (read("enum"))
   {
-    Enum e(readIdentifier(), stateBefor(4));
+    const auto location = stateBefor(4);
+    Enum e(readIdentifier(), location);
     if (e.name.empty())
       throw FileError("Expected enum name after 'enum'.", state());
 
@@ -291,7 +292,7 @@ bool Parser::readEnum()
   return false;
 }
 
-bool Parser::readEnumEntryList(Enum &e, std::size_t lastValue)
+bool Parser::readEnumEntryList(Enum &e, size_t lastValue)
 {
   auto s = state();
 
@@ -358,7 +359,7 @@ bool Parser::readTableMemberDefault(Member &m)
   return false;
 }
 
-bool Parser::readEnumMemberDefault(std::size_t &v)
+bool Parser::readEnumMemberDefault(size_t &v)
 {
   auto s = state();
 

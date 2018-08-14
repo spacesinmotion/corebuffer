@@ -9,12 +9,12 @@
 #include <string>
 #include <unordered_map>
 
-using std::string;
 using std::unique_ptr;
 
 class Parser
 {
-  using state_type = FilePosition;
+  using string = std::string;
+  using size_t = std::size_t;
 
 public:
   Parser(const string &t, Package &p);
@@ -25,9 +25,9 @@ private:
   char front() const;
   void skip();
   string take(size_t count = 1);
-  state_type state() const;
-  state_type stateBefor(size_t letters) const;
-  void rewind(state_type p);
+  const FilePosition &state() const;
+  FilePosition stateBefor(size_t letters) const;
+  void rewind(const FilePosition &p);
   bool end() const;
 
   static bool contains(const string &s, char c);
@@ -75,7 +75,7 @@ private:
 
 private:
   const string &text;
-  state_type _state;
+  FilePosition _state;
 
   std::unordered_map<string, string> aliases;
   std::unordered_map<string, string> defaults;

@@ -10,6 +10,7 @@ void checkErrorInPure(const std::string &error, size_t line, size_t column, cons
 
   const auto errors = StructureCheck(p).check();
   REQUIRE(errors.size() == 1);
+  INFO(error);
   CHECK(errors.front().what() == error);
   CHECK(errors.front()._state.line == line);
   CHECK(errors.front()._state.column == column);

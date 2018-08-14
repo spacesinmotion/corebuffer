@@ -47,7 +47,7 @@ TEST_CASE("TableType test", "[output, table]")
     Scope::TableC c;
     c.a.emplace_back();
     c.a.front().name = "TableA";
-    c.a.front().d1 = std::make_unique<Scope::TableD>();
+    c.a.front().d1.reset(new Scope::TableD());
     c.a.front().d1->name = "TableD_1";
     c.a.front().d3 = std::make_shared<Scope::TableD>();
     c.a.front().d3->name = "TableD_3";

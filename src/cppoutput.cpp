@@ -266,7 +266,7 @@ void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
     o << "    char ref = 0;" << endl;
     o << "    i.read(&ref, 1);" << endl;
     o << "    if (ref == '\\x1') {" << endl;
-    o << "      v = std::make_unique<T>();" << endl;
+    o << "      v = std::unique_ptr<T>(new T);" << endl;
     o << "      Read(i, *v);" << endl;
     o << "    }" << endl;
     o << "  }" << endl << endl;
