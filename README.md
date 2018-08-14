@@ -1,4 +1,7 @@
 
+[![Build status](https://ci.appveyor.com/api/projects/status/x0xdasqqpq1evc08?svg=true)](https://ci.appveyor.com/project/spacesinmotion/corebuffer)
+[![license](https://img.shields.io/github/license/spacesinmotion/corebuffer.svg)]()
+
 ##  What is CoreBuffer?
 It is a code generation tool that is highly inspired by [Protocol Buffers](https://developers.google.com/protocol-buffers/)
 and [FlatBuffers](https://google.github.io/flatbuffers/). But these tools concentrate on fast information transfer,
