@@ -116,8 +116,8 @@ void WriteForwardDeclarations(ostream &o, const Package &p)
 void WriteEnumDeclaration(ostream &o, const Enum &e)
 {
   int64_t maxEntry = 0ul;
-  for (const auto &e : e.entries)
-    maxEntry = max(e.value, maxEntry);
+  for (const auto &entry : e.entries)
+    maxEntry = max(entry.value, maxEntry);
 
   string type = "std::int8_t";
   if (maxEntry > numeric_limits<uint32_t>::max())
