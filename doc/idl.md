@@ -50,15 +50,16 @@ string
 bool
 ```
 
-For a convenient there are aliases to the typical c types.
+There are aliases to the typical c types.
 
 ```
 int => i32
-short => i16
+unsigned short => i16
 long => i64
 
 float => f32
 double => f64
+...
 ```
 
 ### Pointer
@@ -76,6 +77,23 @@ Plain c pointers are not supported ...
 Braces like `[...]` define vector data and are used to list multiple items of the same type as one member.
 
 You could define vectors of pointers but no pointers of vectors. Nesting is also not allowed here.
+
+### Initializers (construction)
+
+**Example:**
+```
+table Player {
+  name:string;
+  hitPoints:int;
+
+  init(name);
+  init(name, hitPoints);
+}
+```
+
+Beside the default construction you could add construction per value with the *special function* `init`. By listing the
+parameter to be initialized as parameter you define the constructor in *c++* code.
+
 
 ## Enums
 

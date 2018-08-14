@@ -24,6 +24,16 @@ struct TableA {
   std::weak_ptr<TableD> d2;
   std::shared_ptr<TableD> d3;
   std::shared_ptr<TableD> d4;
+
+  TableA() = default;
+  TableA(const std::shared_ptr<TableD> &d3_)
+    : d3(d3_)
+  {}
+  TableA(const std::shared_ptr<TableD> &d2_, std::unique_ptr<TableD> d1_)
+    : d1(std::move(d1_))
+    , d2(d2_)
+  {}
+
 private:
   unsigned int io_counter_{0};
   friend struct TableC_io;
@@ -31,6 +41,9 @@ private:
 
 struct TableB {
   std::string name;
+
+  TableB() = default;
+
 private:
   unsigned int io_counter_{0};
   friend struct TableC_io;
@@ -39,6 +52,9 @@ private:
 struct TableD {
   std::string name;
   std::shared_ptr<TableA> a;
+
+  TableD() = default;
+
 private:
   unsigned int io_counter_{0};
   friend struct TableC_io;
@@ -50,6 +66,11 @@ struct TableC {
   std::vector<std::unique_ptr<TableA>> c;
   std::vector<std::shared_ptr<TableB>> d;
   std::vector<std::weak_ptr<TableB>> e;
+
+  TableC() = default;
+  TableC(std::vector<std::unique_ptr<TableA>> c_)
+    : c(std::move(c_))
+  {}
 };
 
 template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {

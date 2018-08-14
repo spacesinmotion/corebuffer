@@ -9,6 +9,7 @@
 struct Package;
 struct Table;
 struct Enum;
+struct Method;
 
 class StructureCheck
 {
@@ -27,6 +28,10 @@ private:
   void checkDuplicateTableMembers(const Table &t);
   void checkMemberTypes(const Table &t);
 
+  void checksMethods(const Table &t);
+  void checkIfMethodsExist(const Table &t);
+  void checkMethodForParameter(const Table &t);
+
   void checkEnums();
   void checkEmptyEnums();
   void checkDuplicateEnumEntries(const Enum &e);
@@ -40,6 +45,9 @@ private:
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
   bool enumExists(const std::string &name);
+
+  std::string methodParameterKey(const Method &m);
+  std::string methodTypeParameterKey(const Table &t, const Method &m);
 
 private:
   Package &_package;

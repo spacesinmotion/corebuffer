@@ -64,12 +64,30 @@ struct Member
   FilePosition location;
 };
 
+struct Parameter
+{
+  Parameter(const std::string &n, const FilePosition &fp) : name(n), location(fp) {}
+
+  string name;
+  FilePosition location;
+};
+
+struct Method
+{
+  Method(const std::string &n, const FilePosition &fp) : name(n), location(fp) {}
+
+  string name;
+  FilePosition location;
+  vector<Parameter> parameter;
+};
+
 struct Table
 {
   explicit Table(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
 
   string name;
   vector<Member> member;
+  vector<Method> methods;
   unsigned char appearance{0};
   FilePosition location;
 };

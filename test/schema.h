@@ -41,11 +41,15 @@ enum class PointerAppearance : std::int8_t {
 struct EnumEntry {
   std::string name;
   std::int32_t value{0};
+
+  EnumEntry() = default;
 };
 
 struct Enum {
   std::string name;
   std::vector<EnumEntry> entries;
+
+  Enum() = default;
 };
 
 struct Member {
@@ -55,12 +59,16 @@ struct Member {
   bool isVector{false};
   bool isBaseType{false};
   Pointer pointer{CoreData::Pointer::Plain};
+
+  Member() = default;
 };
 
 struct Table {
   std::string name;
   std::vector<Member> member;
   std::uint8_t appearance{0u};
+
+  Table() = default;
 };
 
 struct Package {
@@ -70,6 +78,8 @@ struct Package {
   std::vector<Table> tables;
   std::vector<Table> baseTypes;
   std::vector<Enum> enums;
+
+  Package() = default;
 };
 
 bool operator==(const EnumEntry&l, const EnumEntry&r) {

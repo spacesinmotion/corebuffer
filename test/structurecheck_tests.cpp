@@ -9,14 +9,14 @@ void checkErrorInPure(const std::string &error, size_t line, size_t column, cons
   REQUIRE(Parser(source, p).parse());
 
   const auto errors = StructureCheck(p).check();
-  REQUIRE(errors.size() == 1);
   INFO(error);
+  REQUIRE(errors.size() == 1);
   CHECK(errors.front().what() == error);
   CHECK(errors.front()._state.line == line);
   CHECK(errors.front()._state.column == column);
 }
 
-void checkErrorIn(const std::string &error, size_t line, size_t column, std::string source)
+void addFooter(std::string &source)
 {
   source +=
       "\n"
@@ -24,8 +24,24 @@ void checkErrorIn(const std::string &error, size_t line, size_t column, std::str
       "version \"3.2.1\";\n"
       "root_type Dummy;\n"
       "table Dummy { x:int; }\n";
+}
 
+void checkErrorIn(const std::string &error, size_t line, size_t column, std::string source)
+{
+  addFooter(source);
   checkErrorInPure(error, line, column, source);
+}
+
+void checkNoErrorIn(std::string source)
+{
+  addFooter(source);
+
+  Package p;
+  REQUIRE(Parser(source, p).parse());
+
+  const auto errors = StructureCheck(p).check();
+  CAPTURE(errors);
+  REQUIRE(errors.empty());
 }
 
 TEST_CASE("Check structure errors", "[error, parsing, structure]")
@@ -122,5 +138,57 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                  "  c:unique E;\n"
                  "}\n"
                  "enum E {a,b}\n");
+  }
+
+  SECTION("table special function checks")
+  {
+    SECTION("special initializer parsing")
+    {
+      checkErrorIn("unknown method '_fail_' in table 'T1'.", 3, 3,
+                   "table T1 {\n"
+                   "  a:int;\n"
+                   "  _fail_(a);\n"
+                   "}");
+
+      checkErrorIn("No parameter defined for method 'init'.", 3, 3,
+                   "table T1 {\n"
+                   "  a:int;\n"
+                   "  init();\n"
+                   "}");
+
+      checkErrorIn("unknown parameter 'b' in method 'init'.", 3, 11,
+                   "table T1 {\n"
+                   "  a:int;\n"
+                   "  init(a, b);\n"
+                   "}");
+
+      checkErrorIn("duplicate parameter 'a' in method 'init'.", 3, 11,
+                   "table T1 {\n"
+                   "  a:int;\n"
+                   "  init(a, a);\n"
+                   "}");
+
+      checkErrorIn("method 'init' already defined.", 4, 3,
+                   "table T1 {\n"
+                   "  a:int;\n"
+                   "  init(a);\n"
+                   "  init(a);\n"
+                   "}");
+      checkNoErrorIn(
+          "table T1 {\n"
+          "  a:int;\n"
+          "  b:int;\n"
+          "  init(a);\n"
+          "  init(a,b);\n"
+          "}");
+
+      checkErrorIn("method 'init' already defined implicitly by parameter.", 5, 3,
+                   "table T1 {\n"
+                   "  a:int;\n"
+                   "  b:int;\n"
+                   "  init(a);\n"
+                   "  init(b);\n"
+                   "}");
+    }
   }
 }

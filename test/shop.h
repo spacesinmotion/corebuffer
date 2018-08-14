@@ -22,6 +22,9 @@ struct Shop;
 struct Item {
   std::string name;
   float price{0.0f};
+
+  Item() = default;
+
 private:
   unsigned int io_counter_{0};
   friend struct Shop_io;
@@ -30,6 +33,9 @@ private:
 struct Customer {
   std::string name;
   std::string address;
+
+  Customer() = default;
+
 private:
   unsigned int io_counter_{0};
   friend struct Shop_io;
@@ -38,12 +44,16 @@ private:
 struct Order {
   std::vector<std::shared_ptr<Item>> items;
   std::shared_ptr<Customer> customer;
+
+  Order() = default;
 };
 
 struct Shop {
   std::vector<std::shared_ptr<Item>> items;
   std::vector<std::shared_ptr<Customer>> customers;
   std::vector<Order> orders;
+
+  Shop() = default;
 };
 
 bool operator==(const Item&l, const Item&r) {

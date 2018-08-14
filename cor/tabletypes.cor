@@ -8,6 +8,9 @@ table TableA {
   d2:weak TableD;
   d3:shared TableD;
   d4:shared TableD;
+
+  init(d3);
+  init(d2, d1);
 }
 
 table TableB {
@@ -26,4 +29,6 @@ table TableC {
   c:[unique TableA];
   d:[shared TableB];
   e:[weak TableB];
+
+  init(c);
 }

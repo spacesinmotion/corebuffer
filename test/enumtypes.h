@@ -42,6 +42,8 @@ struct Dummy {
   EnumTypes en1{Scope::EnumTypes::alpha};
   EnumTypes en2{Scope::EnumTypes::delta};
   std::vector<EnumTypes> en3;
+
+  Dummy() = default;
 };
 
 bool operator==(const Dummy&l, const Dummy&r) {

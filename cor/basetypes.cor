@@ -24,6 +24,14 @@ table PointerBaseTypes {
   b1:[string];
 }
 
+table Initializer {
+  a:int = 3;
+  b:double = 4.2;
+
+  init(a);
+  init(b, a);
+}
+
 table Root {
   a:BaseTypes;
   b:PointerBaseTypes;

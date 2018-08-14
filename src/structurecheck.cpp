@@ -49,6 +49,7 @@ void StructureCheck::checkTables()
   {
     checkDuplicateTableMembers(t);
     checkMemberTypes(t);
+    checksMethods(t);
   }
 }
 
@@ -72,6 +73,64 @@ void StructureCheck::checkMemberTypes(const Table &t)
   for (const auto &m : t.member)
     if (!isBaseType(m.type) && !tableExists(m.type) && !enumExists(m.type))
       _errors.emplace_back("Unknown type '" + m.type + "'.", m.location);
+}
+
+void StructureCheck::checksMethods(const Table &t)
+{
+  checkIfMethodsExist(t);
+  checkMethodForParameter(t);
+}
+
+void StructureCheck::checkIfMethodsExist(const Table &t)
+{
+  static const unordered_set<string> knownMethods{"init"};
+  for (const auto &m : t.methods)
+    if (knownMethods.find(m.name) == knownMethods.end())
+      _errors.emplace_back("unknown method '" + m.name + "' in table '" + t.name + "'.", m.location);
+}
+
+void StructureCheck::checkMethodForParameter(const Table &t)
+{
+  if (t.methods.empty())
+    return;
+
+  unordered_set<string> methodsDefinedByName;
+  unordered_set<string> methodsDefinedByType;
+  unordered_set<string> member;
+  for (const auto &m : t.member)
+    member.emplace(m.name);
+
+  for (const auto &m : t.methods)
+  {
+    if (m.parameter.empty())
+    {
+      _errors.emplace_back("No parameter defined for method '" + m.name + "'.", m.location);
+      continue;
+    }
+
+    unordered_set<string> parameterSet;
+    for (const auto &p : m.parameter)
+      if (!parameterSet.emplace(p.name).second)
+        _errors.emplace_back("duplicate parameter '" + p.name + "' in method '" + m.name + "'.", p.location);
+
+    bool unknownParameter = false;
+    for (const auto &p : m.parameter)
+    {
+      if (member.find(p.name) != member.end())
+        continue;
+      _errors.emplace_back("unknown parameter '" + p.name + "' in method '" + m.name + "'.", p.location);
+      unknownParameter = true;
+    }
+    if (unknownParameter)
+      continue;
+
+    const auto definedByName = !methodsDefinedByName.emplace(methodParameterKey(m)).second;
+    const auto definedByType = !methodsDefinedByType.emplace(methodTypeParameterKey(t, m)).second;
+    if (definedByName)
+      _errors.emplace_back("method '" + m.name + "' already defined.", m.location);
+    else if (!definedByName && definedByType)
+      _errors.emplace_back("method '" + m.name + "' already defined implicitly by parameter.", m.location);
+  }
 }
 
 void StructureCheck::checkEnums()
@@ -154,4 +213,29 @@ bool StructureCheck::tableExists(const string &name)
 bool StructureCheck::enumExists(const string &name)
 {
   return _enumNames.find(name) != _enumNames.end();
+}
+
+string StructureCheck::methodParameterKey(const Method &m)
+{
+  auto n = m.name;
+  for (const auto &p : m.parameter)
+    n += p.name;
+  return n;
+}
+
+string StructureCheck::methodTypeParameterKey(const Table &t, const Method &m)
+{
+  auto n = m.name;
+  for (const auto &p : m.parameter)
+  {
+    for (const auto &b : t.member)
+    {
+      if (p.name == b.name)
+      {
+        n += b.type;
+        break;
+      }
+    }
+  }
+  return n;
 }

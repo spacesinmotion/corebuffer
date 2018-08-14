@@ -54,6 +54,9 @@ private:
   bool readEnumEntryList(Enum &e, size_t lastValue);
   bool readEnumMemberDefault(size_t &v);
 
+  bool readTableMemberOrMethod(Table &t);
+  bool readTableMethod(Table &t);
+  vector<Parameter> readIdentifierList();
   bool readTableMember(Table &t);
   bool readTableMemberDefault(Member &m);
   bool readTypeDefinition(Member &m);

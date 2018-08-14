@@ -86,4 +86,21 @@ TEST_CASE("base type output test", "[output, base types]")
 
     CHECK(dOut == dIn);
   }
+
+  SECTION("initializing methods")
+  {
+    auto _default = Scope::Initializer();
+    auto _inited = Scope::Initializer(123);
+
+    CHECK(_inited.a == 123);
+    CHECK(_inited.a != _default.a);
+    CHECK(_inited.b == _default.b);
+
+    _inited = Scope::Initializer(32.1, 345);
+
+    CHECK(_inited.a != _default.a);
+    CHECK(_inited.b != _default.b);
+    CHECK(_inited.a == 345);
+    CHECK(_inited.b == 32.1);
+  }
 }

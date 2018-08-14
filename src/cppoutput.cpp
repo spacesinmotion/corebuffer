@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <tuple>
 
 using namespace std;
 
@@ -378,6 +379,86 @@ ostream &WriteType(ostream &o, const Member &m)
   return o;
 }
 
+ostream &WriteParameterType(ostream &o, const Member &m)
+{
+  if (m.pointer != Pointer::Unique)
+    o << "const ";
+
+  auto mm = m;
+  if (!m.isVector && m.pointer == Pointer::Weak)
+    mm.pointer = Pointer::Shared;
+
+  WriteType(o, mm) << " ";
+  if (m.pointer != Pointer::Unique)
+    o << "&";
+
+  return o << m.name << "_";
+}
+
+const Member *memberFor(const Table &t, const string &name)
+{
+  for (const auto &m : t.member)
+    if (m.name == name)
+      return &m;
+  throw std::runtime_error("Member not defined!");
+}
+
+std::pair<int, const Member *> memberEntry(const Table &t, const string &name)
+{
+  int i = 0;
+  for (const auto &m : t.member)
+  {
+    if (m.name == name)
+      return make_pair(i, &m);
+    ++i;
+  }
+  throw std::runtime_error("Member not defined!");
+}
+
+std::vector<std::pair<int, const Member *>> indexParameter(const Table &t, const Method &m)
+{
+  std::vector<std::pair<int, const Member *>> parameter;
+
+  for (const auto &p : m.parameter)
+    parameter.emplace_back(memberEntry(t, p.name));
+
+  return parameter;
+}
+
+void WriteTableInitializer(ostream &o, const Table &t)
+{
+  o << endl << "  " << t.name << "() = default;" << endl;
+  for (const auto &method : t.methods)
+  {
+    if (method.name != "init")
+      continue;
+
+    auto parameter = indexParameter(t, method);
+    o << "  " << t.name << "(";
+    string comma;
+    for (const auto &p : parameter)
+    {
+      o << comma;
+      WriteParameterType(o, *p.second);
+      comma = ", ";
+    }
+    o << ")" << endl;
+    comma = ": ";
+    std::sort(parameter.begin(), parameter.end());
+    for (const auto &p : parameter)
+    {
+      bool isUnique = p.second->pointer == Pointer::Unique;
+      o << "    " << comma << p.second->name << "(";
+      if (isUnique)
+        o << "std::move(" << p.second->name << "_))" << endl;
+      else
+        o << p.second->name << "_)" << endl;
+      comma = ", ";
+    }
+    o << "  {}" << endl;
+  }
+}
+
 void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
 {
   o << "struct " << t.name << " {" << endl;
@@ -390,8 +471,11 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
     o << ";" << endl;
   }
 
+  WriteTableInitializer(o, t);
+
   if (hasSharedAppearance(t))
   {
+    o << endl;
     o << "private:" << endl;
     o << "  unsigned int io_counter_{0};" << endl;
     o << "  friend struct " << root_type << "_io;" << endl;

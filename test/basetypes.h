@@ -15,6 +15,7 @@ struct AlwaysFalse : std::false_type {};
 
 struct BaseTypes;
 struct PointerBaseTypes;
+struct Initializer;
 struct Root;
 
 struct BaseTypes {
@@ -33,15 +34,35 @@ struct BaseTypes {
   std::uint32_t k{0u};
   std::uint64_t l{0u};
   std::string m;
+
+  BaseTypes() = default;
 };
 
 struct PointerBaseTypes {
   std::vector<std::string> b1;
+
+  PointerBaseTypes() = default;
+};
+
+struct Initializer {
+  std::int32_t a{3};
+  double b{4.2};
+
+  Initializer() = default;
+  Initializer(const std::int32_t &a_)
+    : a(a_)
+  {}
+  Initializer(const double &b_, const std::int32_t &a_)
+    : a(a_)
+    , b(b_)
+  {}
 };
 
 struct Root {
   BaseTypes a;
   PointerBaseTypes b;
+
+  Root() = default;
 };
 
 bool operator==(const BaseTypes&l, const BaseTypes&r) {
@@ -90,6 +111,18 @@ bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
 bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
   return 
     l.b1 != r.b1;
+}
+
+bool operator==(const Initializer&l, const Initializer&r) {
+  return 
+    l.a == r.a
+    && l.b == r.b;
+}
+
+bool operator!=(const Initializer&l, const Initializer&r) {
+  return 
+    l.a != r.a
+    || l.b != r.b;
 }
 
 bool operator==(const Root&l, const Root&r) {
@@ -206,6 +239,16 @@ private:
 
   void Read(std::istream &s, PointerBaseTypes &v) {
     Read(s, v.b1);
+  }
+
+  void Write(std::ostream &o, const Initializer &v) {
+    Write(o, v.a);
+    Write(o, v.b);
+  }
+
+  void Read(std::istream &s, Initializer &v) {
+    Read(s, v.a);
+    Read(s, v.b);
   }
 
   void Write(std::ostream &o, const Root &v) {

@@ -262,18 +262,12 @@ package Scope;
 version "0.0";
 root_type Dummy;
 
-enum EnumTypes
-{
-alpha,
-beta = 4,
-gamma,
-delta = 42
-}
+enum EnumTypes { alpha, beta = 4, gamma, delta = 42 }
 
 table Dummy
 {
-en1:EnumTypes;
-en2:EnumTypes=delta;
+  en1:EnumTypes;
+  en2:EnumTypes=delta;
 })");
 
     REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 4));
@@ -303,5 +297,20 @@ en2:EnumTypes=delta;
     parse(
         "table D { a:unsigned int;} \n"
         "// line comment at end");
+  }
+
+  SECTION("table special function parsing")
+  {
+    SECTION("special initializer parsing")
+    {
+      const auto p = parse(
+          "table Dummy {\n"
+          "  a:int;\n"
+          "  b:float;\n"
+          "  init(a,b);\n"
+          "  init(b);\n"
+          "  init();\n"
+          "}");
+    }
   }
 }

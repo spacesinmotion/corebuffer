@@ -253,7 +253,7 @@ bool Parser::readTable()
     //        ok = readClassBaseList(_class);
 
     if (ok && readScopeStatement([this, &t]() {
-          while (readTableMember(t))
+          while (readTableMemberOrMethod(t))
             ;
           return true;
         }))
@@ -376,6 +376,52 @@ bool Parser::readEnumMemberDefault(size_t &v)
 
   rewind(s);
   return false;
+}
+
+bool Parser::readTableMemberOrMethod(Table &t)
+{
+  return readTableMethod(t) || readTableMember(t);
+}
+
+bool Parser::readTableMethod(Table &t)
+{
+  auto s = state();
+
+  auto name = readIdentifier();
+  const auto sb = stateBefor(name.size());
+  if (!name.empty() && read("("))
+  {
+    Method m(name, sb);
+    m.parameter = readIdentifierList();
+
+    if (!read(")"))
+      throw FileError("Missing closing ')' for method '" + name + "'.", state());
+    if (!read(";"))
+      throw FileError("Expected ';' after method definition.", state());
+
+    t.methods.push_back(m);
+    return true;
+  }
+
+  rewind(s);
+  return false;
+}
+
+vector<Parameter> Parser::readIdentifierList()
+{
+  vector<Parameter> list;
+  for (;;)
+  {
+    const auto id = readIdentifier();
+    if (id.empty())
+      break;
+
+    list.emplace_back(id, stateBefor(id.size()));
+    if (!read(","))
+      break;
+  };
+
+  return list;
 }
 
 bool Parser::readTypeDefinition(Member &m)

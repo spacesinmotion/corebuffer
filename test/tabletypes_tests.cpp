@@ -152,4 +152,34 @@ TEST_CASE("TableType test", "[output, table]")
     CHECK(cIn.e[1].lock() == cIn.d[1]);
     CHECK(cIn.e[1].lock() == cIn.d[1]);
   }
+
+  SECTION("initializing methods with pointer")
+  {
+    auto d = std::make_shared<Scope::TableD>();
+
+    auto _inited = Scope::TableA(d);
+
+    CHECK(nullptr == _inited.d1);
+    CHECK(nullptr == _inited.d2.lock());
+    CHECK(d == _inited.d3);
+    CHECK(nullptr == _inited.d4);
+
+    _inited = Scope::TableA(d, std::unique_ptr<Scope::TableD>(new Scope::TableD));
+
+    CHECK(nullptr != _inited.d1);
+    CHECK(d == _inited.d2.lock());
+    CHECK(nullptr == _inited.d3);
+    CHECK(nullptr == _inited.d4);
+  }
+
+  SECTION("initializing methods vector of unique pointer")
+  {
+    std::vector<std::unique_ptr<Scope::TableA>> list;
+    list.emplace_back(new Scope::TableA);
+    list.emplace_back(new Scope::TableA);
+
+    Scope::TableC _inited(std::move(list));
+
+    CHECK(_inited.c.size() == 2);
+  }
 }
