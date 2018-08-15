@@ -192,56 +192,73 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
     }
   }
 
-  SECTION("wrong efault values")
+  SECTION("wrong default values")
   {
-    checkNoErrorIn("table T1 { a:float=42; }");
-    checkNoErrorIn("table T1 { a:float=42.0; }");
-    checkNoErrorIn("table T1 { a:int=42; }");
-    checkNoErrorIn("table T1 { a:bool=true; }");
-    checkNoErrorIn("table T1 { a:bool=false; }");
-    checkNoErrorIn("table T1 { a:string=\"true/false\"; }");
-    checkNoErrorIn("table T1 { a:string=\"\"; }");
+    SECTION("base types")
+    {
+      checkNoErrorIn("table T1 { a:float=42; }");
+      checkNoErrorIn("table T1 { a:float=42.0; }");
+      checkNoErrorIn("table T1 { a:int=42; }");
+      checkNoErrorIn("table T1 { a:bool=true; }");
+      checkNoErrorIn("table T1 { a:bool=false; }");
+      checkNoErrorIn("table T1 { a:string=\"true/false\"; }");
+      checkNoErrorIn("table T1 { a:string=\"\"; }");
 
-    checkErrorIn("only integral values can be assigned here.", 2, 9,
-                 "table T1 {\n"
-                 "  a:int=0.4;\n"
-                 "}");
-    checkErrorIn("only integral values can be assigned here.", 2, 9,
-                 "table T1 {\n"
-                 "  a:int=\"0.4\";\n"
-                 "}");
-    checkErrorIn("only integral values can be assigned here.", 2, 9,
-                 "table T1 {\n"
-                 "  a:int=true;\n"
-                 "}");
-    checkErrorIn("only floating point values can be assigned here.", 2, 11,
-                 "table T1 {\n"
-                 "  a:float=\"0.4\";\n"
-                 "}");
-    checkErrorIn("only floating point values can be assigned here.", 2, 11,
-                 "table T1 {\n"
-                 "  a:float=false;\n"
-                 "}");
-    checkErrorIn("only string values can be assigned here.", 2, 12,
-                 "table T1 {\n"
-                 "  a:string=0.4;\n"
-                 "}");
-    checkErrorIn("only string values can be assigned here.", 2, 12,
-                 "table T1 {\n"
-                 "  a:string=false;\n"
-                 "}");
+      checkErrorIn("only integral values can be assigned here.", 2, 9,
+                   "table T1 {\n"
+                   "  a:int=0.4;\n"
+                   "}");
+      checkErrorIn("only integral values can be assigned here.", 2, 9,
+                   "table T1 {\n"
+                   "  a:int=\"0.4\";\n"
+                   "}");
+      checkErrorIn("only integral values can be assigned here.", 2, 9,
+                   "table T1 {\n"
+                   "  a:int=true;\n"
+                   "}");
+      checkErrorIn("only floating point values can be assigned here.", 2, 11,
+                   "table T1 {\n"
+                   "  a:float=\"0.4\";\n"
+                   "}");
+      checkErrorIn("only floating point values can be assigned here.", 2, 11,
+                   "table T1 {\n"
+                   "  a:float=false;\n"
+                   "}");
+      checkErrorIn("only string values can be assigned here.", 2, 12,
+                   "table T1 {\n"
+                   "  a:string=0.4;\n"
+                   "}");
+      checkErrorIn("only string values can be assigned here.", 2, 12,
+                   "table T1 {\n"
+                   "  a:string=false;\n"
+                   "}");
 
-    checkErrorIn("only boolean values can be assigned here.", 2, 10,
-                 "table T1 {\n"
-                 "  a:bool=1;\n"
-                 "}");
-    checkErrorIn("only boolean values can be assigned here.", 2, 10,
-                 "table T1 {\n"
-                 "  a:bool=4.3;\n"
-                 "}");
-    checkErrorIn("only boolean values can be assigned here.", 2, 10,
-                 "table T1 {\n"
-                 "  a:bool=\"fail\";\n"
-                 "}");
+      checkErrorIn("only boolean values can be assigned here.", 2, 10,
+                   "table T1 {\n"
+                   "  a:bool=1;\n"
+                   "}");
+      checkErrorIn("only boolean values can be assigned here.", 2, 10,
+                   "table T1 {\n"
+                   "  a:bool=4.3;\n"
+                   "}");
+      checkErrorIn("only boolean values can be assigned here.", 2, 10,
+                   "table T1 {\n"
+                   "  a:bool=\"fail\";\n"
+                   "}");
+    }
+
+    SECTION("enums")
+    {
+      checkErrorIn("unknown value 'fail' for enum 'E1'.", 3, 8,
+                   "enum E1 { A, B, C }\n"
+                   "table T1 {\n"
+                   "  a:E1=fail;\n"
+                   "}");
+      checkErrorIn("only values of 'E1' can be assigned here.", 3, 8,
+                   "enum E1 { A, B, C }\n"
+                   "table T1 {\n"
+                   "  a:E1=true;\n"
+                   "}");
+    }
   }
 }

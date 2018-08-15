@@ -221,7 +221,18 @@ bool StructureCheck::isString(const string &text)
   return !text.empty() && text.front() == '\"' && text.back() == '\"';
 }
 
+bool StructureCheck::isBool(const string &text)
+{
+  return text == "true" || text == "false";
+}
+
 void StructureCheck::checkDefaultValues()
+{
+  checkDefaultValuesOfBaseTypes();
+  checkDefaultValuesOfEnums();
+}
+
+void StructureCheck::checkDefaultValuesOfBaseTypes()
 {
   for (const auto &t : _package.tables)
   {
@@ -242,11 +253,29 @@ void StructureCheck::checkDefaultValues()
       }
       else if (m.type == "bool")
       {
-        if (m.defaultValue.value != "true" && m.defaultValue.value != "false")
+        if (!isBool(m.defaultValue.value))
           _errors.emplace_back("only boolean values can be assigned here.", m.defaultValue.location);
       }
       else if (m.type == "std::string" && !isString(m.defaultValue.value))
         _errors.emplace_back("only string values can be assigned here.", m.defaultValue.location);
+    }
+  }
+}
+
+void StructureCheck::checkDefaultValuesOfEnums()
+{
+  for (const auto &t : _package.tables)
+  {
+    for (const auto &m : t.member)
+    {
+      if (!enumExists(m.type) || m.defaultValue.value.empty())
+        continue;
+
+      if (isFloat(m.defaultValue.value) || isString(m.defaultValue.value) || isBool(m.defaultValue.value))
+        _errors.emplace_back("only values of '" + m.type + "' can be assigned here.", m.defaultValue.location);
+      else if (m.defaultValue.value.find(m.type) == string::npos)
+        _errors.emplace_back("unknown value '" + m.defaultValue.value + "' for enum '" + m.type + "'.",
+                             m.defaultValue.location);
     }
   }
 }

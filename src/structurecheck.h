@@ -43,6 +43,8 @@ private:
   void checkEnumTypePointer();
 
   void checkDefaultValues();
+  void checkDefaultValuesOfBaseTypes();
+  void checkDefaultValuesOfEnums();
 
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
@@ -54,6 +56,7 @@ private:
   bool isFloat(const std::string &number);
   bool isIntegral(const std::string &number);
   bool isString(const std::string &text);
+  bool isBool(const std::string &text);
 
 private:
   Package &_package;

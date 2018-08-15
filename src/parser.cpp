@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "fileerror.h"
 
+#include <algorithm>
 #include <sstream>
 
 static string WHITESPACE = " \t\n\r";
@@ -740,8 +741,11 @@ bool Parser::updateTableAppearance()
       auto *e = enumForType(m.type);
       if (e)
       {
-        m.defaultValue.value = fullPackageScope() + "::" + e->name +
-                               "::" + (m.defaultValue.value.empty() ? e->entries.front().name : m.defaultValue.value);
+        if (m.defaultValue.value.empty())
+          m.defaultValue.value = fullPackageScope() + "::" + e->name + "::" + e->entries.front().name;
+        else if (std::any_of(e->entries.begin(), e->entries.end(),
+                             [&m](const EnumEntry &ee) { return ee.name == m.defaultValue.value; }))
+          m.defaultValue.value = fullPackageScope() + "::" + e->name + "::" + m.defaultValue.value;
       }
 
       auto *t = tableForType(m.type);
