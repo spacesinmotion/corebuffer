@@ -103,4 +103,57 @@ TEST_CASE("base type output test", "[output, base types]")
     CHECK(_inited.a == 345);
     CHECK(_inited.b == 32.1f);
   }
+
+  SECTION("Compare operations")
+  {
+    SECTION("Pointer")
+    {
+      Scope::PointerBaseTypes d1;
+      Scope::PointerBaseTypes d2;
+
+      CHECK(d1 == d2);
+      CHECK_FALSE(d1 != d2);
+
+      d1.b1.emplace_back("xxx");
+      d2.b1.emplace_back("yyy");
+
+      CHECK_FALSE(d1 == d2);
+      CHECK(d1 != d2);
+    }
+
+    SECTION("Root")
+    {
+      Scope::Root d1;
+      Scope::Root d2;
+
+      CHECK(d1 == d2);
+      CHECK_FALSE(d1 != d2);
+
+      d1.b.b1.emplace_back("xxx");
+      d2.b.b1.emplace_back("yyy");
+
+      CHECK_FALSE(d1 == d2);
+      CHECK(d1 != d2);
+    }
+
+    SECTION("Initializer")
+    {
+      CHECK(Scope::Initializer() == Scope::Initializer());
+      CHECK_FALSE(Scope::Initializer() != Scope::Initializer());
+
+      CHECK_FALSE(Scope::Initializer(2.1f, 4) == Scope::Initializer(2.21f, 14));
+      CHECK(Scope::Initializer(2.1f, 4) != Scope::Initializer(2.21f, 14));
+    }
+  }
+
+  SECTION("Reading fails with wrong data")
+  {
+    Scope::Root r;
+
+    std::stringstream s1("FALSE");
+    CHECK_FALSE(Scope::Root_io().ReadRoot(s1, r));
+
+    std::stringstream s2("COREfails");
+    CHECK_FALSE(Scope::Root_io().ReadRoot(s2, r));
+  }
 }

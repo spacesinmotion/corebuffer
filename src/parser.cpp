@@ -742,10 +742,10 @@ bool Parser::updateTableAppearance()
       if (e)
       {
         if (m.defaultValue.value.empty())
-          m.defaultValue.value = fullPackageScope() + "::" + e->name + "::" + e->entries.front().name;
+          m.defaultValue.value = fullPackageScope() + e->name + "::" + e->entries.front().name;
         else if (std::any_of(e->entries.begin(), e->entries.end(),
                              [&m](const EnumEntry &ee) { return ee.name == m.defaultValue.value; }))
-          m.defaultValue.value = fullPackageScope() + "::" + e->name + "::" + m.defaultValue.value;
+          m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
       }
 
       auto *t = tableForType(m.type);
@@ -777,15 +777,13 @@ std::string Parser::fullPackageScope() const
   auto pos = std::string::size_type(0);
   auto end = package.path.value.find('.', pos);
   std::string scope = package.path.value.substr(pos, end);
-  do
+  while (end != std::string::npos)
   {
-    pos = end;
+    pos = end + 1;
     end = package.path.value.find('.', pos);
-    if (end == std::string::npos)
-      break;
-    scope += "::" + package.path.value.substr(pos, end);
-  } while (true);
-  return scope;
+    scope += "::" + package.path.value.substr(pos, end - pos);
+  }
+  return scope.empty() ? "" : scope + "::";
 }
 
 FileError::FileError(const std::string &m, const FilePosition &s) : std::runtime_error(m), _state(s) {}

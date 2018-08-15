@@ -35,6 +35,11 @@ TEST_CASE("EnumTypes test", "[output, enum]")
     CHECK(Scope::ValueName(Scope::EnumTypes::delta) == std::string("delta"));
   }
 
+  SECTION("defined value names - error")
+  {
+    CHECK(Scope::ValueName(static_cast<Scope::EnumTypes>(12)) == std::string("<error>"));
+  }
+
   SECTION("default values")
   {
     Scope::Dummy d;
@@ -73,5 +78,31 @@ TEST_CASE("EnumTypes test", "[output, enum]")
     REQUIRE(dIn.en3.size() == 2);
     CHECK(dIn.en3[0] == Scope::EnumTypes::beta);
     CHECK(dIn.en3[1] == Scope::EnumTypes::gamma);
+  }
+
+  SECTION("Compare operations")
+  {
+    Scope::Dummy d1;
+    Scope::Dummy d2;
+
+    CHECK(d1 == d2);
+    CHECK_FALSE(d1 != d2);
+
+    d1.en1 = Scope::EnumTypes::beta;
+    d2.en1 = Scope::EnumTypes::gamma;
+
+    CHECK_FALSE(d1 == d2);
+    CHECK(d1 != d2);
+  }
+
+  SECTION("Reading fails with wrong data")
+  {
+    Scope::Dummy r;
+
+    std::stringstream s1("FALSE");
+    CHECK_FALSE(Scope::Dummy_io().ReadDummy(s1, r));
+
+    std::stringstream s2("COREfails");
+    CHECK_FALSE(Scope::Dummy_io().ReadDummy(s2, r));
   }
 }

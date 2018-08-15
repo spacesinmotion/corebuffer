@@ -255,10 +255,10 @@ table VectorTypes {
     CHECK((p.tables.size() == 1 && p.tables.back().member.size() == 1));
   }
 
-  SECTION("Defautl values for enums")
+  SECTION("default values for enums")
   {
     const auto p = parse(R"(
-package Scope;
+package Scope.Sub;
 version "0.0";
 root_type Dummy;
 
@@ -273,8 +273,29 @@ table Dummy
     REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 4));
     REQUIRE((p.tables.size() == 1 && p.tables.back().member.size() == 2));
 
-    CHECK(p.tables[0].member[0].defaultValue.value == "Scope::EnumTypes::alpha");
-    CHECK(p.tables[0].member[1].defaultValue.value == "Scope::EnumTypes::delta");
+    CHECK(p.tables[0].member[0].defaultValue.value == "Scope::Sub::EnumTypes::alpha");
+    CHECK(p.tables[0].member[1].defaultValue.value == "Scope::Sub::EnumTypes::delta");
+  }
+
+  SECTION("default values for enums without package")
+  {
+    const auto p = parse(R"(
+version "0.0";
+root_type Dummy;
+
+enum EnumTypes { alpha, beta = 4, gamma, delta = 42 }
+
+table Dummy
+{
+  en1:EnumTypes;
+  en2:EnumTypes=delta;
+})");
+
+    REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 4));
+    REQUIRE((p.tables.size() == 1 && p.tables.back().member.size() == 2));
+
+    CHECK(p.tables[0].member[0].defaultValue.value == "EnumTypes::alpha");
+    CHECK(p.tables[0].member[1].defaultValue.value == "EnumTypes::delta");
   }
 
   SECTION("empty table or enum")
