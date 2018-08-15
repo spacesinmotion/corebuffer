@@ -6,7 +6,7 @@
 Package parse(const std::string &source)
 {
   Package p;
-  REQUIRE(Parser(source, p).parse());
+  REQUIRE_NOTHROW(Parser(source, p).parse());
   return p;
 }
 

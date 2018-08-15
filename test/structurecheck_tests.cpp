@@ -6,7 +6,7 @@
 void checkErrorInPure(const std::string &error, size_t line, size_t column, const std::string &source)
 {
   Package p;
-  REQUIRE(Parser(source, p).parse());
+  REQUIRE_NOTHROW(Parser(source, p).parse());
 
   const auto errors = StructureCheck(p).check();
   INFO(error);
@@ -37,7 +37,7 @@ void checkNoErrorIn(std::string source)
   addFooter(source);
 
   Package p;
-  REQUIRE(Parser(source, p).parse());
+  REQUIRE_NOTHROW(Parser(source, p).parse());
 
   const auto errors = StructureCheck(p).check();
   CAPTURE(errors);

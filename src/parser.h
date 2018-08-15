@@ -19,7 +19,7 @@ class Parser
 public:
   Parser(const string &t, Package &p);
 
-  bool parse();
+  void parse();
 
 private:
   char front() const;
@@ -73,7 +73,7 @@ private:
   void initBaseTypes();
   Table *tableForType(const std::string &t);
   Enum *enumForType(const std::string &t);
-  bool updateTableAppearance();
+  void updateTableAppearance();
   std::string fullPackageScope() const;
 
 private:

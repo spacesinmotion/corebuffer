@@ -12,7 +12,7 @@ static string IDENTIFIER_MID = IDENTIFIER_BEGIN + DIDGET;
 
 Parser::Parser(const std::string &t, Package &p) : text(t), package(p) {}
 
-bool Parser::parse()
+void Parser::parse()
 {
   initBaseTypes();
 
@@ -20,9 +20,10 @@ bool Parser::parse()
     ;
 
   skipComment();
-  if (end())
-    return updateTableAppearance();
-  return false;
+  if (!end())
+    throw FileError("Parsing failed for unknown reason.", state());
+
+  updateTableAppearance();
 }
 
 char Parser::front() const
@@ -721,7 +722,7 @@ Enum *Parser::enumForType(const std::string &name)
   return nullptr;
 }
 
-bool Parser::updateTableAppearance()
+void Parser::updateTableAppearance()
 {
   for (auto &t : package.tables)
   {
@@ -769,7 +770,6 @@ bool Parser::updateTableAppearance()
         t->appearance |= PlainAppearance;
     }
   }
-  return true;
 }
 
 std::string Parser::fullPackageScope() const
