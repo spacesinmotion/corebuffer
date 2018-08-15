@@ -395,14 +395,6 @@ ostream &WriteParameterType(ostream &o, const Member &m)
   return o << m.name << "_";
 }
 
-const Member *memberFor(const Table &t, const string &name)
-{
-  for (const auto &m : t.member)
-    if (m.name == name)
-      return &m;
-  throw std::runtime_error("Member not defined!");
-}
-
 std::pair<int, const Member *> memberEntry(const Table &t, const string &name)
 {
   int i = 0;

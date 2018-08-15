@@ -283,6 +283,15 @@ table Dummy
     parse("enum Dummy {}");
   }
 
+  SECTION("default values for bool")
+  {
+    parse(
+        "table A {\n"
+        "a:bool = false;\n"
+        "b:bool = true;\n"
+        "}");
+  }
+
   SECTION("trailing ',' enum") { parse("enum Dummy {a,b,}"); }
 
   SECTION("base type names with more than one identifier") { parse("table Dummy {a:unsigned int;}"); }

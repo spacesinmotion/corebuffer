@@ -125,4 +125,18 @@ TEST_CASE("Parsing idls with error", "[parsing, error, syntax]")
                "table A {\n"
                "  a:plain;\n"
                "}");
+
+  SECTION("special method parsing")
+  {
+    checkThrowIn("Missing closing ')' for method 'init'.", 3, 9,
+                 "table T1 {\n"
+                 "  a:int;\n"
+                 "  init(a ;\n"
+                 "}");
+    checkThrowIn("Expected ';' after method definition.", 3, 10,
+                 "table T1 {\n"
+                 "  a:int;\n"
+                 "  init(a)\n"
+                 "}");
+  }
 }
