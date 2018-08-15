@@ -26,7 +26,8 @@ table PointerBaseTypes {
 
 table Initializer {
   a:int = 3;
-  b:double = 4.2;
+  b:float = 4.2;
+  c:ui64 = 999933030303003;
 
   init(a);
   init(b, a);

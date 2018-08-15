@@ -46,13 +46,14 @@ struct PointerBaseTypes {
 
 struct Initializer {
   std::int32_t a{3};
-  double b{4.2};
+  float b{4.2f};
+  std::uint64_t c{999933030303003u};
 
   Initializer() = default;
   Initializer(const std::int32_t &a_)
     : a(a_)
   {}
-  Initializer(const double &b_, const std::int32_t &a_)
+  Initializer(const float &b_, const std::int32_t &a_)
     : a(a_)
     , b(b_)
   {}
@@ -116,13 +117,15 @@ bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
 bool operator==(const Initializer&l, const Initializer&r) {
   return 
     l.a == r.a
-    && l.b == r.b;
+    && l.b == r.b
+    && l.c == r.c;
 }
 
 bool operator!=(const Initializer&l, const Initializer&r) {
   return 
     l.a != r.a
-    || l.b != r.b;
+    || l.b != r.b
+    || l.c != r.c;
 }
 
 bool operator==(const Root&l, const Root&r) {
@@ -244,11 +247,13 @@ private:
   void Write(std::ostream &o, const Initializer &v) {
     Write(o, v.a);
     Write(o, v.b);
+    Write(o, v.c);
   }
 
   void Read(std::istream &s, Initializer &v) {
     Read(s, v.a);
     Read(s, v.b);
+    Read(s, v.c);
   }
 
   void Write(std::ostream &o, const Root &v) {
