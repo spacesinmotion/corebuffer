@@ -96,11 +96,11 @@ TEST_CASE("base type output test", "[output, base types]")
     CHECK(_inited.a != _default.a);
     CHECK(_inited.b == _default.b);
 
-    _inited = Scope::Initializer(32.1, 345);
+    _inited = Scope::Initializer(32.1f, 345);
 
     CHECK(_inited.a != _default.a);
     CHECK(_inited.b != _default.b);
     CHECK(_inited.a == 345);
-    CHECK(_inited.b == 32.1);
+    CHECK(_inited.b == 32.1f);
   }
 }
