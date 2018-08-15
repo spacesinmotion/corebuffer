@@ -1,5 +1,5 @@
 
-[![Build status](https://ci.appveyor.com/api/projects/status/x0xdasqqpq1evc08?svg=true)](https://ci.appveyor.com/project/spacesinmotion/corebuffer)
+[![Build status](https://ci.appveyor.com/api/projects/status/x0xdasqqpq1evc08/branch/master?svg=true)](https://ci.appveyor.com/project/spacesinmotion/corebuffer/branch/master)
 [![license](https://img.shields.io/github/license/spacesinmotion/corebuffer.svg)]()
 
 ##  What is CoreBuffer?
