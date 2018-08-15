@@ -456,9 +456,9 @@ string defaultValueLiteral(const Member &m)
   if (m.isBaseType)
   {
     if (m.type == "float")
-      return m.defaultValue.back() == 'f' ? "" : "f";
+      return m.defaultValue.value.back() == 'f' ? "" : "f";
     else if (m.type.find("std::u") == 0)
-      return m.defaultValue.back() == 'u' ? "" : "u";
+      return m.defaultValue.value.back() == 'u' ? "" : "u";
   }
   return string();
 }
@@ -470,8 +470,8 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
   {
     o << "  ";
     WriteType(o, m) << " " << m.name;
-    if (!m.isVector && m.pointer == Pointer::Plain && !m.defaultValue.empty())
-      o << "{" << m.defaultValue << defaultValueLiteral(m) << "}";
+    if (!m.isVector && m.pointer == Pointer::Plain && !m.defaultValue.value.empty())
+      o << "{" << m.defaultValue.value << defaultValueLiteral(m) << "}";
     o << ";" << endl;
   }
 

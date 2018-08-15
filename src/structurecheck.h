@@ -42,12 +42,18 @@ private:
   void checkBaseTypePointer();
   void checkEnumTypePointer();
 
+  void checkDefaultValues();
+
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
   bool enumExists(const std::string &name);
 
   std::string methodParameterKey(const Method &m);
   std::string methodTypeParameterKey(const Table &t, const Method &m);
+
+  bool isFloat(const std::string &number);
+  bool isIntegral(const std::string &number);
+  bool isString(const std::string &text);
 
 private:
   Package &_package;

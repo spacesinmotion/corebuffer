@@ -1,6 +1,8 @@
 #include "structurecheck.h"
 #include "package.h"
 
+#include <sstream>
+
 using namespace std;
 
 StructureCheck::StructureCheck(Package &p) : _package(p) {}
@@ -14,6 +16,7 @@ const std::vector<FileError> &StructureCheck::check()
   checkRootType();
   checkBaseTypePointer();
   checkEnumTypePointer();
+  checkDefaultValues();
 
   return _errors;
 }
@@ -195,6 +198,57 @@ void StructureCheck::checkEnumTypePointer()
     for (const auto &m : t.member)
       if (!m.isBaseType && m.pointer != Pointer::Plain && enumExists(m.type))
         _errors.emplace_back("enums cannot be pointer.", m.location);
+}
+
+bool StructureCheck::isFloat(const string &number)
+{
+  istringstream iss(number);
+  double f;
+  iss >> noskipws >> f;
+  return iss.eof() && !iss.fail();
+}
+
+bool StructureCheck::isIntegral(const string &number)
+{
+  istringstream iss(number);
+  long long i;
+  iss >> noskipws >> i;
+  return iss.eof() && !iss.fail();
+}
+
+bool StructureCheck::isString(const string &text)
+{
+  return !text.empty() && text.front() == '\"' && text.back() == '\"';
+}
+
+void StructureCheck::checkDefaultValues()
+{
+  for (const auto &t : _package.tables)
+  {
+    for (const auto &m : t.member)
+    {
+      if (!m.isBaseType || m.defaultValue.location.isAtStart())
+        continue;
+
+      if (m.type.find("std::uint") == 0 || m.type.find("std::int") == 0)
+      {
+        if (!isIntegral(m.defaultValue.value))
+          _errors.emplace_back("only integral values can be assigned here.", m.defaultValue.location);
+      }
+      else if (m.type == "float" || m.type == "double")
+      {
+        if (!isFloat(m.defaultValue.value))
+          _errors.emplace_back("only floating point values can be assigned here.", m.defaultValue.location);
+      }
+      else if (m.type == "bool")
+      {
+        if (m.defaultValue.value != "true" && m.defaultValue.value != "false")
+          _errors.emplace_back("only boolean values can be assigned here.", m.defaultValue.location);
+      }
+      else if (m.type == "std::string" && !isString(m.defaultValue.value))
+        _errors.emplace_back("only string values can be assigned here.", m.defaultValue.location);
+    }
+  }
 }
 
 bool StructureCheck::isBaseType(const string &name)

@@ -351,7 +351,7 @@ bool Parser::readTableMemberDefault(Member &m)
     if (!readBaseType(val))
       throw FileError("Missing default value.", state());
 
-    m.defaultValue = val;
+    m.defaultValue = Attribute(val, stateBefor(val.size()));
     return true;
   }
 
@@ -536,8 +536,12 @@ bool Parser::readBaseType(string &val)
 
   if (!bt)
     bt = readNumber(val);
+
   if (!bt)
+  {
     bt = readString(val);
+    val = "\"" + val + "\"";
+  }
 
   if (!bt)
   {
@@ -602,14 +606,22 @@ bool Parser::readString(string &val)
 
   if (read("\""))
   {
+    const auto sb = stateBefor(1);
+
     while (!end() && front() != '\"')
+    {
+      if (front() == '\n')
+        throw FileError("Line break in string constant.", sb);
       val += take();
+    }
 
     if (!end())
     {
       skip();
       return true;
     }
+    else
+      throw FileError("Missing closing '\"' reading string constant.", sb);
   }
 
   rewind(s);
@@ -719,17 +731,17 @@ bool Parser::updateTableAppearance()
         m.type = aliases.at(m.type);
         m.isBaseType = true;
       }
-      if (!m.isVector && m.pointer == Pointer::Plain && m.defaultValue.empty() &&
+      if (!m.isVector && m.pointer == Pointer::Plain && m.defaultValue.value.empty() &&
           defaults.find(m.type) != defaults.end())
       {
-        m.defaultValue = defaults[m.type];
+        m.defaultValue.value = defaults[m.type];
       }
 
       auto *e = enumForType(m.type);
       if (e)
       {
-        m.defaultValue = fullPackageScope() + "::" + e->name +
-                         "::" + (m.defaultValue.empty() ? e->entries.front().name : m.defaultValue);
+        m.defaultValue.value = fullPackageScope() + "::" + e->name +
+                               "::" + (m.defaultValue.value.empty() ? e->entries.front().name : m.defaultValue.value);
       }
 
       auto *t = tableForType(m.type);

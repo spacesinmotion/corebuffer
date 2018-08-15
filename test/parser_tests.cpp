@@ -25,7 +25,7 @@ table BaseTypes {)" + member +
   CHECK_FALSE(p.tables.front().member[0].isVector);
   CHECK(p.tables.front().member[0].pointer == Pointer::Plain);
   CHECK(p.tables.front().member[0].type == type);
-  CHECK(p.tables.front().member[0].defaultValue == defValue);
+  CHECK(p.tables.front().member[0].defaultValue.value == defValue);
 }
 
 TEST_CASE("Parsing packages", "[parser]")
@@ -85,28 +85,28 @@ enum Access { Private, Public = 3, Protected }
       CHECK(!p.tables[0].member[0].isVector);
       CHECK(p.tables[0].member[0].name == "bill");
       CHECK(p.tables[0].member[0].type == "std::int32_t");
-      CHECK(p.tables[0].member[0].defaultValue == "1");
+      CHECK(p.tables[0].member[0].defaultValue.value == "1");
       CHECK(p.tables[0].member[0].pointer == Pointer::Plain);
 
       CHECK(!p.tables[0].member[1].isVector);
       CHECK(p.tables[0].member[1].isBaseType);
       CHECK(p.tables[0].member[1].name == "aul");
       CHECK(p.tables[0].member[1].type == "bool");
-      CHECK(p.tables[0].member[1].defaultValue == "false");
+      CHECK(p.tables[0].member[1].defaultValue.value == "false");
       CHECK(p.tables[0].member[1].pointer == Pointer::Plain);
 
       CHECK(!p.tables[0].member[2].isVector);
       CHECK(p.tables[0].member[2].isBaseType);
       CHECK(p.tables[0].member[2].name == "kaul");
       CHECK(p.tables[0].member[2].type == "float");
-      CHECK(p.tables[0].member[2].defaultValue == "0.0f");
+      CHECK(p.tables[0].member[2].defaultValue.value == "0.0f");
       CHECK(p.tables[0].member[2].pointer == Pointer::Plain);
 
       CHECK(p.tables[0].member[3].isVector);
       CHECK(p.tables[0].member[3].isBaseType);
       CHECK(p.tables[0].member[3].name == "baul");
       CHECK(p.tables[0].member[3].type == "float");
-      CHECK(p.tables[0].member[3].defaultValue.empty());
+      CHECK(p.tables[0].member[3].defaultValue.value.empty());
       CHECK(p.tables[0].member[3].pointer == Pointer::Plain);
     }
 
@@ -122,14 +122,14 @@ enum Access { Private, Public = 3, Protected }
       CHECK(!p.tables[1].member[0].isBaseType);
       CHECK(p.tables[1].member[0].name == "still");
       CHECK(p.tables[1].member[0].type == "XXX");
-      CHECK(p.tables[1].member[0].defaultValue.empty());
+      CHECK(p.tables[1].member[0].defaultValue.value.empty());
       CHECK(p.tables[1].member[0].pointer == Pointer::Unique);
 
       CHECK(p.tables[1].member[1].isVector);
       CHECK(!p.tables[1].member[1].isBaseType);
       CHECK(p.tables[1].member[1].name == "sub");
       CHECK(p.tables[1].member[1].type == "YYY");
-      CHECK(p.tables[1].member[1].defaultValue.empty());
+      CHECK(p.tables[1].member[1].defaultValue.value.empty());
       CHECK(p.tables[1].member[1].pointer == Pointer::Shared);
     }
   }
@@ -273,8 +273,8 @@ table Dummy
     REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 4));
     REQUIRE((p.tables.size() == 1 && p.tables.back().member.size() == 2));
 
-    CHECK(p.tables[0].member[0].defaultValue == "Scope::EnumTypes::alpha");
-    CHECK(p.tables[0].member[1].defaultValue == "Scope::EnumTypes::delta");
+    CHECK(p.tables[0].member[0].defaultValue.value == "Scope::EnumTypes::alpha");
+    CHECK(p.tables[0].member[1].defaultValue.value == "Scope::EnumTypes::delta");
   }
 
   SECTION("empty table or enum")
