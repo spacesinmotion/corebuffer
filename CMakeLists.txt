@@ -5,17 +5,17 @@ project (CoreBuffer LANGUAGES CXX VERSION 0.1)
 enable_testing()
 set (CMAKE_CXX_STANDARD 11)
 
-include_directories(src/ ./)
+include_directories(src/ ./ 3rdparty/)
 
 add_library(CoreBuffer STATIC src/parser.cpp src/parser.h src/structurecheck.h src/structurecheck.cpp src/cppoutput.cpp
   src/cppoutput.h src/package.cpp src/package.h src/fileposition.h src/fileerror.h)
 
-add_executable (CoreBufferC src/corebuffer.cpp)
+add_executable (CoreBufferC 3rdparty/args/args.hxx src/corebuffer.cpp)
 
-add_executable (CoreBufferTests catch/catch.hpp test/parser_tests.cpp test/parser_error_tests.cpp
+add_executable (CoreBufferTests 3rdparty/catch2/catch.hpp test/parser_tests.cpp test/parser_error_tests.cpp
   test/corebuffer_tests.cpp test/structurecheck_tests.cpp)
 
-add_executable (CoreBufferOutputTests catch/catch.hpp test/basetypes.h test/enumtypes.h test/tabletypes.h test/shop.h
+add_executable (CoreBufferOutputTests 3rdparty/catch2/catch.hpp test/basetypes.h test/enumtypes.h test/tabletypes.h test/shop.h
   test/shop_tests.cpp test/tabletypes_tests.cpp test/basetype_tests.cpp test/enumtypes_tests.cpp
   test/corebufferoutput_tests.cpp)
 
