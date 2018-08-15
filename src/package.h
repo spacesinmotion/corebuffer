@@ -10,6 +10,15 @@ using std::pair;
 using std::string;
 using std::vector;
 
+struct Attribute
+{
+  Attribute() = default;
+  Attribute(const string &v, const FilePosition &fp) : value(v), location(fp) {}
+
+  string value;
+  FilePosition location;
+};
+
 struct EnumEntry
 {
   EnumEntry(const std::string &n, std::size_t v, const FilePosition &fp) : name(n), value(v), location(fp) {}
@@ -57,7 +66,7 @@ struct Member
 
   string name;
   string type;
-  string defaultValue;
+  Attribute defaultValue;
   bool isVector{false};
   bool isBaseType{false};
   Pointer pointer{Pointer::Plain};
@@ -89,15 +98,6 @@ struct Table
   vector<Member> member;
   vector<Method> methods;
   unsigned char appearance{0};
-  FilePosition location;
-};
-
-struct Attribute
-{
-  Attribute() = default;
-  Attribute(const string &v, const FilePosition &fp) : value(v), location(fp) {}
-
-  string value;
   FilePosition location;
 };
 

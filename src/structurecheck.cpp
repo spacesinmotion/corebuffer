@@ -1,6 +1,8 @@
 #include "structurecheck.h"
 #include "package.h"
 
+#include <sstream>
+
 using namespace std;
 
 StructureCheck::StructureCheck(Package &p) : _package(p) {}
@@ -14,6 +16,7 @@ const std::vector<FileError> &StructureCheck::check()
   checkRootType();
   checkBaseTypePointer();
   checkEnumTypePointer();
+  checkDefaultValues();
 
   return _errors;
 }
@@ -195,6 +198,106 @@ void StructureCheck::checkEnumTypePointer()
     for (const auto &m : t.member)
       if (!m.isBaseType && m.pointer != Pointer::Plain && enumExists(m.type))
         _errors.emplace_back("enums cannot be pointer.", m.location);
+}
+
+bool StructureCheck::isFloat(const string &number)
+{
+  istringstream iss(number);
+  double f;
+  iss >> noskipws >> f;
+  return iss.eof() && !iss.fail();
+}
+
+bool StructureCheck::isIntegral(const string &number)
+{
+  istringstream iss(number);
+  long long i;
+  iss >> noskipws >> i;
+  return iss.eof() && !iss.fail();
+}
+
+bool StructureCheck::isString(const string &text)
+{
+  return !text.empty() && text.front() == '\"' && text.back() == '\"';
+}
+
+bool StructureCheck::isBool(const string &text)
+{
+  return text == "true" || text == "false";
+}
+
+void StructureCheck::checkDefaultValues()
+{
+  checkDefaultValuesOfBaseTypes();
+  checkDefaultValuesOfEnums();
+  checkDefaultValuesOfTables();
+}
+
+void StructureCheck::checkDefaultValuesOfBaseTypes()
+{
+  for (const auto &t : _package.tables)
+  {
+    for (const auto &m : t.member)
+    {
+      if (!m.isBaseType || m.defaultValue.location.isAtStart())
+        continue;
+
+      if (m.type.find("std::uint") == 0 || m.type.find("std::int") == 0)
+      {
+        if (!isIntegral(m.defaultValue.value))
+          _errors.emplace_back("only integral values can be assigned here.", m.defaultValue.location);
+      }
+      else if (m.type == "float" || m.type == "double")
+      {
+        if (!isFloat(m.defaultValue.value))
+          _errors.emplace_back("only floating point values can be assigned here.", m.defaultValue.location);
+      }
+      else if (m.type == "bool")
+      {
+        if (!isBool(m.defaultValue.value))
+          _errors.emplace_back("only boolean values can be assigned here.", m.defaultValue.location);
+      }
+      else if (m.type == "std::string" && !isString(m.defaultValue.value))
+        _errors.emplace_back("only string values can be assigned here.", m.defaultValue.location);
+    }
+  }
+}
+
+void StructureCheck::checkDefaultValuesOfEnums()
+{
+  for (const auto &t : _package.tables)
+  {
+    for (const auto &m : t.member)
+    {
+      if (!enumExists(m.type) || m.defaultValue.value.empty())
+        continue;
+
+      if (isFloat(m.defaultValue.value) || isString(m.defaultValue.value) || isBool(m.defaultValue.value))
+        _errors.emplace_back("only values of '" + m.type + "' can be assigned here.", m.defaultValue.location);
+      else if (m.defaultValue.value.find(m.type) == string::npos)
+        _errors.emplace_back("unknown value '" + m.defaultValue.value + "' for enum '" + m.type + "'.",
+                             m.defaultValue.location);
+    }
+  }
+}
+
+void StructureCheck::checkDefaultValuesOfTables()
+{
+  for (const auto &t : _package.tables)
+  {
+    for (const auto &m : t.member)
+    {
+      if (m.defaultValue.value.empty() || enumExists(m.type))
+        continue;
+
+      if (m.pointer != Pointer::Plain)
+        _errors.emplace_back("default values for pointer are not supported.", m.defaultValue.location);
+      else if (m.isVector)
+        _errors.emplace_back("default values for vectors are not supported.", m.defaultValue.location);
+      else if (tableExists(m.type))
+        _errors.emplace_back("default values for tables are not supported.", m.defaultValue.location);
+    }
+  }
 }
 
 bool StructureCheck::isBaseType(const string &name)

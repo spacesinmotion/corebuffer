@@ -41,9 +41,16 @@ TEST_CASE("Parsing idls with error", "[parsing, error, syntax]")
                "package Scope\n"
                "version \"0.0\"");
 
-  checkThrowIn("Expected ';' after version statement.", 1, 14,
-               "version \"0.0\"\n"
-               "package Scope;");
+  SECTION("version attribute")
+  {
+    checkThrowIn("Expected ';' after version statement.", 1, 14,
+                 "version \"0.0\"\n"
+                 "package Scope;");
+
+    checkThrowIn("Expected version string after 'version'.", 1, 8, "version   ;");
+
+    checkThrowIn("Line break in string constant.", 1, 10, "version  \"..as.;\n");
+  }
 
   checkThrowIn("Expected ';' after root_type statement.", 1, 16,
                "root_type Dummy\n"
@@ -72,8 +79,6 @@ TEST_CASE("Parsing idls with error", "[parsing, error, syntax]")
                "}");
 
   checkThrowIn("Expected package name after 'package'.", 1, 8, "package  ;");
-
-  checkThrowIn("Expected version string after 'version'.", 1, 8, "version   ;");
 
   checkThrowIn("Expected table name after 'root_type'.", 1, 10, "root_type   ;");
 
@@ -125,4 +130,29 @@ TEST_CASE("Parsing idls with error", "[parsing, error, syntax]")
                "table A {\n"
                "  a:plain;\n"
                "}");
+
+  SECTION("special method parsing")
+  {
+    checkThrowIn("Missing closing ')' for method 'init'.", 3, 9,
+                 "table T1 {\n"
+                 "  a:int;\n"
+                 "  init(a ;\n"
+                 "}");
+    checkThrowIn("Expected ';' after method definition.", 3, 10,
+                 "table T1 {\n"
+                 "  a:int;\n"
+                 "  init(a)\n"
+                 "}");
+  }
+
+  SECTION("default values")
+  {
+    checkThrowIn("Line break in string constant.", 2, 12,
+                 "table T1 {\n"
+                 "  a:string=\"..as.;\n"
+                 "}");
+    checkThrowIn("Missing closing '\"' reading string constant.", 2, 12,
+                 "table T1 {\n"
+                 "  a:string=\"..as.;}");
+  }
 }

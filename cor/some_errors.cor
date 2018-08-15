@@ -1,0 +1,9 @@
+package Example.Shop;
+
+version "0.0";
+
+root_type Root;
+
+table XXX {
+  a:int = 1.2;
+}

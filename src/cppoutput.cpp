@@ -395,14 +395,6 @@ ostream &WriteParameterType(ostream &o, const Member &m)
   return o << m.name << "_";
 }
 
-const Member *memberFor(const Table &t, const string &name)
-{
-  for (const auto &m : t.member)
-    if (m.name == name)
-      return &m;
-  throw std::runtime_error("Member not defined!");
-}
-
 std::pair<int, const Member *> memberEntry(const Table &t, const string &name)
 {
   int i = 0;
@@ -464,9 +456,9 @@ string defaultValueLiteral(const Member &m)
   if (m.isBaseType)
   {
     if (m.type == "float")
-      return m.defaultValue.back() == 'f' ? "" : "f";
+      return m.defaultValue.value.back() == 'f' ? "" : "f";
     else if (m.type.find("std::u") == 0)
-      return m.defaultValue.back() == 'u' ? "" : "u";
+      return m.defaultValue.value.back() == 'u' ? "" : "u";
   }
   return string();
 }
@@ -478,8 +470,8 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
   {
     o << "  ";
     WriteType(o, m) << " " << m.name;
-    if (!m.isVector && m.pointer == Pointer::Plain && !m.defaultValue.empty())
-      o << "{" << m.defaultValue << defaultValueLiteral(m) << "}";
+    if (!m.isVector && m.pointer == Pointer::Plain && !m.defaultValue.value.empty())
+      o << "{" << m.defaultValue.value << defaultValueLiteral(m) << "}";
     o << ";" << endl;
   }
 

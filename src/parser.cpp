@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "fileerror.h"
 
+#include <algorithm>
 #include <sstream>
 
 static string WHITESPACE = " \t\n\r";
@@ -11,7 +12,7 @@ static string IDENTIFIER_MID = IDENTIFIER_BEGIN + DIDGET;
 
 Parser::Parser(const std::string &t, Package &p) : text(t), package(p) {}
 
-bool Parser::parse()
+void Parser::parse()
 {
   initBaseTypes();
 
@@ -19,9 +20,10 @@ bool Parser::parse()
     ;
 
   skipComment();
-  if (end())
-    return updateTableAppearance();
-  return false;
+  if (!end())
+    throw FileError("Parsing failed for unknown reason.", state());
+
+  updateTableAppearance();
 }
 
 char Parser::front() const
@@ -351,7 +353,7 @@ bool Parser::readTableMemberDefault(Member &m)
     if (!readBaseType(val))
       throw FileError("Missing default value.", state());
 
-    m.defaultValue = val;
+    m.defaultValue = Attribute(val, stateBefor(val.size()));
     return true;
   }
 
@@ -536,8 +538,12 @@ bool Parser::readBaseType(string &val)
 
   if (!bt)
     bt = readNumber(val);
+
   if (!bt)
+  {
     bt = readString(val);
+    val = "\"" + val + "\"";
+  }
 
   if (!bt)
   {
@@ -602,14 +608,22 @@ bool Parser::readString(string &val)
 
   if (read("\""))
   {
+    const auto sb = stateBefor(1);
+
     while (!end() && front() != '\"')
+    {
+      if (front() == '\n')
+        throw FileError("Line break in string constant.", sb);
       val += take();
+    }
 
     if (!end())
     {
       skip();
       return true;
     }
+    else
+      throw FileError("Missing closing '\"' reading string constant.", sb);
   }
 
   rewind(s);
@@ -708,7 +722,7 @@ Enum *Parser::enumForType(const std::string &name)
   return nullptr;
 }
 
-bool Parser::updateTableAppearance()
+void Parser::updateTableAppearance()
 {
   for (auto &t : package.tables)
   {
@@ -719,17 +733,20 @@ bool Parser::updateTableAppearance()
         m.type = aliases.at(m.type);
         m.isBaseType = true;
       }
-      if (!m.isVector && m.pointer == Pointer::Plain && m.defaultValue.empty() &&
+      if (!m.isVector && m.pointer == Pointer::Plain && m.defaultValue.value.empty() &&
           defaults.find(m.type) != defaults.end())
       {
-        m.defaultValue = defaults[m.type];
+        m.defaultValue.value = defaults[m.type];
       }
 
       auto *e = enumForType(m.type);
       if (e)
       {
-        m.defaultValue = fullPackageScope() + "::" + e->name +
-                         "::" + (m.defaultValue.empty() ? e->entries.front().name : m.defaultValue);
+        if (m.defaultValue.value.empty())
+          m.defaultValue.value = fullPackageScope() + e->name + "::" + e->entries.front().name;
+        else if (std::any_of(e->entries.begin(), e->entries.end(),
+                             [&m](const EnumEntry &ee) { return ee.name == m.defaultValue.value; }))
+          m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
       }
 
       auto *t = tableForType(m.type);
@@ -753,7 +770,6 @@ bool Parser::updateTableAppearance()
         t->appearance |= PlainAppearance;
     }
   }
-  return true;
 }
 
 std::string Parser::fullPackageScope() const
@@ -761,15 +777,13 @@ std::string Parser::fullPackageScope() const
   auto pos = std::string::size_type(0);
   auto end = package.path.value.find('.', pos);
   std::string scope = package.path.value.substr(pos, end);
-  do
+  while (end != std::string::npos)
   {
-    pos = end;
+    pos = end + 1;
     end = package.path.value.find('.', pos);
-    if (end == std::string::npos)
-      break;
-    scope += "::" + package.path.value.substr(pos, end);
-  } while (true);
-  return scope;
+    scope += "::" + package.path.value.substr(pos, end - pos);
+  }
+  return scope.empty() ? "" : scope + "::";
 }
 
 FileError::FileError(const std::string &m, const FilePosition &s) : std::runtime_error(m), _state(s) {}

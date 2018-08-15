@@ -153,6 +153,31 @@ TEST_CASE("TableType test", "[output, table]")
     CHECK(cIn.e[1].lock() == cIn.d[1]);
   }
 
+  SECTION("Compare operations")
+  {
+    Scope::TableD d1;
+    Scope::TableD d2;
+    CHECK(d1 == d2);
+    CHECK_FALSE(d1 != d2);
+
+    d1.name = "xxx";
+    d2.name = "yyy";
+
+    CHECK_FALSE(d1 == d2);
+    CHECK(d1 != d2);
+  }
+
+  SECTION("Reading fails with wrong data")
+  {
+    Scope::TableC c;
+
+    std::stringstream s1("FALSE");
+    CHECK_FALSE(Scope::TableC_io().ReadTableC(s1, c));
+
+    std::stringstream s2("COREfails");
+    CHECK_FALSE(Scope::TableC_io().ReadTableC(s2, c));
+  }
+
   SECTION("initializing methods with pointer")
   {
     auto d = std::make_shared<Scope::TableD>();

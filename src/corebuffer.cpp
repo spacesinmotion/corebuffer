@@ -14,7 +14,7 @@ void usage(const std::string &msg, const std::string &program)
 {
   cerr << msg << endl << endl;
   cerr << "usage:" << endl;
-  cerr << "  " << program << " <input.cor> <ouput.h>" << endl;
+  cerr << "  " << program << " <input.cor> <output.h>" << endl;
 }
 
 void logError(const std::string &file, const FileError &pe)
@@ -42,11 +42,8 @@ int main(int argc, char *argv[])
   Package p;
   try
   {
-    if (!Parser(source, p).parse())
-    {
-      usage(string("parsing faild for '") + argv[1] + "'.", argv[0]);
-      return 3;
-    }
+    Parser(source, p).parse();
+
     auto errors = StructureCheck(p).check();
     std::sort(errors.begin(), errors.end(),
               [](const FileError &l, const FileError &r) { return l._state.pos < r._state.pos; });

@@ -6,7 +6,7 @@
 void checkErrorInPure(const std::string &error, size_t line, size_t column, const std::string &source)
 {
   Package p;
-  REQUIRE(Parser(source, p).parse());
+  REQUIRE_NOTHROW(Parser(source, p).parse());
 
   const auto errors = StructureCheck(p).check();
   INFO(error);
@@ -37,7 +37,7 @@ void checkNoErrorIn(std::string source)
   addFooter(source);
 
   Package p;
-  REQUIRE(Parser(source, p).parse());
+  REQUIRE_NOTHROW(Parser(source, p).parse());
 
   const auto errors = StructureCheck(p).check();
   CAPTURE(errors);
@@ -188,6 +188,105 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                    "  b:int;\n"
                    "  init(a);\n"
                    "  init(b);\n"
+                   "}");
+    }
+  }
+
+  SECTION("wrong default values")
+  {
+    SECTION("base types")
+    {
+      checkNoErrorIn("table T1 { a:float=42; }");
+      checkNoErrorIn("table T1 { a:float=42.0; }");
+      checkNoErrorIn("table T1 { a:int=42; }");
+      checkNoErrorIn("table T1 { a:bool=true; }");
+      checkNoErrorIn("table T1 { a:bool=false; }");
+      checkNoErrorIn("table T1 { a:string=\"true/false\"; }");
+      checkNoErrorIn("table T1 { a:string=\"\"; }");
+
+      checkErrorIn("only integral values can be assigned here.", 2, 9,
+                   "table T1 {\n"
+                   "  a:int=0.4;\n"
+                   "}");
+      checkErrorIn("only integral values can be assigned here.", 2, 9,
+                   "table T1 {\n"
+                   "  a:int=\"0.4\";\n"
+                   "}");
+      checkErrorIn("only integral values can be assigned here.", 2, 9,
+                   "table T1 {\n"
+                   "  a:int=true;\n"
+                   "}");
+      checkErrorIn("only floating point values can be assigned here.", 2, 11,
+                   "table T1 {\n"
+                   "  a:float=\"0.4\";\n"
+                   "}");
+      checkErrorIn("only floating point values can be assigned here.", 2, 11,
+                   "table T1 {\n"
+                   "  a:float=false;\n"
+                   "}");
+      checkErrorIn("only string values can be assigned here.", 2, 12,
+                   "table T1 {\n"
+                   "  a:string=0.4;\n"
+                   "}");
+      checkErrorIn("only string values can be assigned here.", 2, 12,
+                   "table T1 {\n"
+                   "  a:string=false;\n"
+                   "}");
+
+      checkErrorIn("only boolean values can be assigned here.", 2, 10,
+                   "table T1 {\n"
+                   "  a:bool=1;\n"
+                   "}");
+      checkErrorIn("only boolean values can be assigned here.", 2, 10,
+                   "table T1 {\n"
+                   "  a:bool=4.3;\n"
+                   "}");
+      checkErrorIn("only boolean values can be assigned here.", 2, 10,
+                   "table T1 {\n"
+                   "  a:bool=\"fail\";\n"
+                   "}");
+    }
+
+    SECTION("enums")
+    {
+      checkErrorIn("unknown value 'fail' for enum 'E1'.", 3, 8,
+                   "enum E1 { A, B, C }\n"
+                   "table T1 {\n"
+                   "  a:E1=fail;\n"
+                   "}");
+      checkErrorIn("only values of 'E1' can be assigned here.", 3, 8,
+                   "enum E1 { A, B, C }\n"
+                   "table T1 {\n"
+                   "  a:E1=true;\n"
+                   "}");
+    }
+
+    SECTION("tables")
+    {
+      checkErrorIn("default values for tables are not supported.", 3, 8,
+                   "table T1 { a:int; }\n"
+                   "table T2 {\n"
+                   "  a:T1=fail;\n"
+                   "}");
+    }
+
+    SECTION("pointer")
+    {
+      checkErrorIn("default values for pointer are not supported.", 2, 15,
+                   "table T2 {\n"
+                   "  a:shared T2=fail;\n"
+                   "}");
+      checkErrorIn("default values for pointer are not supported.", 2, 13,
+                   "table T2 {\n"
+                   "  a:weak T2=fail;\n"
+                   "}");
+      checkErrorIn("default values for pointer are not supported.", 2, 15,
+                   "table T2 {\n"
+                   "  a:unique T2=fail;\n"
+                   "}");
+      checkErrorIn("default values for vectors are not supported.", 2, 11,
+                   "table T2 {\n"
+                   "  a:[int]=1;\n"
                    "}");
     }
   }
