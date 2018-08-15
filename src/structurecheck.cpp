@@ -230,6 +230,7 @@ void StructureCheck::checkDefaultValues()
 {
   checkDefaultValuesOfBaseTypes();
   checkDefaultValuesOfEnums();
+  checkDefaultValuesOfTables();
 }
 
 void StructureCheck::checkDefaultValuesOfBaseTypes()
@@ -276,6 +277,25 @@ void StructureCheck::checkDefaultValuesOfEnums()
       else if (m.defaultValue.value.find(m.type) == string::npos)
         _errors.emplace_back("unknown value '" + m.defaultValue.value + "' for enum '" + m.type + "'.",
                              m.defaultValue.location);
+    }
+  }
+}
+
+void StructureCheck::checkDefaultValuesOfTables()
+{
+  for (const auto &t : _package.tables)
+  {
+    for (const auto &m : t.member)
+    {
+      if (m.defaultValue.value.empty() || enumExists(m.type))
+        continue;
+
+      if (m.pointer != Pointer::Plain)
+        _errors.emplace_back("default values for pointer are not supported.", m.defaultValue.location);
+      else if (m.isVector)
+        _errors.emplace_back("default values for vectors are not supported.", m.defaultValue.location);
+      else if (tableExists(m.type))
+        _errors.emplace_back("default values for tables are not supported.", m.defaultValue.location);
     }
   }
 }

@@ -260,5 +260,34 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                    "  a:E1=true;\n"
                    "}");
     }
+
+    SECTION("tables")
+    {
+      checkErrorIn("default values for tables are not supported.", 3, 8,
+                   "table T1 { a:int; }\n"
+                   "table T2 {\n"
+                   "  a:T1=fail;\n"
+                   "}");
+    }
+
+    SECTION("pointer")
+    {
+      checkErrorIn("default values for pointer are not supported.", 2, 15,
+                   "table T2 {\n"
+                   "  a:shared T2=fail;\n"
+                   "}");
+      checkErrorIn("default values for pointer are not supported.", 2, 13,
+                   "table T2 {\n"
+                   "  a:weak T2=fail;\n"
+                   "}");
+      checkErrorIn("default values for pointer are not supported.", 2, 15,
+                   "table T2 {\n"
+                   "  a:unique T2=fail;\n"
+                   "}");
+      checkErrorIn("default values for vectors are not supported.", 2, 11,
+                   "table T2 {\n"
+                   "  a:[int]=1;\n"
+                   "}");
+    }
   }
 }

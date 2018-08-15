@@ -45,6 +45,7 @@ private:
   void checkDefaultValues();
   void checkDefaultValuesOfBaseTypes();
   void checkDefaultValuesOfEnums();
+  void checkDefaultValuesOfTables();
 
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
