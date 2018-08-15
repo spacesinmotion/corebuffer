@@ -31,11 +31,13 @@ add_test(NAME SchemaBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DI
 add_test (NAME CheckUsage1 COMMAND $<TARGET_FILE:CoreBufferC> )
 add_test (NAME CheckUsage2 COMMAND $<TARGET_FILE:CoreBufferC> "not_existing.cor" "not_existing.h")
 add_test (NAME CheckUsage3 COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/schema.cor "not_/_working.h")
-set_tests_properties (CheckUsage1 CheckUsage2 CheckUsage3 PROPERTIES
-  PASS_REGULAR_EXPRESSION "usage"
-  PASS_REGULAR_EXPRESSION "<input.cor>"
-  PASS_REGULAR_EXPRESSION "CoreBufferC"
-  PASS_REGULAR_EXPRESSION "<output.h>")
+add_test (NAME CheckHelp COMMAND $<TARGET_FILE:CoreBufferC> --help)
+add_test (NAME ArgsError COMMAND $<TARGET_FILE:CoreBufferC> --fail)
+set_tests_properties (CheckUsage1 CheckUsage2 CheckUsage3 CheckHelp ArgsError PROPERTIES
+  PASS_REGULAR_EXPRESSION "\[<input.cor>\] \[<output.h>\]")
+
+add_test (NAME CheckVersion COMMAND $<TARGET_FILE:CoreBufferC> --version)
+set_tests_properties (CheckVersion PROPERTIES PASS_REGULAR_EXPRESSION ${PROJECT_VERSION})
 
 add_test (NAME CheckStructureError COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/some_errors.cor schema.h)
 add_test (NAME CheckError COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/parser_errors.cor schema.h)
