@@ -8,7 +8,7 @@
 #include <array>
 #include <type_traits>
 
-namespace CoreData {
+namespace CoreBuffer {
 
 template<typename T>
 struct AlwaysFalse : std::false_type {};
@@ -43,6 +43,10 @@ struct EnumEntry {
   std::int32_t value{0};
 
   EnumEntry() = default;
+  EnumEntry(const std::string &name_, const std::int32_t &value_)
+    : name(name_)
+    , value(value_)
+  {}
 };
 
 struct Enum {
@@ -50,6 +54,9 @@ struct Enum {
   std::vector<EnumEntry> entries;
 
   Enum() = default;
+  Enum(const std::string &name_)
+    : name(name_)
+  {}
 };
 
 struct Member {
@@ -58,9 +65,13 @@ struct Member {
   std::string defaultValue;
   bool isVector{false};
   bool isBaseType{false};
-  Pointer pointer{CoreData::Pointer::Plain};
+  Pointer pointer{CoreBuffer::Pointer::Plain};
 
   Member() = default;
+  Member(const std::string &name_, const std::string &type_)
+    : name(name_)
+    , type(type_)
+  {}
 };
 
 struct Table {
@@ -69,6 +80,9 @@ struct Table {
   std::uint8_t appearance{0u};
 
   Table() = default;
+  Table(const std::string &name_)
+    : name(name_)
+  {}
 };
 
 struct Package {
@@ -80,6 +94,11 @@ struct Package {
   std::vector<Enum> enums;
 
   Package() = default;
+  Package(const std::string &path_, const std::string &version_, const std::string &root_type_)
+    : path(path_)
+    , version(version_)
+    , root_type(root_type_)
+  {}
 };
 
 bool operator==(const EnumEntry&l, const EnumEntry&r) {
