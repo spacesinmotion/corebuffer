@@ -9,10 +9,6 @@ image:
 - Visual Studio 2017
 - Ubuntu
 
-environment:
-  COREBUFFER_VERSION: 0.1
-  COREBUFFER_BUILD: {build}
-
 build_script:
 - sh: >-
     mkdir build
