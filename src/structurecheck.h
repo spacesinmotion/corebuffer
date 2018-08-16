@@ -9,6 +9,7 @@
 struct Package;
 struct Table;
 struct Enum;
+struct Union;
 struct Method;
 
 class StructureCheck
@@ -22,6 +23,7 @@ private:
   void initNameSets();
   void checkDuplicateTables();
   void checkDuplicateEnums();
+  void checkDuplicateUnions();
 
   void checkTables();
   void checkEmptyTables();
@@ -35,6 +37,11 @@ private:
   void checkEnums();
   void checkEmptyEnums();
   void checkDuplicateEnumEntries(const Enum &e);
+
+  void checkUnions();
+  void checkEmptyUnions();
+  void checkDuplicateUnionEntries(const Union &u);
+  void checkTableReferences(const Union &u);
 
   void checkPackage();
   void checkRootType();
@@ -65,6 +72,7 @@ private:
 
   std::unordered_set<std::string> _tableNames;
   std::unordered_set<std::string> _enumNames;
+  std::unordered_set<std::string> _unionNames;
 };
 
 #endif  // STURCTURECHECK_H

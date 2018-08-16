@@ -5,11 +5,12 @@
 
 void checkErrorInPure(const std::string &error, size_t line, size_t column, const std::string &source)
 {
+  INFO(error);
+
   Package p;
   REQUIRE_NOTHROW(Parser(source, p).parse());
 
   const auto errors = StructureCheck(p).check();
-  INFO(error);
   REQUIRE(errors.size() == 1);
   CHECK(errors.front().what() == error);
   CHECK(errors.front()._state.line == line);
@@ -48,7 +49,7 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
 {
   SECTION("table structure errors")
   {
-    checkErrorIn("Duplicate table 'Table1'.", 3, 1,
+    checkErrorIn("table 'Table1' already defined.", 3, 1,
                  "table Table1 { c:int; }\n"
                  "table Table2 { c:int; }\n"
                  "table Table1 { a:int; }\n");
@@ -62,11 +63,11 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
 
   SECTION("enum structure errors")
   {
-    checkErrorIn("Duplicate enum 'E1'.", 3, 2,
+    checkErrorIn("enum 'E1' already defined.", 3, 2,
                  "enum E1 { c }\n"
                  "enum E2 { c }\n"
                  " enum E1 { a }\n");
-    checkErrorIn("enum 'E1' already defined as table.", 3, 2,
+    checkErrorIn("enum 'E1' already defined.", 3, 2,
                  "table E1 { c:int; }\n"
                  "enum E2 { c }\n"
                  " enum E1 { a }\n");
@@ -190,6 +191,27 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                    "  init(b);\n"
                    "}");
     }
+  }
+
+  SECTION("wrong union definitions")
+  {
+    checkErrorIn("union 'U1' already defined.", 3, 2,
+                 "union U1 { Dummy }\n"
+                 "union U2 { Dummy }\n"
+                 " union U1 { Dummy }\n");
+    checkErrorIn("union 'U1' already defined.", 3, 2,
+                 "table U1 { c:int; }\n"
+                 "union U2 { Dummy }\n"
+                 " union U1 { Dummy }\n");
+    checkErrorIn("union 'U1' already defined.", 3, 2,
+                 "enum U1 { c }\n"
+                 "union U2 { Dummy }\n"
+                 " union U1 { Dummy }\n");
+    checkErrorIn("Empty union 'U2'.", 1, 4, "   union U2 {}");
+    checkErrorIn("union entry 'B' already defined for 'U2'.", 2, 19,
+                 "table B{a:int;}\n"
+                 "union U2 {B,Dummy,B}");
+    checkErrorIn("Unknown table 'xxx'.", 1, 11, "union T1 {xxx, Dummy}");
   }
 
   SECTION("wrong default values")

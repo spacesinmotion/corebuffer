@@ -12,6 +12,7 @@ const std::vector<FileError> &StructureCheck::check()
   initNameSets();
   checkTables();
   checkEnums();
+  checkUnions();
   checkPackage();
   checkRootType();
   checkBaseTypePointer();
@@ -25,24 +26,28 @@ void StructureCheck::initNameSets()
 {
   checkDuplicateTables();
   checkDuplicateEnums();
+  checkDuplicateUnions();
 }
 
 void StructureCheck::checkDuplicateTables()
 {
   for (const auto &t : _package.tables)
     if (!_tableNames.emplace(t.name).second)
-      _errors.emplace_back("Duplicate table '" + t.name + "'.", t.location);
+      _errors.emplace_back("table '" + t.name + "' already defined.", t.location);
 }
 
 void StructureCheck::checkDuplicateEnums()
 {
   for (const auto &e : _package.enums)
-    if (!_enumNames.emplace(e.name).second)
-      _errors.emplace_back("Duplicate enum '" + e.name + "'.", e.location);
+    if (!_enumNames.emplace(e.name).second || tableExists(e.name))
+      _errors.emplace_back("enum '" + e.name + "' already defined.", e.location);
+}
 
-  for (const auto &e : _package.enums)
-    if (tableExists(e.name))
-      _errors.emplace_back("enum '" + e.name + "' already defined as table.", e.location);
+void StructureCheck::checkDuplicateUnions()
+{
+  for (const auto &u : _package.unions)
+    if (!_unionNames.emplace(u.name).second || tableExists(u.name) || enumExists(u.name))
+      _errors.emplace_back("union '" + u.name + "' already defined.", u.location);
 }
 
 void StructureCheck::checkTables()
@@ -156,6 +161,38 @@ void StructureCheck::checkDuplicateEnumEntries(const Enum &e)
   for (const auto &entry : e.entries)
     if (!names.emplace(entry.name).second)
       _errors.emplace_back("enum value '" + entry.name + "' already defined for '" + e.name + "'.", entry.location);
+}
+
+void StructureCheck::checkUnions()
+{
+  checkEmptyUnions();
+  for (const auto &u : _package.unions)
+  {
+    checkDuplicateUnionEntries(u);
+    checkTableReferences(u);
+  }
+}
+
+void StructureCheck::checkEmptyUnions()
+{
+  for (const auto &u : _package.unions)
+    if (u.tables.empty())
+      _errors.emplace_back("Empty union '" + u.name + "'.", u.location);
+}
+
+void StructureCheck::checkDuplicateUnionEntries(const Union &u)
+{
+  unordered_set<string> names;
+  for (const auto &t : u.tables)
+    if (!names.emplace(t.value).second)
+      _errors.emplace_back("union entry '" + t.value + "' already defined for '" + u.name + "'.", t.location);
+}
+
+void StructureCheck::checkTableReferences(const Union &u)
+{
+  for (const auto &t : u.tables)
+    if (!tableExists(t.value))
+      _errors.emplace_back("Unknown table '" + t.value + "'.", t.location);
 }
 
 void StructureCheck::checkPackage()
