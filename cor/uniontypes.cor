@@ -1,0 +1,20 @@
+package UnionTypes;
+version "0.0";
+root_type Root;
+
+table A {
+  name:string;
+  init(name);
+}
+
+table B {
+  size:i64;
+  init(size);
+}
+
+union AB { A, B }
+
+table Root {
+  a:A;
+  b:B;
+}
