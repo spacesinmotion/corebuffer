@@ -106,12 +106,11 @@ void WriteNameSpaceEnd(ostream &o, const string &path, int pos = 0)
 
 void WriteForwardDeclarations(ostream &o, const Package &p)
 {
-  if (!p.tables.empty())
-    o << endl;
   for (const auto &t : p.tables)
-    o << "struct " << t.name << ";" << endl;
-  if (!p.tables.empty())
-    o << endl;
+    o << endl << "struct " << t.name << ";";
+  for (const auto &t : p.unions)
+    o << endl << "struct " << t.name << ";";
+  o << endl << endl;
 }
 
 void WriteEnumDeclaration(ostream &o, const Enum &e)
@@ -597,6 +596,131 @@ void WriteTableDeclarations(ostream &o, const Package &p)
     WriteTableCompareFunctions(o, t);
 }
 
+void WriteUnionStruct(ostream &o, const Union &u)
+{
+  o << "struct " << u.name << " {" << endl;
+
+  o << "  " << u.name << "() = default;" << endl;
+  o << "  " << u.name << "(const " << u.name << " &o) { _clone(o); }" << endl;
+  o << "  " << u.name << "& operator=(const " << u.name << " &o) { _destroy(); _clone(o); return *this; }" << endl
+    << endl;
+
+  for (const auto &t : u.tables)
+  {
+    o << "  " << u.name << "(const " << t.value << " &v)" << endl;
+    o << "    : _" << t.value << "(new " << t.value << "(v))" << endl;
+    o << "    , _selection(_" << t.value << "_selection)" << endl;
+    o << "  {}" << endl;
+    o << "  " << u.name << "(" << t.value << " &&v)" << endl;
+    o << "    : _" << t.value << "(new " << t.value << "(std::forward<" << t.value << ">(v)))" << endl;
+    o << "    , _selection(_" << t.value << "_selection)" << endl;
+    o << "  {}" << endl;
+    o << "  " << u.name << " & operator=(const " << t.value << " &v) {" << endl;
+    o << "    _destroy();" << endl;
+    o << "    _" << t.value << " = new " << t.value << "(v);" << endl;
+    o << "    _selection = _" << t.value << "_selection;" << endl;
+    o << "    return *this;" << endl;
+    o << "  }" << endl;
+    o << "  " << u.name << " & operator=(" << t.value << " &&v) {" << endl;
+    o << "    _destroy();" << endl;
+    o << "    _" << t.value << " = new " << t.value << "(std::forward<" << t.value << ">(v));" << endl;
+    o << "    _selection = _" << t.value << "_selection;" << endl;
+    o << "    return *this;" << endl;
+    o << "  }" << endl << endl;
+  }
+
+  o << "  ~" << u.name << "() {" << endl;
+  o << "    _destroy();" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  bool is_Defined() const noexcept { return _selection != no_selection; }" << endl;
+  for (const auto &t : u.tables)
+  {
+    o << "  bool is_" << t.value << "() const noexcept { return _selection == _" << t.value << "_selection; }" << endl;
+    o << "  const " << t.value << " & as_" << t.value << "() const noexcept { return *_" << t.value << "; }" << endl;
+    o << "  " << t.value << " & as_" << t.value << "() { return *_" << t.value << "; }" << endl << endl;
+  }
+
+  for (const auto &t : u.tables)
+  {
+    o << "  friend bool operator==(const " << u.name << "&ab, const " << t.value << " &o) noexcept";
+    o << "  { return ab.is_" << t.value << "() && ab.as_" << t.value << "() == o; }" << endl;
+    o << "  friend bool operator==(const " << t.value << " &o, const " << u.name << "&ab) noexcept";
+    o << "  { return ab.is_" << t.value << "() && o == ab.as_" << t.value << "(); }" << endl;
+    o << "  friend bool operator!=(const " << u.name << "&ab, const " << t.value << " &o) noexcept";
+    o << "  { return !ab.is_" << t.value << "() || ab.as_" << t.value << "() != o; }" << endl;
+    o << "  friend bool operator!=(const " << t.value << " &o, const " << u.name << "&ab) noexcept";
+    o << "  { return !ab.is_" << t.value << "() || o != ab.as_" << t.value << "(); }" << endl << endl;
+  }
+
+  o << "  bool operator==(const " << u.name << " &o) const noexcept" << endl;
+  o << "  {" << endl;
+  o << "    if (this == &o)" << endl;
+  o << "      return true;" << endl;
+  o << "    if (_selection != o._selection)" << endl;
+  o << "      return false;" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ return true;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: return *_" << t.value << " == *o._" << t.value << ";" << endl;
+  o << "    }" << endl;
+  o << "    return false; // without this line there is a msvc warning I do not understand." << endl;
+  o << "  }" << endl << endl;
+
+  o << "  bool operator!=(const " << u.name << " &o) const noexcept" << endl;
+  o << "  {" << endl;
+  o << "    if (this == &o)" << endl;
+  o << "      return false;" << endl;
+  o << "    if (_selection != o._selection)" << endl;
+  o << "      return true;" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ return false;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: return *_" << t.value << " != *o._" << t.value << ";" << endl;
+  o << "    }" << endl;
+  o << "    return false; // without this line there is a msvc warning I do not understand." << endl;
+  o << "  }" << endl << endl;
+
+  o << "private:" << endl;
+  o << "  void _clone(const " << u.name << " &o) noexcept" << endl;
+  o << "  {" << endl;
+  o << "     _selection = o._selection;" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: _" << t.value << " = new " << t.value << "(*o._" << t.value
+      << "); break;" << endl;
+  o << "    }" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  void _destroy() noexcept {" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: delete _" << t.value << "; break;" << endl;
+  o << "    }" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  union {" << endl;
+  for (const auto &t : u.tables)
+    o << "    " << t.value << " * _" << t.value << ";" << endl;
+  o << "  };" << endl << endl;
+  o << "  enum Selection_t {" << endl;
+  o << "    no_selection," << endl;
+  for (const auto &t : u.tables)
+    o << "    _" << t.value << "_selection," << endl;
+  o << "  };" << endl << endl;
+
+  o << "  Selection_t _selection{no_selection};" << endl;
+  o << "};" << endl << endl;
+}
+
+void WriteUnions(ostream &o, const Package &p)
+{
+  for (const auto &u : p.unions)
+    WriteUnionStruct(o, u);
+}
+
 void WriteTablesIOFunctions(ostream &o, const vector<Table> &tables)
 {
   for (const auto &t : tables)
@@ -693,6 +817,7 @@ void WriteCppCode(ostream &o, const Package &p)
   WriteForwardDeclarations(o, p);
   WriteEnumDeclarations(o, p.enums);
   WriteTableDeclarations(o, p);
+  WriteUnions(o, p);
 
   for (const auto &e : p.enums)
     WriteEnumFunctions(o, e);
