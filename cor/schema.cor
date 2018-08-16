@@ -1,5 +1,5 @@
 
-package CoreData;
+package CoreBuffer;
 
 version "0.1";
 
@@ -21,11 +21,15 @@ enum PointerAppearance
 table EnumEntry {
   name:string;
   value:int;
+
+  init(name, value);
 }
 
 table Enum {
   name:string;
   entries:[EnumEntry];
+
+  init(name);
 }
 
 table Member {
@@ -35,12 +39,16 @@ table Member {
   isVector:bool = false;
   isBaseType:bool = false;
   pointer:Pointer;
+
+  init(name, type);
 }
 
 table Table {
   name:string;
   member:[Member];
   appearance:ui8;
+
+  init(name);
 }
 
 table Package {
@@ -51,6 +59,8 @@ table Package {
   tables:[Table];
   baseTypes:[Table];
   enums:[Enum];
+
+  init(path, version, root_type);
 }
 
 root_type Package;
