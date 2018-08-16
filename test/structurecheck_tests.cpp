@@ -193,25 +193,39 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
     }
   }
 
-  SECTION("wrong union definitions")
+  SECTION("union definitions")
   {
-    checkErrorIn("union 'U1' already defined.", 3, 2,
-                 "union U1 { Dummy }\n"
-                 "union U2 { Dummy }\n"
-                 " union U1 { Dummy }\n");
-    checkErrorIn("union 'U1' already defined.", 3, 2,
-                 "table U1 { c:int; }\n"
-                 "union U2 { Dummy }\n"
-                 " union U1 { Dummy }\n");
-    checkErrorIn("union 'U1' already defined.", 3, 2,
-                 "enum U1 { c }\n"
-                 "union U2 { Dummy }\n"
-                 " union U1 { Dummy }\n");
-    checkErrorIn("Empty union 'U2'.", 1, 4, "   union U2 {}");
-    checkErrorIn("union entry 'B' already defined for 'U2'.", 2, 19,
-                 "table B{a:int;}\n"
-                 "union U2 {B,Dummy,B}");
-    checkErrorIn("Unknown table 'xxx'.", 1, 11, "union T1 {xxx, Dummy}");
+    SECTION("declaration errors")
+    {
+      checkErrorIn("union 'U1' already defined.", 3, 2,
+                   "union U1 { Dummy }\n"
+                   "union U2 { Dummy }\n"
+                   " union U1 { Dummy }\n");
+      checkErrorIn("union 'U1' already defined.", 3, 2,
+                   "table U1 { c:int; }\n"
+                   "union U2 { Dummy }\n"
+                   " union U1 { Dummy }\n");
+      checkErrorIn("union 'U1' already defined.", 3, 2,
+                   "enum U1 { c }\n"
+                   "union U2 { Dummy }\n"
+                   " union U1 { Dummy }\n");
+      checkErrorIn("Empty union 'U2'.", 1, 4, "   union U2 {}");
+      checkErrorIn("union entry 'B' already defined for 'U2'.", 2, 19,
+                   "table B{a:int;}\n"
+                   "union U2 {B,Dummy,B}");
+      checkErrorIn("Unknown table 'xxx'.", 1, 11, "union T1 {xxx, Dummy}");
+    }
+
+    SECTION("unions allowed as table member")
+    {
+      checkNoErrorIn(
+          "union U { T, Dummy }\n"
+          "table T { \n"
+          "  x:U; \n"
+          "  y:[U];\n"
+          "  z:shared U;\n"
+          "}");
+    }
   }
 
   SECTION("wrong default values")

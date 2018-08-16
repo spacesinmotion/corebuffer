@@ -57,6 +57,8 @@ private:
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
   bool enumExists(const std::string &name);
+  bool unionExists(const std::string &name);
+  bool isValidType(const std::string &name);
 
   std::string methodParameterKey(const Method &m);
   std::string methodTypeParameterKey(const Table &t, const Method &m);

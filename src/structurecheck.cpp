@@ -79,7 +79,7 @@ void StructureCheck::checkDuplicateTableMembers(const Table &t)
 void StructureCheck::checkMemberTypes(const Table &t)
 {
   for (const auto &m : t.member)
-    if (!isBaseType(m.type) && !tableExists(m.type) && !enumExists(m.type))
+    if (!isValidType(m.type))
       _errors.emplace_back("Unknown type '" + m.type + "'.", m.location);
 }
 
@@ -353,6 +353,16 @@ bool StructureCheck::tableExists(const string &name)
 bool StructureCheck::enumExists(const string &name)
 {
   return _enumNames.find(name) != _enumNames.end();
+}
+
+bool StructureCheck::unionExists(const string &name)
+{
+  return _unionNames.find(name) != _unionNames.end();
+}
+
+bool StructureCheck::isValidType(const string &name)
+{
+  return isBaseType(name) || tableExists(name) || unionExists(name) || enumExists(name);
 }
 
 string StructureCheck::methodParameterKey(const Method &m)
