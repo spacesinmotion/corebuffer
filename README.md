@@ -1,6 +1,8 @@
 
-[![Build status](https://ci.appveyor.com/api/projects/status/x0xdasqqpq1evc08/branch/master?svg=true)](https://ci.appveyor.com/project/spacesinmotion/corebuffer/branch/master)
-[![license](https://img.shields.io/github/license/spacesinmotion/corebuffer.svg)]()
+branch | status 
+--- |:---:
+master | [![Build status](https://ci.appveyor.com/api/projects/status/x0xdasqqpq1evc08/branch/master?svg=true)](https://ci.appveyor.com/project/spacesinmotion/corebuffer/branch/master) 
+develop | [![Build status](https://ci.appveyor.com/api/projects/status/x0xdasqqpq1evc08/branch/develop?svg=true)](https://ci.appveyor.com/project/spacesinmotion/corebuffer/branch/develop)
 
 ##  What is CoreBuffer?
 It is a code generation tool that is highly inspired by [Protocol Buffers](https://developers.google.com/protocol-buffers/)
