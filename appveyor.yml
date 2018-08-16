@@ -11,7 +11,7 @@ image:
 
 environment:
   COREBUFFER_VERSION: 0.1
-  COREBUFFER_BUILD: "{build} ({branch})"
+  COREBUFFER_BUILD: {build}
 
 build_script:
 - sh: >-
