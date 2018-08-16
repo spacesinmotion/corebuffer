@@ -10,6 +10,13 @@
 
 #include "args/args.hxx"
 
+#ifndef COREBUFFER_VERSION
+#define COREBUFFER_VERSION "<undefined>"
+#endif
+#ifndef COREBUFFER_BUILD
+#define COREBUFFER_BUILD "<undefined>"
+#endif
+
 using namespace std;
 
 void usageError(const string &msg, const args::ArgumentParser &args)
@@ -72,7 +79,7 @@ int main(int argc, char *argv[])
   args::ArgumentParser args(
       "CoreBuffer compiler. Code generation tool for convenient automatically generated binary serialization of "
       "complex data structures.",
-      __DATE__ " CoreBufferC " COREBUFFER_VERSION);
+      __DATE__ " CoreBufferC " COREBUFFER_VERSION " build " COREBUFFER_BUILD);
   args::HelpFlag help(args, "help", "Display this help menu", {'h', "help"});
   args::Flag version(args, "version", "display the program version", {"version"});
   args::Positional<string> input(args, "<input.cor>", "the CoreBuffer IDL descripting input file");

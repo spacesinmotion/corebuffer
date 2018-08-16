@@ -1,0 +1,27 @@
+version: 0.1.{build}-{branch}
+
+branches:
+  only:
+    - master
+    - develop
+
+image:
+- Visual Studio 2017
+- Ubuntu
+
+environment:
+  COREBUFFER_VERSION: 0.1
+  COREBUFFER_BUILD: {build} ({branch})
+
+build_script:
+- sh: >-
+    mkdir build
+
+    cd build
+
+    cmake ..
+
+    cmake --build . --target all
+
+test_script:
+- sh: ctest --output-on-failure

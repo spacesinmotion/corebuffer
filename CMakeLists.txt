@@ -1,12 +1,22 @@
 cmake_minimum_required (VERSION 3.1)
 
-project (CoreBuffer LANGUAGES CXX VERSION 0.1)
+if (DEFINED ENV{COREBUFFER_VERSION})
+  set(COREBUFFER_VERSION $ENV{COREBUFFER_VERSION})
+  set(COREBUFFER_BUILD $ENV{COREBUFFER_BUILD})
+else()
+  set(COREBUFFER_VERSION 0)
+  set(COREBUFFER_BUILD 0)
+endif()
 
-enable_testing()
+project (CoreBuffer LANGUAGES CXX VERSION ${COREBUFFER_VERSION})
+
+
 set (CMAKE_CXX_STANDARD 11)
-
 include_directories(src/ ./ 3rdparty/)
 add_definitions(-DCOREBUFFER_VERSION="${PROJECT_VERSION}")
+add_definitions(-DCOREBUFFER_BUILD="${COREBUFFER_BUILD}")
+
+message(STATUS "Building CoreBuffer ${PROJECT_VERSION}-${COREBUFFER_BUILD}")
 
 add_library(CoreBuffer STATIC src/parser.cpp src/parser.h src/structurecheck.h src/structurecheck.cpp src/cppoutput.cpp
   src/cppoutput.h src/package.cpp src/package.h src/fileposition.h src/fileerror.h)
@@ -22,6 +32,9 @@ add_executable (CoreBufferOutputTests 3rdparty/catch2/catch.hpp test/basetypes.h
 
 target_link_libraries(CoreBufferC CoreBuffer)
 target_link_libraries(CoreBufferTests CoreBuffer)
+
+
+enable_testing()
 
 add_test(NAME BaseTypeBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/basetypes.cor ${PROJECT_SOURCE_DIR}/test/basetypes.h)
 add_test(NAME EnumTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/enumtypes.cor ${PROJECT_SOURCE_DIR}/test/enumtypes.h)
@@ -46,5 +59,6 @@ set_tests_properties (CheckStructureError CheckError PROPERTIES PASS_REGULAR_EXP
 
 add_test(CoreBufferTest CoreBufferTests -r compact)
 add_test(CoreBufferOutputTest CoreBufferOutputTests)
+
 
 install (TARGETS CoreBufferC DESTINATION bin)
