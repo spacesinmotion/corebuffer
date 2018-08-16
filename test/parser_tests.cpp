@@ -341,6 +341,42 @@ table Dummy
           "  init(b);\n"
           "  init();\n"
           "}");
+
+      REQUIRE(p.tables.size() == 1);
+
+      REQUIRE(p.tables[0].methods.size() == 3);
+      CHECK(p.tables[0].methods[0].name == "init");
+      CHECK(p.tables[0].methods[1].name == "init");
+      CHECK(p.tables[0].methods[2].name == "init");
+
+      REQUIRE(p.tables[0].methods[0].parameter.size() == 2);
+      CHECK(p.tables[0].methods[0].parameter[0].name == "a");
+      CHECK(p.tables[0].methods[0].parameter[1].name == "b");
+
+      CHECK(p.tables[0].methods[1].parameter.size() == 1);
+      CHECK(p.tables[0].methods[2].parameter.empty());
+    }
+  }
+
+  SECTION("union tables")
+  {
+    SECTION("basic parsing")
+    {
+      parse("union U { }\n");
+      parse("union U { A}\n");
+      parse("union U { A, B }\n");
+      parse("union U { A, B, }\n");
+    }
+
+    SECTION("parsing content test")
+    {
+      const auto p = parse("union U { A, B }\n");
+      REQUIRE(p.unions.size() == 1);
+      CHECK(p.unions[0].name == "U");
+
+      REQUIRE(p.unions[0].tables.size() == 2);
+      CHECK(p.unions[0].tables[0].value == "A");
+      CHECK(p.unions[0].tables[1].value == "B");
     }
   }
 }

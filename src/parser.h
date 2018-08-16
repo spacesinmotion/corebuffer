@@ -49,6 +49,9 @@ private:
   bool readTable();
   bool readEnum();
 
+  bool readUnion();
+  bool readUnionEntries(Union &u);
+
   bool readScopeStatement(const std::function<bool()> &scopeContent);
 
   bool readEnumEntryList(Enum &e, size_t lastValue);

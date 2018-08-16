@@ -4,10 +4,12 @@
 #include "fileposition.h"
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using std::pair;
 using std::string;
+using std::unordered_map;
 using std::vector;
 
 struct Attribute
@@ -101,6 +103,15 @@ struct Table
   FilePosition location;
 };
 
+struct Union
+{
+  explicit Union(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
+
+  string name;
+  FilePosition location;
+  vector<Attribute> tables;
+};
+
 struct Package
 {
   Attribute path;
@@ -109,6 +120,7 @@ struct Package
   vector<Table> tables;
   vector<Table> baseTypes;
   vector<Enum> enums;
+  vector<Union> unions;
 };
 
 #endif  // PACKAGE_H

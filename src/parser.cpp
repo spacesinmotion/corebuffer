@@ -236,7 +236,7 @@ bool Parser::readRootType()
 
 bool Parser::readMainContent()
 {
-  return readTable() || readEnum() || readPackage() || readVersion() || readRootType();
+  return readTable() || readUnion() || readEnum() || readPackage() || readVersion() || readRootType();
 }
 
 bool Parser::readTable()
@@ -294,6 +294,48 @@ bool Parser::readEnum()
   return false;
 }
 
+bool Parser::readUnion()
+{
+  auto s = state();
+
+  if (read("union"))
+  {
+    const auto location = stateBefor(5);
+    Union u(readIdentifier(), location);
+    if (u.name.empty())
+      throw FileError("Expected union name after 'union'.", state());
+
+    if (readScopeStatement([this, &u]() {
+          readUnionEntries(u);
+          return true;
+        }))
+    {
+      package.unions.push_back(u);
+      return true;
+    }
+  }
+
+  rewind(s);
+  return false;
+}
+
+bool Parser::readUnionEntries(Union &u)
+{
+  auto s = state();
+
+  auto name = readIdentifier();
+  if (!name.empty())
+  {
+    u.tables.emplace_back(name, stateBefor(name.size()));
+    if (read(","))
+      readUnionEntries(u);
+    return true;
+  }
+
+  rewind(s);
+  return false;
+}
+
 bool Parser::readEnumEntryList(Enum &e, size_t lastValue)
 {
   auto s = state();
@@ -305,12 +347,8 @@ bool Parser::readEnumEntryList(Enum &e, size_t lastValue)
     readEnumMemberDefault(lastValue);
     e.entries.emplace_back(name, lastValue++, location);
     if (read(","))
-    {
       readEnumEntryList(e, lastValue);
-      return true;
-    }
-    else
-      return true;
+    return true;
   }
 
   rewind(s);
