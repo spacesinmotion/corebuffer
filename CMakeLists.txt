@@ -3,9 +3,16 @@ cmake_minimum_required (VERSION 3.1)
 if ($ENV{APPVEYOR})
   set(COREBUFFER_VERSION $ENV{APPVEYOR_BUILD_VERSION})
   set(COREBUFFER_BUILD $ENV{APPVEYOR_BUILD_NUMBER})
+  set(COREBUFFER_BRANCH $ENV{APPVEYOR_REPO_BRANCH})
 else()
   set(COREBUFFER_VERSION 0)
   set(COREBUFFER_BUILD 0)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE COREBUFFER_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
 endif()
 
 project (CoreBuffer LANGUAGES CXX VERSION ${COREBUFFER_VERSION})
@@ -15,8 +22,10 @@ set (CMAKE_CXX_STANDARD 11)
 include_directories(src/ ./ 3rdparty/)
 add_definitions(-DCOREBUFFER_VERSION="${PROJECT_VERSION}")
 add_definitions(-DCOREBUFFER_BUILD="${COREBUFFER_BUILD}")
+add_definitions(-DCOREBUFFER_BRANCH="${COREBUFFER_BRANCH}")
 
-message(STATUS "Building CoreBuffer ${PROJECT_VERSION}-${COREBUFFER_BUILD}")
+message(STATUS "Building CoreBuffer ${PROJECT_VERSION}-${COREBUFFER_BUILD} (${COREBUFFER_BRANCH})")
+
 
 add_library(CoreBuffer STATIC src/parser.cpp src/parser.h src/structurecheck.h src/structurecheck.cpp src/cppoutput.cpp
   src/cppoutput.h src/package.cpp src/package.h src/fileposition.h src/fileerror.h)
