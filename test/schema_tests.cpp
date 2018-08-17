@@ -24,22 +24,31 @@ TEST_CASE("Schema output test", "[output]")
 
     CHECK(Package() == Package());
     CHECK_FALSE(Package() != Package());
+
+    CHECK(Type() == Type());
+    CHECK_FALSE(Type() != Type());
   }
 
   SECTION("reading whats written")
   {
-    Enum e1("E1");
+    Package p("Scope", "0.1", "P1");
+
+    Enum e1;
     e1.entries.emplace_back("x", 42);
     e1.entries.emplace_back("half", 21);
+    p.types.emplace_back("E1", e1);
 
-    Table t1("T1");
+    Table t1;
     t1.member.emplace_back("e", "E1");
     t1.member.emplace_back("x", "std::uint32_t");
+    p.types.emplace_back("T1", t1);
 
-    Package p("Scope", "0.1", "T1");
-    p.tables.emplace_back(t1);
-    p.baseTypes.emplace_back("base_type");
-    p.enums.emplace_back(e1);
+    p.types.emplace_back("base_type", BaseType(true));
+
+    Union u;
+    u.tables.emplace_back("X1");
+    u.tables.emplace_back("X2");
+    p.types.emplace_back("U1", u);
 
     Package cIn;
     CHECK_FALSE(p == cIn);
@@ -53,6 +62,7 @@ TEST_CASE("Schema output test", "[output]")
     Package_io().ReadPackage(sIn, cIn);
 
     CHECK(p == cIn);
+    CHECK_FALSE(p != cIn);
   }
 
   SECTION("Reading fails with wrong data")
