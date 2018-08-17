@@ -49,6 +49,9 @@ private:
   bool readTable();
   bool readEnum();
 
+  bool readUnion();
+  bool readUnionEntries(Union &u);
+
   bool readScopeStatement(const std::function<bool()> &scopeContent);
 
   bool readEnumEntryList(Enum &e, size_t lastValue);
@@ -72,6 +75,7 @@ private:
 
   void initBaseTypes();
   Table *tableForType(const std::string &t);
+  Union *unionForType(const std::string &t);
   Enum *enumForType(const std::string &t);
   void updateTableAppearance();
   std::string fullPackageScope() const;

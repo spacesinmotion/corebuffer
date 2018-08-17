@@ -236,7 +236,7 @@ bool Parser::readRootType()
 
 bool Parser::readMainContent()
 {
-  return readTable() || readEnum() || readPackage() || readVersion() || readRootType();
+  return readTable() || readUnion() || readEnum() || readPackage() || readVersion() || readRootType();
 }
 
 bool Parser::readTable()
@@ -260,7 +260,7 @@ bool Parser::readTable()
           return true;
         }))
     {
-      package.tables.push_back(t);
+      package.types.emplace_back(t);
       return true;
     }
   }
@@ -285,9 +285,51 @@ bool Parser::readEnum()
           return true;
         }))
     {
-      package.enums.push_back(e);
+      package.types.emplace_back(e);
       return true;
     }
+  }
+
+  rewind(s);
+  return false;
+}
+
+bool Parser::readUnion()
+{
+  auto s = state();
+
+  if (read("union"))
+  {
+    const auto location = stateBefor(5);
+    Union u(readIdentifier(), location);
+    if (u.name.empty())
+      throw FileError("Expected union name after 'union'.", state());
+
+    if (readScopeStatement([this, &u]() {
+          readUnionEntries(u);
+          return true;
+        }))
+    {
+      package.types.emplace_back(u);
+      return true;
+    }
+  }
+
+  rewind(s);
+  return false;
+}
+
+bool Parser::readUnionEntries(Union &u)
+{
+  auto s = state();
+
+  auto name = readIdentifier();
+  if (!name.empty())
+  {
+    u.tables.emplace_back(name, stateBefor(name.size()));
+    if (read(","))
+      readUnionEntries(u);
+    return true;
   }
 
   rewind(s);
@@ -305,12 +347,8 @@ bool Parser::readEnumEntryList(Enum &e, size_t lastValue)
     readEnumMemberDefault(lastValue);
     e.entries.emplace_back(name, lastValue++, location);
     if (read(","))
-    {
       readEnumEntryList(e, lastValue);
-      return true;
-    }
-    else
-      return true;
+    return true;
   }
 
   rewind(s);
@@ -705,28 +743,61 @@ void Parser::initBaseTypes()
 
 Table *Parser::tableForType(const std::string &name)
 {
-  for (auto &t : package.tables)
-    if (t.name == name)
-      return &t;
+  for (auto &t : package.types)
+    if (t.is_Table() && t.as_Table().name == name)
+      return &t.as_Table();
   for (auto &t : package.baseTypes)
     if (t.name == name)
       return &t;
   return nullptr;
 }
 
+Union *Parser::unionForType(const std::string &name)
+{
+  for (auto &u : package.types)
+    if (u.is_Union() && u.as_Union().name == name)
+      return &u.as_Union();
+  return nullptr;
+}
+
 Enum *Parser::enumForType(const std::string &name)
 {
-  for (auto &e : package.enums)
-    if (e.name == name)
-      return &e;
+  for (auto &e : package.types)
+    if (e.is_Enum() && e.as_Enum().name == name)
+      return &e.as_Enum();
   return nullptr;
+}
+
+template <class T>
+void updateAppearance(T *t, const Member &m)
+{
+  if (!t)
+    return;
+  if (m.isVector && m.pointer == Pointer::Weak)
+    t->appearance |= WeakVectorAppearance;
+  else if (m.isVector && m.pointer == Pointer::Unique)
+    t->appearance |= UniqueVectorAppearance;
+  else if (m.isVector && m.pointer == Pointer::Shared)
+    t->appearance |= SharedVectorAppearance;
+  else if (m.isVector && m.pointer == Pointer::Plain)
+    t->appearance |= VectorAppearance;
+  else if (!m.isVector && m.pointer == Pointer::Weak)
+    t->appearance |= WeakAppearance;
+  else if (!m.isVector && m.pointer == Pointer::Unique)
+    t->appearance |= UniqueAppearance;
+  else if (!m.isVector && m.pointer == Pointer::Shared)
+    t->appearance |= SharedAppearance;
+  else
+    t->appearance |= PlainAppearance;
 }
 
 void Parser::updateTableAppearance()
 {
-  for (auto &t : package.tables)
+  for (auto &t : package.types)
   {
-    for (auto &m : t.member)
+    if (!t.is_Table())
+      continue;
+    for (auto &m : t.as_Table().member)
     {
       if (aliases.find(m.type) != aliases.end())
       {
@@ -749,25 +820,8 @@ void Parser::updateTableAppearance()
           m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
       }
 
-      auto *t = tableForType(m.type);
-      if (!t)
-        continue;
-      if (m.isVector && m.pointer == Pointer::Weak)
-        t->appearance |= WeakVectorAppearance;
-      else if (m.isVector && m.pointer == Pointer::Unique)
-        t->appearance |= UniqueVectorAppearance;
-      else if (m.isVector && m.pointer == Pointer::Shared)
-        t->appearance |= SharedVectorAppearance;
-      else if (m.isVector && m.pointer == Pointer::Plain)
-        t->appearance |= VectorAppearance;
-      else if (!m.isVector && m.pointer == Pointer::Weak)
-        t->appearance |= WeakAppearance;
-      else if (!m.isVector && m.pointer == Pointer::Unique)
-        t->appearance |= UniqueAppearance;
-      else if (!m.isVector && m.pointer == Pointer::Shared)
-        t->appearance |= SharedAppearance;
-      else
-        t->appearance |= PlainAppearance;
+      updateAppearance(tableForType(m.type), m);
+      updateAppearance(unionForType(m.type), m);
     }
   }
 }

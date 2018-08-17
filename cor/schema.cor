@@ -26,10 +26,7 @@ table EnumEntry {
 }
 
 table Enum {
-  name:string;
   entries:[EnumEntry];
-
-  init(name);
 }
 
 table Member {
@@ -44,11 +41,29 @@ table Member {
 }
 
 table Table {
-  name:string;
   member:[Member];
   appearance:ui8;
+}
 
-  init(name);
+table Union
+{
+  tables:[string];
+}
+
+table BaseType {
+  isComplex:bool = false;
+
+  init(isComplex);
+}
+
+union Representation { BaseType, Enum, Table, Union }
+
+table Type {
+  name:string;
+  appearance:ui8;
+  representation:Representation;
+
+  init(name, representation);
 }
 
 table Package {
@@ -56,9 +71,7 @@ table Package {
   version:string;
   root_type:string;
 
-  tables:[Table];
-  baseTypes:[Table];
-  enums:[Enum];
+  types:[Type];
 
   init(path, version, root_type);
 }

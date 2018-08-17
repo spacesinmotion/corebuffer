@@ -22,44 +22,6 @@ enum class EnumTypes : std::int8_t {
   delta = 42,
 };
 
-enum class Enum16 : std::int16_t {
-  a = 512,
-};
-
-enum class Enum32 : std::int32_t {
-  a = 128000,
-};
-
-enum class Enum64 : std::int64_t {
-  a = 4294967297,
-};
-
-enum class EnumMinus8 : std::int8_t {
-  a = -1,
-};
-
-struct Dummy {
-  EnumTypes en1{Scope::EnumTypes::alpha};
-  EnumTypes en2{Scope::EnumTypes::delta};
-  std::vector<EnumTypes> en3;
-
-  Dummy() = default;
-};
-
-bool operator==(const Dummy&l, const Dummy&r) {
-  return 
-    l.en1 == r.en1
-    && l.en2 == r.en2
-    && l.en3 == r.en3;
-}
-
-bool operator!=(const Dummy&l, const Dummy&r) {
-  return 
-    l.en1 != r.en1
-    || l.en2 != r.en2
-    || l.en3 != r.en3;
-}
-
 inline const std::array<EnumTypes,4> & EnumTypesValues() {
   static const std::array<EnumTypes,4> values {{
     EnumTypes::alpha,
@@ -80,6 +42,10 @@ inline const char * ValueName(const EnumTypes &v) {
   return "<error>";
 };
 
+enum class Enum16 : std::int16_t {
+  a = 512,
+};
+
 inline const std::array<Enum16,1> & Enum16Values() {
   static const std::array<Enum16,1> values {{
     Enum16::a,
@@ -92,6 +58,10 @@ inline const char * ValueName(const Enum16 &v) {
     case Enum16::a: return "a";
   }
   return "<error>";
+};
+
+enum class Enum32 : std::int32_t {
+  a = 128000,
 };
 
 inline const std::array<Enum32,1> & Enum32Values() {
@@ -108,6 +78,10 @@ inline const char * ValueName(const Enum32 &v) {
   return "<error>";
 };
 
+enum class Enum64 : std::int64_t {
+  a = 4294967297,
+};
+
 inline const std::array<Enum64,1> & Enum64Values() {
   static const std::array<Enum64,1> values {{
     Enum64::a,
@@ -122,6 +96,10 @@ inline const char * ValueName(const Enum64 &v) {
   return "<error>";
 };
 
+enum class EnumMinus8 : std::int8_t {
+  a = -1,
+};
+
 inline const std::array<EnumMinus8,1> & EnumMinus8Values() {
   static const std::array<EnumMinus8,1> values {{
     EnumMinus8::a,
@@ -134,6 +112,28 @@ inline const char * ValueName(const EnumMinus8 &v) {
     case EnumMinus8::a: return "a";
   }
   return "<error>";
+};
+
+struct Dummy {
+  EnumTypes en1{Scope::EnumTypes::alpha};
+  EnumTypes en2{Scope::EnumTypes::delta};
+  std::vector<EnumTypes> en3;
+
+  Dummy() = default;
+
+  friend bool operator==(const Dummy&l, const Dummy&r) {
+    return 
+      l.en1 == r.en1
+      && l.en2 == r.en2
+      && l.en3 == r.en3;
+  }
+
+  friend bool operator!=(const Dummy&l, const Dummy&r) {
+    return 
+      l.en1 != r.en1
+      || l.en2 != r.en2
+      || l.en3 != r.en3;
+  }
 };
 
 struct Dummy_io {

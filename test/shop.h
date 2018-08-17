@@ -25,6 +25,18 @@ struct Item {
 
   Item() = default;
 
+  friend bool operator==(const Item&l, const Item&r) {
+    return 
+      l.name == r.name
+      && l.price == r.price;
+  }
+
+  friend bool operator!=(const Item&l, const Item&r) {
+    return 
+      l.name != r.name
+      || l.price != r.price;
+  }
+
 private:
   unsigned int io_counter_{0};
   friend struct Shop_io;
@@ -36,6 +48,18 @@ struct Customer {
 
   Customer() = default;
 
+  friend bool operator==(const Customer&l, const Customer&r) {
+    return 
+      l.name == r.name
+      && l.address == r.address;
+  }
+
+  friend bool operator!=(const Customer&l, const Customer&r) {
+    return 
+      l.name != r.name
+      || l.address != r.address;
+  }
+
 private:
   unsigned int io_counter_{0};
   friend struct Shop_io;
@@ -46,6 +70,18 @@ struct Order {
   std::shared_ptr<Customer> customer;
 
   Order() = default;
+
+  friend bool operator==(const Order&l, const Order&r) {
+    return 
+      l.items == r.items
+      && l.customer == r.customer;
+  }
+
+  friend bool operator!=(const Order&l, const Order&r) {
+    return 
+      l.items != r.items
+      || l.customer != r.customer;
+  }
 };
 
 struct Shop {
@@ -54,57 +90,21 @@ struct Shop {
   std::vector<Order> orders;
 
   Shop() = default;
+
+  friend bool operator==(const Shop&l, const Shop&r) {
+    return 
+      l.items == r.items
+      && l.customers == r.customers
+      && l.orders == r.orders;
+  }
+
+  friend bool operator!=(const Shop&l, const Shop&r) {
+    return 
+      l.items != r.items
+      || l.customers != r.customers
+      || l.orders != r.orders;
+  }
 };
-
-bool operator==(const Item&l, const Item&r) {
-  return 
-    l.name == r.name
-    && l.price == r.price;
-}
-
-bool operator!=(const Item&l, const Item&r) {
-  return 
-    l.name != r.name
-    || l.price != r.price;
-}
-
-bool operator==(const Customer&l, const Customer&r) {
-  return 
-    l.name == r.name
-    && l.address == r.address;
-}
-
-bool operator!=(const Customer&l, const Customer&r) {
-  return 
-    l.name != r.name
-    || l.address != r.address;
-}
-
-bool operator==(const Order&l, const Order&r) {
-  return 
-    l.items == r.items
-    && l.customer == r.customer;
-}
-
-bool operator!=(const Order&l, const Order&r) {
-  return 
-    l.items != r.items
-    || l.customer != r.customer;
-}
-
-bool operator==(const Shop&l, const Shop&r) {
-  return 
-    l.items == r.items
-    && l.customers == r.customers
-    && l.orders == r.orders;
-}
-
-bool operator!=(const Shop&l, const Shop&r) {
-  return 
-    l.items != r.items
-    || l.customers != r.customers
-    || l.orders != r.orders;
-}
 
 struct Shop_io {
 private:

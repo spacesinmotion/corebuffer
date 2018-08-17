@@ -17,6 +17,10 @@ struct EnumEntry;
 struct Enum;
 struct Member;
 struct Table;
+struct Union;
+struct BaseType;
+struct Representation;
+struct Type;
 struct Package;
 
 enum class Pointer : std::int8_t {
@@ -25,159 +29,6 @@ enum class Pointer : std::int8_t {
   Unique = 2,
   Shared = 3,
 };
-
-enum class PointerAppearance : std::int8_t {
-  NoPointer = 0,
-  WeakAppearance = 1,
-  UniqueAppearance = 2,
-  SharedAppearance = 3,
-  VectorAppearance = 4,
-  WeakVectorAppearance = 5,
-  UniqueVectorAppearance = 6,
-  SharedVectorAppearance = 7,
-  PlainAppearance = 8,
-};
-
-struct EnumEntry {
-  std::string name;
-  std::int32_t value{0};
-
-  EnumEntry() = default;
-  EnumEntry(const std::string &name_, const std::int32_t &value_)
-    : name(name_)
-    , value(value_)
-  {}
-};
-
-struct Enum {
-  std::string name;
-  std::vector<EnumEntry> entries;
-
-  Enum() = default;
-  Enum(const std::string &name_)
-    : name(name_)
-  {}
-};
-
-struct Member {
-  std::string name;
-  std::string type;
-  std::string defaultValue;
-  bool isVector{false};
-  bool isBaseType{false};
-  Pointer pointer{CoreBuffer::Pointer::Plain};
-
-  Member() = default;
-  Member(const std::string &name_, const std::string &type_)
-    : name(name_)
-    , type(type_)
-  {}
-};
-
-struct Table {
-  std::string name;
-  std::vector<Member> member;
-  std::uint8_t appearance{0u};
-
-  Table() = default;
-  Table(const std::string &name_)
-    : name(name_)
-  {}
-};
-
-struct Package {
-  std::string path;
-  std::string version;
-  std::string root_type;
-  std::vector<Table> tables;
-  std::vector<Table> baseTypes;
-  std::vector<Enum> enums;
-
-  Package() = default;
-  Package(const std::string &path_, const std::string &version_, const std::string &root_type_)
-    : path(path_)
-    , version(version_)
-    , root_type(root_type_)
-  {}
-};
-
-bool operator==(const EnumEntry&l, const EnumEntry&r) {
-  return 
-    l.name == r.name
-    && l.value == r.value;
-}
-
-bool operator!=(const EnumEntry&l, const EnumEntry&r) {
-  return 
-    l.name != r.name
-    || l.value != r.value;
-}
-
-bool operator==(const Enum&l, const Enum&r) {
-  return 
-    l.name == r.name
-    && l.entries == r.entries;
-}
-
-bool operator!=(const Enum&l, const Enum&r) {
-  return 
-    l.name != r.name
-    || l.entries != r.entries;
-}
-
-bool operator==(const Member&l, const Member&r) {
-  return 
-    l.name == r.name
-    && l.type == r.type
-    && l.defaultValue == r.defaultValue
-    && l.isVector == r.isVector
-    && l.isBaseType == r.isBaseType
-    && l.pointer == r.pointer;
-}
-
-bool operator!=(const Member&l, const Member&r) {
-  return 
-    l.name != r.name
-    || l.type != r.type
-    || l.defaultValue != r.defaultValue
-    || l.isVector != r.isVector
-    || l.isBaseType != r.isBaseType
-    || l.pointer != r.pointer;
-}
-
-bool operator==(const Table&l, const Table&r) {
-  return 
-    l.name == r.name
-    && l.member == r.member
-    && l.appearance == r.appearance;
-}
-
-bool operator!=(const Table&l, const Table&r) {
-  return 
-    l.name != r.name
-    || l.member != r.member
-    || l.appearance != r.appearance;
-}
-
-bool operator==(const Package&l, const Package&r) {
-  return 
-    l.path == r.path
-    && l.version == r.version
-    && l.root_type == r.root_type
-    && l.tables == r.tables
-    && l.baseTypes == r.baseTypes
-    && l.enums == r.enums;
-}
-
-bool operator!=(const Package&l, const Package&r) {
-  return 
-    l.path != r.path
-    || l.version != r.version
-    || l.root_type != r.root_type
-    || l.tables != r.tables
-    || l.baseTypes != r.baseTypes
-    || l.enums != r.enums;
-}
 
 inline const std::array<Pointer,4> & PointerValues() {
   static const std::array<Pointer,4> values {{
@@ -197,6 +48,18 @@ inline const char * ValueName(const Pointer &v) {
     case Pointer::Shared: return "Shared";
   }
   return "<error>";
+};
+
+enum class PointerAppearance : std::int8_t {
+  NoPointer = 0,
+  WeakAppearance = 1,
+  UniqueAppearance = 2,
+  SharedAppearance = 3,
+  VectorAppearance = 4,
+  WeakVectorAppearance = 5,
+  UniqueVectorAppearance = 6,
+  SharedVectorAppearance = 7,
+  PlainAppearance = 8,
 };
 
 inline const std::array<PointerAppearance,9> & PointerAppearanceValues() {
@@ -229,6 +92,410 @@ inline const char * ValueName(const PointerAppearance &v) {
   return "<error>";
 };
 
+struct EnumEntry {
+  std::string name;
+  std::int32_t value{0};
+
+  EnumEntry() = default;
+  EnumEntry(const std::string &name_, const std::int32_t &value_)
+    : name(name_)
+    , value(value_)
+  {}
+
+  friend bool operator==(const EnumEntry&l, const EnumEntry&r) {
+    return 
+      l.name == r.name
+      && l.value == r.value;
+  }
+
+  friend bool operator!=(const EnumEntry&l, const EnumEntry&r) {
+    return 
+      l.name != r.name
+      || l.value != r.value;
+  }
+};
+
+struct Enum {
+  std::vector<EnumEntry> entries;
+
+  Enum() = default;
+
+  friend bool operator==(const Enum&l, const Enum&r) {
+    return 
+      l.entries == r.entries;
+  }
+
+  friend bool operator!=(const Enum&l, const Enum&r) {
+    return 
+      l.entries != r.entries;
+  }
+};
+
+struct Member {
+  std::string name;
+  std::string type;
+  std::string defaultValue;
+  bool isVector{false};
+  bool isBaseType{false};
+  Pointer pointer{CoreBuffer::Pointer::Plain};
+
+  Member() = default;
+  Member(const std::string &name_, const std::string &type_)
+    : name(name_)
+    , type(type_)
+  {}
+
+  friend bool operator==(const Member&l, const Member&r) {
+    return 
+      l.name == r.name
+      && l.type == r.type
+      && l.defaultValue == r.defaultValue
+      && l.isVector == r.isVector
+      && l.isBaseType == r.isBaseType
+      && l.pointer == r.pointer;
+  }
+
+  friend bool operator!=(const Member&l, const Member&r) {
+    return 
+      l.name != r.name
+      || l.type != r.type
+      || l.defaultValue != r.defaultValue
+      || l.isVector != r.isVector
+      || l.isBaseType != r.isBaseType
+      || l.pointer != r.pointer;
+  }
+};
+
+struct Table {
+  std::vector<Member> member;
+  std::uint8_t appearance{0u};
+
+  Table() = default;
+
+  friend bool operator==(const Table&l, const Table&r) {
+    return 
+      l.member == r.member
+      && l.appearance == r.appearance;
+  }
+
+  friend bool operator!=(const Table&l, const Table&r) {
+    return 
+      l.member != r.member
+      || l.appearance != r.appearance;
+  }
+};
+
+struct Union {
+  std::vector<std::string> tables;
+
+  Union() = default;
+
+  friend bool operator==(const Union&l, const Union&r) {
+    return 
+      l.tables == r.tables;
+  }
+
+  friend bool operator!=(const Union&l, const Union&r) {
+    return 
+      l.tables != r.tables;
+  }
+};
+
+struct BaseType {
+  bool isComplex{false};
+
+  BaseType() = default;
+  BaseType(const bool &isComplex_)
+    : isComplex(isComplex_)
+  {}
+
+  friend bool operator==(const BaseType&l, const BaseType&r) {
+    return 
+      l.isComplex == r.isComplex;
+  }
+
+  friend bool operator!=(const BaseType&l, const BaseType&r) {
+    return 
+      l.isComplex != r.isComplex;
+  }
+};
+
+struct Representation {
+  Representation() = default;
+  Representation(const Representation &o) { _clone(o); }
+  Representation& operator=(const Representation &o) { _destroy(); _clone(o); return *this; }
+
+  Representation(const BaseType &v)
+    : _BaseType(new BaseType(v))
+    , _selection(_BaseType_selection)
+  {}
+  Representation(BaseType &&v)
+    : _BaseType(new BaseType(std::forward<BaseType>(v)))
+    , _selection(_BaseType_selection)
+  {}
+  Representation & operator=(const BaseType &v) {
+    _destroy();
+    _BaseType = new BaseType(v);
+    _selection = _BaseType_selection;
+    return *this;
+  }
+  Representation & operator=(BaseType &&v) {
+    _destroy();
+    _BaseType = new BaseType(std::forward<BaseType>(v));
+    _selection = _BaseType_selection;
+    return *this;
+  }
+
+  Representation(const Enum &v)
+    : _Enum(new Enum(v))
+    , _selection(_Enum_selection)
+  {}
+  Representation(Enum &&v)
+    : _Enum(new Enum(std::forward<Enum>(v)))
+    , _selection(_Enum_selection)
+  {}
+  Representation & operator=(const Enum &v) {
+    _destroy();
+    _Enum = new Enum(v);
+    _selection = _Enum_selection;
+    return *this;
+  }
+  Representation & operator=(Enum &&v) {
+    _destroy();
+    _Enum = new Enum(std::forward<Enum>(v));
+    _selection = _Enum_selection;
+    return *this;
+  }
+
+  Representation(const Table &v)
+    : _Table(new Table(v))
+    , _selection(_Table_selection)
+  {}
+  Representation(Table &&v)
+    : _Table(new Table(std::forward<Table>(v)))
+    , _selection(_Table_selection)
+  {}
+  Representation & operator=(const Table &v) {
+    _destroy();
+    _Table = new Table(v);
+    _selection = _Table_selection;
+    return *this;
+  }
+  Representation & operator=(Table &&v) {
+    _destroy();
+    _Table = new Table(std::forward<Table>(v));
+    _selection = _Table_selection;
+    return *this;
+  }
+
+  Representation(const Union &v)
+    : _Union(new Union(v))
+    , _selection(_Union_selection)
+  {}
+  Representation(Union &&v)
+    : _Union(new Union(std::forward<Union>(v)))
+    , _selection(_Union_selection)
+  {}
+  Representation & operator=(const Union &v) {
+    _destroy();
+    _Union = new Union(v);
+    _selection = _Union_selection;
+    return *this;
+  }
+  Representation & operator=(Union &&v) {
+    _destroy();
+    _Union = new Union(std::forward<Union>(v));
+    _selection = _Union_selection;
+    return *this;
+  }
+
+  ~Representation() {
+    _destroy();
+  }
+
+  bool is_Defined() const noexcept { return _selection != no_selection; }
+  void clear() { *this = Representation(); }
+
+  bool is_BaseType() const noexcept { return _selection == _BaseType_selection; }
+  const BaseType & as_BaseType() const noexcept { return *_BaseType; }
+  BaseType & as_BaseType() { return *_BaseType; }
+  template<typename... Args> BaseType & create_BaseType(Args&&... args) {
+    return (*this = BaseType(std::forward<Args>(args)...)).as_BaseType();
+  }
+
+  bool is_Enum() const noexcept { return _selection == _Enum_selection; }
+  const Enum & as_Enum() const noexcept { return *_Enum; }
+  Enum & as_Enum() { return *_Enum; }
+  template<typename... Args> Enum & create_Enum(Args&&... args) {
+    return (*this = Enum(std::forward<Args>(args)...)).as_Enum();
+  }
+
+  bool is_Table() const noexcept { return _selection == _Table_selection; }
+  const Table & as_Table() const noexcept { return *_Table; }
+  Table & as_Table() { return *_Table; }
+  template<typename... Args> Table & create_Table(Args&&... args) {
+    return (*this = Table(std::forward<Args>(args)...)).as_Table();
+  }
+
+  bool is_Union() const noexcept { return _selection == _Union_selection; }
+  const Union & as_Union() const noexcept { return *_Union; }
+  Union & as_Union() { return *_Union; }
+  template<typename... Args> Union & create_Union(Args&&... args) {
+    return (*this = Union(std::forward<Args>(args)...)).as_Union();
+  }
+
+  friend bool operator==(const Representation&ab, const BaseType &o) noexcept  { return ab.is_BaseType() && ab.as_BaseType() == o; }
+  friend bool operator==(const BaseType &o, const Representation&ab) noexcept  { return ab.is_BaseType() && o == ab.as_BaseType(); }
+  friend bool operator!=(const Representation&ab, const BaseType &o) noexcept  { return !ab.is_BaseType() || ab.as_BaseType() != o; }
+  friend bool operator!=(const BaseType &o, const Representation&ab) noexcept  { return !ab.is_BaseType() || o != ab.as_BaseType(); }
+
+  friend bool operator==(const Representation&ab, const Enum &o) noexcept  { return ab.is_Enum() && ab.as_Enum() == o; }
+  friend bool operator==(const Enum &o, const Representation&ab) noexcept  { return ab.is_Enum() && o == ab.as_Enum(); }
+  friend bool operator!=(const Representation&ab, const Enum &o) noexcept  { return !ab.is_Enum() || ab.as_Enum() != o; }
+  friend bool operator!=(const Enum &o, const Representation&ab) noexcept  { return !ab.is_Enum() || o != ab.as_Enum(); }
+
+  friend bool operator==(const Representation&ab, const Table &o) noexcept  { return ab.is_Table() && ab.as_Table() == o; }
+  friend bool operator==(const Table &o, const Representation&ab) noexcept  { return ab.is_Table() && o == ab.as_Table(); }
+  friend bool operator!=(const Representation&ab, const Table &o) noexcept  { return !ab.is_Table() || ab.as_Table() != o; }
+  friend bool operator!=(const Table &o, const Representation&ab) noexcept  { return !ab.is_Table() || o != ab.as_Table(); }
+
+  friend bool operator==(const Representation&ab, const Union &o) noexcept  { return ab.is_Union() && ab.as_Union() == o; }
+  friend bool operator==(const Union &o, const Representation&ab) noexcept  { return ab.is_Union() && o == ab.as_Union(); }
+  friend bool operator!=(const Representation&ab, const Union &o) noexcept  { return !ab.is_Union() || ab.as_Union() != o; }
+  friend bool operator!=(const Union &o, const Representation&ab) noexcept  { return !ab.is_Union() || o != ab.as_Union(); }
+
+  bool operator==(const Representation &o) const noexcept
+  {
+    if (this == &o)
+      return true;
+    if (_selection != o._selection)
+      return false;
+    switch(_selection) {
+    case no_selection: while(false); /* hack for coverage tool */ return true;
+    case _BaseType_selection: return *_BaseType == *o._BaseType;
+    case _Enum_selection: return *_Enum == *o._Enum;
+    case _Table_selection: return *_Table == *o._Table;
+    case _Union_selection: return *_Union == *o._Union;
+    }
+    return false; // without this line there is a msvc warning I do not understand.
+  }
+
+  bool operator!=(const Representation &o) const noexcept
+  {
+    if (this == &o)
+      return false;
+    if (_selection != o._selection)
+      return true;
+    switch(_selection) {
+    case no_selection: while(false); /* hack for coverage tool */ return false;
+    case _BaseType_selection: return *_BaseType != *o._BaseType;
+    case _Enum_selection: return *_Enum != *o._Enum;
+    case _Table_selection: return *_Table != *o._Table;
+    case _Union_selection: return *_Union != *o._Union;
+    }
+    return false; // without this line there is a msvc warning I do not understand.
+  }
+
+private:
+  void _clone(const Representation &o) noexcept
+  {
+     _selection = o._selection;
+    switch(_selection) {
+    case no_selection: while(false); /* hack for coverage tool */ break;
+    case _BaseType_selection: _BaseType = new BaseType(*o._BaseType); break;
+    case _Enum_selection: _Enum = new Enum(*o._Enum); break;
+    case _Table_selection: _Table = new Table(*o._Table); break;
+    case _Union_selection: _Union = new Union(*o._Union); break;
+    }
+  }
+
+  void _destroy() noexcept {
+    switch(_selection) {
+    case no_selection: while(false); /* hack for coverage tool */ break;
+    case _BaseType_selection: delete _BaseType; break;
+    case _Enum_selection: delete _Enum; break;
+    case _Table_selection: delete _Table; break;
+    case _Union_selection: delete _Union; break;
+    }
+    no_value = nullptr;
+  }
+
+  union {
+    struct NoValue_t *no_value{nullptr};
+    BaseType * _BaseType;
+    Enum * _Enum;
+    Table * _Table;
+    Union * _Union;
+  };
+
+  enum Selection_t {
+    no_selection,
+    _BaseType_selection,
+    _Enum_selection,
+    _Table_selection,
+    _Union_selection,
+  };
+
+  Selection_t _selection{no_selection};
+  friend struct Package_io;
+};
+
+struct Type {
+  std::string name;
+  std::uint8_t appearance{0u};
+  Representation representation;
+
+  Type() = default;
+  Type(const std::string &name_, const Representation &representation_)
+    : name(name_)
+    , representation(representation_)
+  {}
+
+  friend bool operator==(const Type&l, const Type&r) {
+    return 
+      l.name == r.name
+      && l.appearance == r.appearance
+      && l.representation == r.representation;
+  }
+
+  friend bool operator!=(const Type&l, const Type&r) {
+    return 
+      l.name != r.name
+      || l.appearance != r.appearance
+      || l.representation != r.representation;
+  }
+};
+
+struct Package {
+  std::string path;
+  std::string version;
+  std::string root_type;
+  std::vector<Type> types;
+
+  Package() = default;
+  Package(const std::string &path_, const std::string &version_, const std::string &root_type_)
+    : path(path_)
+    , version(version_)
+    , root_type(root_type_)
+  {}
+
+  friend bool operator==(const Package&l, const Package&r) {
+    return 
+      l.path == r.path
+      && l.version == r.version
+      && l.root_type == r.root_type
+      && l.types == r.types;
+  }
+
+  friend bool operator!=(const Package&l, const Package&r) {
+    return 
+      l.path != r.path
+      || l.version != r.version
+      || l.root_type != r.root_type
+      || l.types != r.types;
+  }
+};
+
 struct Package_io {
 private:
   template<typename T> void Write(std::ostream &, const T *) {
@@ -242,6 +509,12 @@ private:
   template<typename T> void Write(std::ostream &o, const std::vector<T> &v) {
     Write(o, v.size());
     o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
+  }
+
+  void Write(std::ostream &o, const std::vector<std::string> &v) {
+    Write(o, v.size());
+    for (const auto &entry : v)
+      Write(o, entry);
   }
 
   template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
@@ -266,6 +539,14 @@ private:
     Read(i, s);
     v.resize(s);
     i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
+  }
+
+  void Read(std::istream &i, std::vector<std::string> &v) {
+    auto size = v.size();
+    Read(i, size);
+    v.resize(size);
+    for (auto &entry : v)
+      Read(i, entry);
   }
 
   void Read(std::istream &i, std::string &v) {
@@ -300,27 +581,11 @@ private:
   }
 
   void Write(std::ostream &o, const Enum &v) {
-    Write(o, v.name);
     Write(o, v.entries);
   }
 
-  void Write(std::ostream &o, const std::vector<Enum> &v) {
-    Write(o, v.size());
-    for (const auto &entry : v)
-      Write(o, entry);
-  }
-
   void Read(std::istream &s, Enum &v) {
-    Read(s, v.name);
     Read(s, v.entries);
-  }
-
-  void Read(std::istream &s, std::vector<Enum> &v) {
-    auto size = v.size();
-    Read(s, size);
-    v.resize(size);
-    for (auto &entry : v)
-      Read(s, entry);
   }
 
   void Write(std::ostream &o, const Member &v) {
@@ -356,24 +621,72 @@ private:
   }
 
   void Write(std::ostream &o, const Table &v) {
-    Write(o, v.name);
     Write(o, v.member);
     Write(o, v.appearance);
   }
 
-  void Write(std::ostream &o, const std::vector<Table> &v) {
+  void Read(std::istream &s, Table &v) {
+    Read(s, v.member);
+    Read(s, v.appearance);
+  }
+
+  void Write(std::ostream &o, const Union &v) {
+    Write(o, v.tables);
+  }
+
+  void Read(std::istream &s, Union &v) {
+    Read(s, v.tables);
+  }
+
+  void Write(std::ostream &o, const BaseType &v) {
+    Write(o, v.isComplex);
+  }
+
+  void Read(std::istream &s, BaseType &v) {
+    Read(s, v.isComplex);
+  }
+
+  void Write(std::ostream &o, const Representation &v) {
+    o.write(reinterpret_cast<const char*>(&v._selection), sizeof(Representation::Selection_t));
+    switch(v._selection) {
+    case Representation::no_selection: while(false); /* hack for coverage tool */ break;
+    case Representation::_BaseType_selection: Write(o, v.as_BaseType()); break;
+    case Representation::_Enum_selection: Write(o, v.as_Enum()); break;
+    case Representation::_Table_selection: Write(o, v.as_Table()); break;
+    case Representation::_Union_selection: Write(o, v.as_Union()); break;
+    }
+  }
+
+  void Read(std::istream &i, Representation &v) {
+    i.read(reinterpret_cast<char*>(&v._selection), sizeof(Representation::Selection_t));
+    switch(v._selection) {
+    case Representation::no_selection: while(false); /* hack for coverage tool */ break;
+    case Representation::_BaseType_selection: Read(i, v.create_BaseType()); break;
+    case Representation::_Enum_selection: Read(i, v.create_Enum()); break;
+    case Representation::_Table_selection: Read(i, v.create_Table()); break;
+    case Representation::_Union_selection: Read(i, v.create_Union()); break;
+    }
+  }
+
+  void Write(std::ostream &o, const Type &v) {
+    Write(o, v.name);
+    Write(o, v.appearance);
+    Write(o, v.representation);
+  }
+
+  void Write(std::ostream &o, const std::vector<Type> &v) {
     Write(o, v.size());
     for (const auto &entry : v)
       Write(o, entry);
   }
 
-  void Read(std::istream &s, Table &v) {
+  void Read(std::istream &s, Type &v) {
     Read(s, v.name);
-    Read(s, v.member);
     Read(s, v.appearance);
+    Read(s, v.representation);
   }
 
-  void Read(std::istream &s, std::vector<Table> &v) {
+  void Read(std::istream &s, std::vector<Type> &v) {
     auto size = v.size();
     Read(s, size);
     v.resize(size);
@@ -385,18 +698,14 @@ private:
     Write(o, v.path);
     Write(o, v.version);
     Write(o, v.root_type);
-    Write(o, v.tables);
-    Write(o, v.baseTypes);
-    Write(o, v.enums);
+    Write(o, v.types);
   }
 
   void Read(std::istream &s, Package &v) {
     Read(s, v.path);
     Read(s, v.version);
     Read(s, v.root_type);
-    Read(s, v.tables);
-    Read(s, v.baseTypes);
-    Read(s, v.enums);
+    Read(s, v.types);
   }
 
 public:

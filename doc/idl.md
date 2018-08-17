@@ -107,6 +107,22 @@ types.
 
 Enumerations could not be defined as `root_type`
 
+## Union
+
+**Example:**
+```
+table Mug { /*...*/ }
+table Jar { /*...*/ }
+table Bowl { /*...*/ }
+
+enum Stuff { Mug, Jar, Bowl }
+```
+
+Union types are combination of tables. Theye are one of the defined values *(or undefined)* . There are convenient
+functions created to work with these kind of types.
+
+Union types could not be defined as `root_type`
+
 ## root_type
 
 **Example:**

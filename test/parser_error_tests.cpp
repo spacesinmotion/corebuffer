@@ -155,4 +155,10 @@ TEST_CASE("Parsing idls with error", "[parsing, error, syntax]")
                  "table T1 {\n"
                  "  a:string=\"..as.;}");
   }
+
+  SECTION("union tables")
+  {
+    checkThrowIn("Expected union name after 'union'.", 1, 6, "union {}");
+    checkThrowIn("Missing closing '}'.", 1, 14, "union Dummy { ,}");
+  }
 }

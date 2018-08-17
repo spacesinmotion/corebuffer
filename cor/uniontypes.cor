@@ -1,0 +1,32 @@
+package UnionTypes;
+version "0.0";
+root_type Root;
+
+table A {
+  name:string;
+  init(name);
+}
+
+table B {
+  size:i64;
+  init(size);
+}
+
+union AB { A, B }
+
+table Root {
+  a:A;
+  b:B;
+
+  c:shared AB;
+  cw:weak AB;
+
+  d:unique AB;
+
+  e:[AB];
+
+  f:AB;
+
+  empty:unique AB;
+  null:unique AB;
+}

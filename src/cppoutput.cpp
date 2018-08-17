@@ -9,10 +9,18 @@ using namespace std;
 template <typename Predicate>
 bool any_table_of(const Package &p, const Predicate &pr)
 {
-  return any_of(p.tables.begin(), p.tables.end(), pr) || any_of(p.baseTypes.begin(), p.baseTypes.end(), pr);
+  return any_of(p.types.begin(), p.types.end(), [&pr](const Type &t) { return t.is_Table() && pr(t.as_Table()); }) ||
+         any_of(p.baseTypes.begin(), p.baseTypes.end(), pr);
 }
 
-bool hasUniqueAppearance(const Table &t)
+template <typename Predicate>
+bool any_union_of(const Package &p, const Predicate &pr)
+{
+  return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Union() && pr(u.as_Union()); });
+}
+
+template <class T>
+bool hasUniqueAppearance(const T &t)
 {
   return ((t.appearance & UniqueAppearance) == UniqueAppearance) ||
          ((t.appearance & UniqueVectorAppearance) == UniqueVectorAppearance);
@@ -20,18 +28,22 @@ bool hasUniqueAppearance(const Table &t)
 
 bool someThingIsUnique(const Package &p)
 {
-  return any_table_of(p, hasUniqueAppearance);
+  return any_table_of(p, hasUniqueAppearance<Table>) || any_union_of(p, hasUniqueAppearance<Union>);
 }
+
+template <class T>
+bool hasUniqueVectorAppearance(const T &t)
+{
+  return (t.appearance & UniqueVectorAppearance) == UniqueVectorAppearance;
+};
 
 bool someThingIsUniqueVector(const Package &p)
 {
-  static const auto hasUniqueVectorAppearance = [](const Table &t) {
-    return (t.appearance & UniqueVectorAppearance) == UniqueVectorAppearance;
-  };
-  return any_table_of(p, hasUniqueVectorAppearance);
+  return any_table_of(p, hasUniqueVectorAppearance<Table>) || any_union_of(p, hasUniqueVectorAppearance<Union>);
 }
 
-bool hasSharedAppearance(const Table &t)
+template <class T>
+bool hasSharedAppearance(const T &t)
 {
   return ((t.appearance & SharedAppearance) == SharedAppearance) ||
          ((t.appearance & SharedVectorAppearance) == SharedVectorAppearance);
@@ -39,18 +51,22 @@ bool hasSharedAppearance(const Table &t)
 
 bool someThingIsShared(const Package &p)
 {
-  return any_table_of(p, hasSharedAppearance);
+  return any_table_of(p, hasSharedAppearance<Table>) || any_union_of(p, hasSharedAppearance<Union>);
 }
+
+template <class T>
+bool hasSharedVectorAppearance(const T &t)
+{
+  return (t.appearance & SharedVectorAppearance) == SharedVectorAppearance;
+};
 
 bool someThingIsSharedVector(const Package &p)
 {
-  static const auto hasSharedVectorAppearance = [](const Table &t) {
-    return (t.appearance & SharedVectorAppearance) == SharedVectorAppearance;
-  };
-  return any_table_of(p, hasSharedVectorAppearance);
+  return any_table_of(p, hasSharedVectorAppearance<Table>) || any_union_of(p, hasSharedVectorAppearance<Union>);
 }
 
-bool hasWeakAppearance(const Table &t)
+template <class T>
+bool hasWeakAppearance(const T &t)
 {
   return ((t.appearance & WeakAppearance) == WeakAppearance) ||
          ((t.appearance & WeakVectorAppearance) == WeakVectorAppearance);
@@ -58,18 +74,22 @@ bool hasWeakAppearance(const Table &t)
 
 bool someThingIsWeak(const Package &p)
 {
-  return any_table_of(p, hasWeakAppearance);
+  return any_table_of(p, hasWeakAppearance<Table>) || any_union_of(p, hasWeakAppearance<Union>);
 }
+
+template <class T>
+bool hasWeakVectorAppearance(const T &t)
+{
+  return (t.appearance & WeakVectorAppearance) == WeakVectorAppearance;
+};
 
 bool someThingIsWeakVector(const Package &p)
 {
-  static const auto hasWeakVectorAppearance = [](const Table &t) {
-    return (t.appearance & WeakVectorAppearance) == WeakVectorAppearance;
-  };
-  return any_table_of(p, hasWeakVectorAppearance);
+  return any_table_of(p, hasWeakVectorAppearance<Table>) || any_union_of(p, hasWeakVectorAppearance<Union>);
 }
 
-bool hasPlainVectorAppearance(const Table &t)
+template <class T>
+bool hasPlainVectorAppearance(const T &t)
 {
   return ((t.appearance & VectorAppearance) == VectorAppearance);
 }
@@ -106,12 +126,12 @@ void WriteNameSpaceEnd(ostream &o, const string &path, int pos = 0)
 
 void WriteForwardDeclarations(ostream &o, const Package &p)
 {
-  if (!p.tables.empty())
-    o << endl;
-  for (const auto &t : p.tables)
-    o << "struct " << t.name << ";" << endl;
-  if (!p.tables.empty())
-    o << endl;
+  for (const auto &t : p.types)
+    if (t.is_Table())
+      o << endl << "struct " << t.as_Table().name << ";";
+    else if (t.is_Union())
+      o << endl << "struct " << t.as_Union().name << ";";
+  o << endl << endl;
 }
 
 void WriteEnumDeclaration(ostream &o, const Enum &e)
@@ -151,12 +171,6 @@ void WriteEnumFunctions(ostream &o, const Enum &e)
   o << "  }" << endl;
   o << "  return \"<error>\";" << endl;
   o << "};" << endl << endl;
-}
-
-void WriteEnumDeclarations(ostream &o, const vector<Enum> &enums)
-{
-  for (const auto &e : enums)
-    WriteEnumDeclaration(o, e);
 }
 
 void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
@@ -463,6 +477,31 @@ string defaultValueLiteral(const Member &m)
   return string();
 }
 
+void WriteTableCompareFunctions(ostream &o, const Table &t)
+{
+  o << endl << "  friend bool operator==(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
+  o << "    return ";
+  bool first = true;
+  for (const auto &m : t.member)
+  {
+    o << endl << "      " << (first ? "" : "&& ") << "l." << m.name << " == r." << m.name;
+    first = false;
+  }
+  o << ";" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  friend bool operator!=(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
+  o << "    return ";
+  first = true;
+  for (const auto &m : t.member)
+  {
+    o << endl << "      " << (first ? "" : "|| ") << "l." << m.name << " != r." << m.name;
+    first = false;
+  }
+  o << ";" << endl;
+  o << "  }" << endl;
+}
+
 void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
 {
   o << "struct " << t.name << " {" << endl;
@@ -477,6 +516,8 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
 
   WriteTableInitializer(o, t);
 
+  WriteTableCompareFunctions(o, t);
+
   if (hasSharedAppearance(t))
   {
     o << endl;
@@ -487,13 +528,9 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
   o << "};" << endl << endl;
 }
 
-void WriteTableOutputFunctions(ostream &o, const Table &t)
+template <class T>
+void WritePointerOutputFor(ostream &o, const T &t)
 {
-  o << "  void Write(std::ostream &o, const " << t.name << " &v) {" << endl;
-  for (const auto &m : t.member)
-    o << "    Write(o, v." << m.name << ");" << endl;
-  o << "  }" << endl << endl;
-
   if (hasSharedAppearance(t))
   {
     o << "  void Write(std::ostream &o, const std::shared_ptr<" << t.name << "> &v) {" << endl;
@@ -516,13 +553,19 @@ void WriteTableOutputFunctions(ostream &o, const Table &t)
   }
 }
 
-void WriteTableInputFunctions(ostream &o, const Table &t)
+void WriteTableOutput(ostream &o, const Table &t)
 {
-  o << "  void Read(std::istream &s, " << t.name << " &v) {" << endl;
+  o << "  void Write(std::ostream &o, const " << t.name << " &v) {" << endl;
   for (const auto &m : t.member)
-    o << "    Read(s, v." << m.name << ");" << endl;
+    o << "    Write(o, v." << m.name << ");" << endl;
   o << "  }" << endl << endl;
 
+  WritePointerOutputFor(o, t);
+}
+
+template <class T>
+void WritePointerInputFor(ostream &o, const T &t)
+{
   if (hasSharedAppearance(t))
   {
     o << "  void Read(std::istream &s, std::shared_ptr<" << t.name << "> &v) {" << endl;
@@ -549,29 +592,14 @@ void WriteTableInputFunctions(ostream &o, const Table &t)
   }
 }
 
-void WriteTableCompareFunctions(ostream &o, const Table &t)
+void WriteTableInput(ostream &o, const Table &t)
 {
-  o << "bool operator==(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
-  o << "  return ";
-  bool first = true;
+  o << "  void Read(std::istream &s, " << t.name << " &v) {" << endl;
   for (const auto &m : t.member)
-  {
-    o << endl << "    " << (first ? "" : "&& ") << "l." << m.name << " == r." << m.name;
-    first = false;
-  }
-  o << ";" << endl;
-  o << "}" << endl << endl;
+    o << "    Read(s, v." << m.name << ");" << endl;
+  o << "  }" << endl << endl;
 
-  o << "bool operator!=(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
-  o << "  return ";
-  first = true;
-  for (const auto &m : t.member)
-  {
-    o << endl << "    " << (first ? "" : "|| ") << "l." << m.name << " != r." << m.name;
-    first = false;
-  }
-  o << ";" << endl;
-  o << "}" << endl << endl;
+  WritePointerInputFor(o, t);
 }
 
 void WriteCompareOperatorForWeakPointer(ostream &o)
@@ -585,33 +613,207 @@ void WriteCompareOperatorForWeakPointer(ostream &o)
   o << "}" << endl << endl;
 }
 
-void WriteTableDeclarations(ostream &o, const Package &p)
+void WriteUnionStruct(ostream &o, const Union &u, const string &root_type)
 {
-  for (const auto &t : p.tables)
-    WriteTableDeclaration(o, t, p.root_type.value);
+  o << "struct " << u.name << " {" << endl;
 
+  o << "  " << u.name << "() = default;" << endl;
+  o << "  " << u.name << "(const " << u.name << " &o) { _clone(o); }" << endl;
+  o << "  " << u.name << "& operator=(const " << u.name << " &o) { _destroy(); _clone(o); return *this; }" << endl
+    << endl;
+
+  for (const auto &t : u.tables)
+  {
+    o << "  " << u.name << "(const " << t.value << " &v)" << endl;
+    o << "    : _" << t.value << "(new " << t.value << "(v))" << endl;
+    o << "    , _selection(_" << t.value << "_selection)" << endl;
+    o << "  {}" << endl;
+    o << "  " << u.name << "(" << t.value << " &&v)" << endl;
+    o << "    : _" << t.value << "(new " << t.value << "(std::forward<" << t.value << ">(v)))" << endl;
+    o << "    , _selection(_" << t.value << "_selection)" << endl;
+    o << "  {}" << endl;
+    o << "  " << u.name << " & operator=(const " << t.value << " &v) {" << endl;
+    o << "    _destroy();" << endl;
+    o << "    _" << t.value << " = new " << t.value << "(v);" << endl;
+    o << "    _selection = _" << t.value << "_selection;" << endl;
+    o << "    return *this;" << endl;
+    o << "  }" << endl;
+    o << "  " << u.name << " & operator=(" << t.value << " &&v) {" << endl;
+    o << "    _destroy();" << endl;
+    o << "    _" << t.value << " = new " << t.value << "(std::forward<" << t.value << ">(v));" << endl;
+    o << "    _selection = _" << t.value << "_selection;" << endl;
+    o << "    return *this;" << endl;
+    o << "  }" << endl << endl;
+  }
+
+  o << "  ~" << u.name << "() {" << endl;
+  o << "    _destroy();" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  bool is_Defined() const noexcept { return _selection != no_selection; }" << endl;
+  o << "  void clear() { *this = " << u.name << "(); }" << endl << endl;
+  for (const auto &t : u.tables)
+  {
+    o << "  bool is_" << t.value << "() const noexcept { return _selection == _" << t.value << "_selection; }" << endl;
+    o << "  const " << t.value << " & as_" << t.value << "() const noexcept { return *_" << t.value << "; }" << endl;
+    o << "  " << t.value << " & as_" << t.value << "() { return *_" << t.value << "; }" << endl;
+
+    o << "  template<typename... Args> " << t.value << " & create_" << t.value << "(Args&&... args) {" << endl;
+    o << "    return (*this = " << t.value << "(std::forward<Args>(args)...)).as_" << t.value << "();" << endl;
+    o << "  }" << endl << endl;
+  }
+
+  for (const auto &t : u.tables)
+  {
+    o << "  friend bool operator==(const " << u.name << "&ab, const " << t.value << " &o) noexcept";
+    o << "  { return ab.is_" << t.value << "() && ab.as_" << t.value << "() == o; }" << endl;
+    o << "  friend bool operator==(const " << t.value << " &o, const " << u.name << "&ab) noexcept";
+    o << "  { return ab.is_" << t.value << "() && o == ab.as_" << t.value << "(); }" << endl;
+    o << "  friend bool operator!=(const " << u.name << "&ab, const " << t.value << " &o) noexcept";
+    o << "  { return !ab.is_" << t.value << "() || ab.as_" << t.value << "() != o; }" << endl;
+    o << "  friend bool operator!=(const " << t.value << " &o, const " << u.name << "&ab) noexcept";
+    o << "  { return !ab.is_" << t.value << "() || o != ab.as_" << t.value << "(); }" << endl << endl;
+  }
+
+  o << "  bool operator==(const " << u.name << " &o) const noexcept" << endl;
+  o << "  {" << endl;
+  o << "    if (this == &o)" << endl;
+  o << "      return true;" << endl;
+  o << "    if (_selection != o._selection)" << endl;
+  o << "      return false;" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ return true;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: return *_" << t.value << " == *o._" << t.value << ";" << endl;
+  o << "    }" << endl;
+  o << "    return false; // without this line there is a msvc warning I do not understand." << endl;
+  o << "  }" << endl << endl;
+
+  o << "  bool operator!=(const " << u.name << " &o) const noexcept" << endl;
+  o << "  {" << endl;
+  o << "    if (this == &o)" << endl;
+  o << "      return false;" << endl;
+  o << "    if (_selection != o._selection)" << endl;
+  o << "      return true;" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ return false;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: return *_" << t.value << " != *o._" << t.value << ";" << endl;
+  o << "    }" << endl;
+  o << "    return false; // without this line there is a msvc warning I do not understand." << endl;
+  o << "  }" << endl << endl;
+
+  o << "private:" << endl;
+  o << "  void _clone(const " << u.name << " &o) noexcept" << endl;
+  o << "  {" << endl;
+  o << "     _selection = o._selection;" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: _" << t.value << " = new " << t.value << "(*o._" << t.value
+      << "); break;" << endl;
+  o << "    }" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  void _destroy() noexcept {" << endl;
+  o << "    switch(_selection) {" << endl;
+  o << "    case no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case _" << t.value << "_selection: delete _" << t.value << "; break;" << endl;
+  o << "    }" << endl;
+  o << "    no_value = nullptr;" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  union {" << endl;
+  o << "    struct NoValue_t *no_value{nullptr};" << endl;
+
+  for (const auto &t : u.tables)
+    o << "    " << t.value << " * _" << t.value << ";" << endl;
+  o << "  };" << endl << endl;
+  o << "  enum Selection_t {" << endl;
+  o << "    no_selection," << endl;
+  for (const auto &t : u.tables)
+    o << "    _" << t.value << "_selection," << endl;
+  o << "  };" << endl << endl;
+
+  o << "  Selection_t _selection{no_selection};" << endl;
+  if (hasSharedAppearance(u))
+    o << "  unsigned int io_counter_{0};" << endl;
+  o << "  friend struct " << root_type << "_io;" << endl;
+  o << "};" << endl << endl;
+}
+
+void WriteTypeStructs(ostream &o, const Package &p)
+{
   if (someThingIsWeak(p))
     WriteCompareOperatorForWeakPointer(o);
 
-  for (const auto &t : p.tables)
-    WriteTableCompareFunctions(o, t);
+  for (const auto &t : p.types)
+  {
+    if (t.is_Table())
+      WriteTableDeclaration(o, t.as_Table(), p.root_type.value);
+    else if (t.is_Union())
+      WriteUnionStruct(o, t.as_Union(), p.root_type.value);
+    else if (t.is_Enum())
+    {
+      WriteEnumDeclaration(o, t.as_Enum());
+      WriteEnumFunctions(o, t.as_Enum());
+    }
+  }
 }
 
-void WriteTablesIOFunctions(ostream &o, const vector<Table> &tables)
+void WriteUnionOutput(ostream &o, const Union &u)
 {
-  for (const auto &t : tables)
+  o << "  void Write(std::ostream &o, const " << u.name << " &v) {" << endl;
+  o << "    o.write(reinterpret_cast<const char*>(&v._selection), sizeof(" << u.name << "::Selection_t));" << endl;
+  o << "    switch(v._selection) {" << endl;
+  o << "    case " << u.name << "::no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case " << u.name << "::_" << t.value << "_selection: Write(o, v.as_" << t.value << "()); break;" << endl;
+  o << "    }" << endl;
+  o << "  }" << endl << endl;
+
+  WritePointerOutputFor(o, u);
+}
+
+void WriteUnionInput(ostream &o, const Union &u)
+{
+  o << "  void Read(std::istream &i, " << u.name << " &v) {" << endl;
+  o << "    i.read(reinterpret_cast<char*>(&v._selection), sizeof(" << u.name << "::Selection_t));" << endl;
+  o << "    switch(v._selection) {" << endl;
+  o << "    case " << u.name << "::no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case " << u.name << "::_" << t.value << "_selection: Read(i, v.create_" << t.value << "()); break;"
+      << endl;
+  o << "    }" << endl;
+  o << "  }" << endl << endl;
+
+  WritePointerInputFor(o, u);
+}
+
+void WriteTablesIOFunctions(ostream &o, const vector<Type> &types)
+{
+  for (const auto &t : types)
   {
-    WriteTableOutputFunctions(o, t);
-    WriteTableInputFunctions(o, t);
+    if (t.is_Table())
+    {
+      WriteTableOutput(o, t.as_Table());
+      WriteTableInput(o, t.as_Table());
+    }
+    else if (t.is_Union())
+    {
+      WriteUnionOutput(o, t.as_Union());
+      WriteUnionInput(o, t.as_Union());
+    }
   }
 }
 
 void WriteBaseIO(ostream &o, const Package &p)
 {
   o << "  void Write" << p.root_type.value << "(std::ostream &o, const " << p.root_type.value << " &v) {" << endl;
-  for (const auto &t : p.tables)
-    if (hasSharedAppearance(t))
-      o << "    " << t.name << "_count_ = 0;" << endl;
+  for (const auto &t : p.types)
+    if (t.is_Table() && hasSharedAppearance(t.as_Table()))
+      o << "    " << t.as_Table().name << "_count_ = 0;" << endl;
 
   o << endl << "    o.write(\"CORE\", 4);" << endl;
   o << "    o.write(\"" << p.version.value << "\", " << p.version.value.size() << ");" << endl;
@@ -620,9 +822,9 @@ void WriteBaseIO(ostream &o, const Package &p)
 
   o << "  bool Read" << p.root_type.value << "(std::istream &i, " << p.root_type.value << " &v) {" << endl;
 
-  for (const auto &t : p.tables)
-    if (hasSharedAppearance(t))
-      o << "    " << t.name << "_references_.clear();" << endl;
+  for (const auto &t : p.types)
+    if (t.is_Table() && hasSharedAppearance(t.as_Table()))
+      o << "    " << t.as_Table().name << "_references_.clear();" << endl;
 
   o << endl << "    std::string marker(\"0000\");" << endl;
   o << "    i.read(&marker[0], 4);" << endl;
@@ -641,12 +843,21 @@ void WriteBaseIO(ostream &o, const Package &p)
 
 void WriteIOStructMember(const Package &p, ostream &o)
 {
-  for (const auto &t : p.tables)
+  for (const auto &t : p.types)
   {
-    if (hasSharedAppearance(t))
+    if (t.is_Table() && hasSharedAppearance(t.as_Table()))
     {
-      o << "  unsigned int " << t.name << "_count_{0};" << endl;
-      o << "  std::vector<std::shared_ptr<" << t.name << ">> " << t.name << "_references_;" << endl << endl;
+      o << "  unsigned int " << t.as_Table().name << "_count_{0};" << endl;
+      o << "  std::vector<std::shared_ptr<" << t.as_Table().name << ">> " << t.as_Table().name << "_references_;"
+        << endl
+        << endl;
+    }
+    else if (t.is_Union() && hasSharedAppearance(t.as_Union()))
+    {
+      o << "  unsigned int " << t.as_Union().name << "_count_{0};" << endl;
+      o << "  std::vector<std::shared_ptr<" << t.as_Union().name << ">> " << t.as_Union().name << "_references_;"
+        << endl
+        << endl;
     }
   }
 }
@@ -658,7 +869,7 @@ void WriteIOStruct(ostream &o, const Package &p)
 
   WriteIOStructMember(p, o);
   WriteBaseTypeIoFnuctions(o, p);
-  WriteTablesIOFunctions(o, p.tables);
+  WriteTablesIOFunctions(o, p.types);
 
   o << "public:" << endl;
 
@@ -691,11 +902,7 @@ void WriteCppCode(ostream &o, const Package &p)
   WriteHelperForNotImplementedTemplates(o);
 
   WriteForwardDeclarations(o, p);
-  WriteEnumDeclarations(o, p.enums);
-  WriteTableDeclarations(o, p);
-
-  for (const auto &e : p.enums)
-    WriteEnumFunctions(o, e);
+  WriteTypeStructs(o, p);
 
   WriteIOStruct(o, p);
 

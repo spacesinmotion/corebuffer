@@ -12,6 +12,7 @@ const std::vector<FileError> &StructureCheck::check()
   initNameSets();
   checkTables();
   checkEnums();
+  checkUnions();
   checkPackage();
   checkRootType();
   checkBaseTypePointer();
@@ -25,42 +26,50 @@ void StructureCheck::initNameSets()
 {
   checkDuplicateTables();
   checkDuplicateEnums();
+  checkDuplicateUnions();
 }
 
 void StructureCheck::checkDuplicateTables()
 {
-  for (const auto &t : _package.tables)
-    if (!_tableNames.emplace(t.name).second)
-      _errors.emplace_back("Duplicate table '" + t.name + "'.", t.location);
+  for (const auto &t : _package.types)
+    if (t.is_Table() && !_tableNames.emplace(t.as_Table().name).second)
+      _errors.emplace_back("table '" + t.as_Table().name + "' already defined.", t.as_Table().location);
 }
 
 void StructureCheck::checkDuplicateEnums()
 {
-  for (const auto &e : _package.enums)
-    if (!_enumNames.emplace(e.name).second)
-      _errors.emplace_back("Duplicate enum '" + e.name + "'.", e.location);
+  for (const auto &e : _package.types)
+    if (e.is_Enum() && (!_enumNames.emplace(e.as_Enum().name).second || tableExists(e.as_Enum().name)))
+      _errors.emplace_back("enum '" + e.as_Enum().name + "' already defined.", e.as_Enum().location);
+}
 
-  for (const auto &e : _package.enums)
-    if (tableExists(e.name))
-      _errors.emplace_back("enum '" + e.name + "' already defined as table.", e.location);
+void StructureCheck::checkDuplicateUnions()
+{
+  for (const auto &u : _package.types)
+    if (u.is_Union() && (!_unionNames.emplace(u.as_Union().name).second || tableExists(u.as_Union().name) ||
+                         enumExists(u.as_Union().name)))
+      _errors.emplace_back("union '" + u.as_Union().name + "' already defined.", u.as_Union().location);
 }
 
 void StructureCheck::checkTables()
 {
   checkEmptyTables();
-  for (const auto &t : _package.tables)
+  for (const auto &t : _package.types)
   {
-    checkDuplicateTableMembers(t);
-    checkMemberTypes(t);
-    checksMethods(t);
+    if (!t.is_Table())
+      continue;
+
+    checkDuplicateTableMembers(t.as_Table());
+    checkMemberTypes(t.as_Table());
+    checksMethods(t.as_Table());
   }
 }
 
 void StructureCheck::checkEmptyTables()
 {
-  for (const auto &t : _package.tables)
-    if (t.member.empty())
-      _errors.emplace_back("Empty table '" + t.name + "'.", t.location);
+  for (const auto &t : _package.types)
+    if (t.is_Table() && t.as_Table().member.empty())
+      _errors.emplace_back("Empty table '" + t.as_Table().name + "'.", t.as_Table().location);
 }
 
 void StructureCheck::checkDuplicateTableMembers(const Table &t)
@@ -74,7 +83,7 @@ void StructureCheck::checkDuplicateTableMembers(const Table &t)
 void StructureCheck::checkMemberTypes(const Table &t)
 {
   for (const auto &m : t.member)
-    if (!isBaseType(m.type) && !tableExists(m.type) && !enumExists(m.type))
+    if (!isValidType(m.type))
       _errors.emplace_back("Unknown type '" + m.type + "'.", m.location);
 }
 
@@ -139,15 +148,16 @@ void StructureCheck::checkMethodForParameter(const Table &t)
 void StructureCheck::checkEnums()
 {
   checkEmptyEnums();
-  for (const auto &e : _package.enums)
-    checkDuplicateEnumEntries(e);
+  for (const auto &e : _package.types)
+    if (e.is_Enum())
+      checkDuplicateEnumEntries(e.as_Enum());
 }
 
 void StructureCheck::checkEmptyEnums()
 {
-  for (const auto &e : _package.enums)
-    if (e.entries.empty())
-      _errors.emplace_back("Empty enum '" + e.name + "'.", e.location);
+  for (const auto &e : _package.types)
+    if (e.is_Enum() && e.as_Enum().entries.empty())
+      _errors.emplace_back("Empty enum '" + e.as_Enum().name + "'.", e.as_Enum().location);
 }
 
 void StructureCheck::checkDuplicateEnumEntries(const Enum &e)
@@ -156,6 +166,40 @@ void StructureCheck::checkDuplicateEnumEntries(const Enum &e)
   for (const auto &entry : e.entries)
     if (!names.emplace(entry.name).second)
       _errors.emplace_back("enum value '" + entry.name + "' already defined for '" + e.name + "'.", entry.location);
+}
+
+void StructureCheck::checkUnions()
+{
+  checkEmptyUnions();
+  for (const auto &u : _package.types)
+  {
+    if (!u.is_Union())
+      continue;
+    checkDuplicateUnionEntries(u.as_Union());
+    checkTableReferences(u.as_Union());
+  }
+}
+
+void StructureCheck::checkEmptyUnions()
+{
+  for (const auto &u : _package.types)
+    if (u.is_Union() && u.as_Union().tables.empty())
+      _errors.emplace_back("Empty union '" + u.as_Union().name + "'.", u.as_Union().location);
+}
+
+void StructureCheck::checkDuplicateUnionEntries(const Union &u)
+{
+  unordered_set<string> names;
+  for (const auto &t : u.tables)
+    if (!names.emplace(t.value).second)
+      _errors.emplace_back("union entry '" + t.value + "' already defined for '" + u.name + "'.", t.location);
+}
+
+void StructureCheck::checkTableReferences(const Union &u)
+{
+  for (const auto &t : u.tables)
+    if (!tableExists(t.value))
+      _errors.emplace_back("Unknown table '" + t.value + "'.", t.location);
 }
 
 void StructureCheck::checkPackage()
@@ -186,18 +230,20 @@ void StructureCheck::checkRootType()
 
 void StructureCheck::checkBaseTypePointer()
 {
-  for (const auto &t : _package.tables)
-    for (const auto &m : t.member)
-      if (m.isBaseType && m.pointer != Pointer::Plain)
-        _errors.emplace_back("base types cannot be pointer.", m.location);
+  for (const auto &t : _package.types)
+    if (t.is_Table())
+      for (const auto &m : t.as_Table().member)
+        if (m.isBaseType && m.pointer != Pointer::Plain)
+          _errors.emplace_back("base types cannot be pointer.", m.location);
 }
 
 void StructureCheck::checkEnumTypePointer()
 {
-  for (const auto &t : _package.tables)
-    for (const auto &m : t.member)
-      if (!m.isBaseType && m.pointer != Pointer::Plain && enumExists(m.type))
-        _errors.emplace_back("enums cannot be pointer.", m.location);
+  for (const auto &t : _package.types)
+    if (t.is_Table())
+      for (const auto &m : t.as_Table().member)
+        if (!m.isBaseType && m.pointer != Pointer::Plain && enumExists(m.type))
+          _errors.emplace_back("enums cannot be pointer.", m.location);
 }
 
 bool StructureCheck::isFloat(const string &number)
@@ -235,9 +281,11 @@ void StructureCheck::checkDefaultValues()
 
 void StructureCheck::checkDefaultValuesOfBaseTypes()
 {
-  for (const auto &t : _package.tables)
+  for (const auto &t : _package.types)
   {
-    for (const auto &m : t.member)
+    if (!t.is_Table())
+      continue;
+    for (const auto &m : t.as_Table().member)
     {
       if (!m.isBaseType || m.defaultValue.location.isAtStart())
         continue;
@@ -265,9 +313,11 @@ void StructureCheck::checkDefaultValuesOfBaseTypes()
 
 void StructureCheck::checkDefaultValuesOfEnums()
 {
-  for (const auto &t : _package.tables)
+  for (const auto &t : _package.types)
   {
-    for (const auto &m : t.member)
+    if (!t.is_Table())
+      continue;
+    for (const auto &m : t.as_Table().member)
     {
       if (!enumExists(m.type) || m.defaultValue.value.empty())
         continue;
@@ -283,9 +333,11 @@ void StructureCheck::checkDefaultValuesOfEnums()
 
 void StructureCheck::checkDefaultValuesOfTables()
 {
-  for (const auto &t : _package.tables)
+  for (const auto &t : _package.types)
   {
-    for (const auto &m : t.member)
+    if (!t.is_Table())
+      continue;
+    for (const auto &m : t.as_Table().member)
     {
       if (m.defaultValue.value.empty() || enumExists(m.type))
         continue;
@@ -316,6 +368,16 @@ bool StructureCheck::tableExists(const string &name)
 bool StructureCheck::enumExists(const string &name)
 {
   return _enumNames.find(name) != _enumNames.end();
+}
+
+bool StructureCheck::unionExists(const string &name)
+{
+  return _unionNames.find(name) != _unionNames.end();
+}
+
+bool StructureCheck::isValidType(const string &name)
+{
+  return isBaseType(name) || tableExists(name) || unionExists(name) || enumExists(name);
 }
 
 string StructureCheck::methodParameterKey(const Method &m)

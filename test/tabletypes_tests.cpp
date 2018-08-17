@@ -44,18 +44,20 @@ TEST_CASE("TableType test", "[output, table]")
 
   SECTION("reading whats written with shared data")
   {
-    Scope::TableC c;
-    c.a.emplace_back();
-    c.a.front().name = "TableA";
-    c.a.front().d1.reset(new Scope::TableD());
-    c.a.front().d1->name = "TableD_1";
-    c.a.front().d3 = std::make_shared<Scope::TableD>();
-    c.a.front().d3->name = "TableD_3";
-    c.a.front().d2 = c.a.front().d3;
-    c.a.front().d4 = c.a.front().d3;
-
     std::stringstream sOut;
-    Scope::TableC_io().WriteTableC(sOut, c);
+    {
+      Scope::TableC c;
+      c.a.emplace_back();
+      c.a.front().name = "TableA";
+      c.a.front().d1.reset(new Scope::TableD());
+      c.a.front().d1->name = "TableD_1";
+      c.a.front().d3 = std::make_shared<Scope::TableD>();
+      c.a.front().d3->name = "TableD_3";
+      c.a.front().d2 = c.a.front().d3;
+      c.a.front().d4 = c.a.front().d3;
+
+      Scope::TableC_io().WriteTableC(sOut, c);
+    }
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
@@ -82,18 +84,21 @@ TEST_CASE("TableType test", "[output, table]")
 
   SECTION("reading whats written with shared data and cross releation ship")
   {
-    Scope::TableC c;
-    c.a.emplace_back();
-    c.a.front().name = "TableA";
-    c.a.front().d3 = std::make_shared<Scope::TableD>();
-    c.a.front().d3->name = "TableD_3";
-    c.a.front().d3->a = std::make_shared<Scope::TableA>();
-    c.a.front().d3->a->d2 = c.a.front().d3;
-    c.a.front().d3->a->d3 = c.a.front().d3;
-    c.a.front().d3->a->d4 = c.a.front().d3;
-
     std::stringstream sOut;
-    Scope::TableC_io().WriteTableC(sOut, c);
+
+    {
+      Scope::TableC c;
+      c.a.emplace_back();
+      c.a.front().name = "TableA";
+      c.a.front().d3 = std::make_shared<Scope::TableD>();
+      c.a.front().d3->name = "TableD_3";
+      c.a.front().d3->a = std::make_shared<Scope::TableA>();
+      c.a.front().d3->a->d2 = c.a.front().d3;
+      c.a.front().d3->a->d3 = c.a.front().d3;
+      c.a.front().d3->a->d4 = c.a.front().d3;
+
+      Scope::TableC_io().WriteTableC(sOut, c);
+    }
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
@@ -118,17 +123,18 @@ TEST_CASE("TableType test", "[output, table]")
 
   SECTION("reading whats written with shared data in vectors")
   {
-    Scope::TableC c;
-    c.c.emplace_back(new Scope::TableA);
-    c.c.back()->name = "TableA_c";
-    c.d.emplace_back(new Scope::TableB);
-    c.d.back()->name = "TableB_d";
-    c.d.push_back(c.d.front());
-    c.e.push_back(c.d.front());
-    c.e.push_back(c.d.front());
-
     std::stringstream sOut;
-    Scope::TableC_io().WriteTableC(sOut, c);
+    {
+      Scope::TableC c;
+      c.c.emplace_back(new Scope::TableA);
+      c.c.back()->name = "TableA_c";
+      c.d.emplace_back(new Scope::TableB);
+      c.d.back()->name = "TableB_d";
+      c.d.push_back(c.d.front());
+      c.e.push_back(c.d.front());
+      c.e.push_back(c.d.front());
+      Scope::TableC_io().WriteTableC(sOut, c);
+    }
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
