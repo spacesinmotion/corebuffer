@@ -12,7 +12,14 @@ bool any_table_of(const Package &p, const Predicate &pr)
   return any_of(p.tables.begin(), p.tables.end(), pr) || any_of(p.baseTypes.begin(), p.baseTypes.end(), pr);
 }
 
-bool hasUniqueAppearance(const Table &t)
+template <typename Predicate>
+bool any_union_of(const Package &p, const Predicate &pr)
+{
+  return any_of(p.unions.begin(), p.unions.end(), pr);
+}
+
+template <class T>
+bool hasUniqueAppearance(const T &t)
 {
   return ((t.appearance & UniqueAppearance) == UniqueAppearance) ||
          ((t.appearance & UniqueVectorAppearance) == UniqueVectorAppearance);
@@ -20,18 +27,22 @@ bool hasUniqueAppearance(const Table &t)
 
 bool someThingIsUnique(const Package &p)
 {
-  return any_table_of(p, hasUniqueAppearance);
+  return any_table_of(p, hasUniqueAppearance<Table>) || any_union_of(p, hasUniqueAppearance<Union>);
 }
+
+template <class T>
+bool hasUniqueVectorAppearance(const T &t)
+{
+  return (t.appearance & UniqueVectorAppearance) == UniqueVectorAppearance;
+};
 
 bool someThingIsUniqueVector(const Package &p)
 {
-  static const auto hasUniqueVectorAppearance = [](const Table &t) {
-    return (t.appearance & UniqueVectorAppearance) == UniqueVectorAppearance;
-  };
-  return any_table_of(p, hasUniqueVectorAppearance);
+  return any_table_of(p, hasUniqueVectorAppearance<Table>) || any_union_of(p, hasUniqueVectorAppearance<Union>);
 }
 
-bool hasSharedAppearance(const Table &t)
+template <class T>
+bool hasSharedAppearance(const T &t)
 {
   return ((t.appearance & SharedAppearance) == SharedAppearance) ||
          ((t.appearance & SharedVectorAppearance) == SharedVectorAppearance);
@@ -39,18 +50,22 @@ bool hasSharedAppearance(const Table &t)
 
 bool someThingIsShared(const Package &p)
 {
-  return any_table_of(p, hasSharedAppearance);
+  return any_table_of(p, hasSharedAppearance<Table>) || any_union_of(p, hasSharedAppearance<Union>);
 }
+
+template <class T>
+bool hasSharedVectorAppearance(const T &t)
+{
+  return (t.appearance & SharedVectorAppearance) == SharedVectorAppearance;
+};
 
 bool someThingIsSharedVector(const Package &p)
 {
-  static const auto hasSharedVectorAppearance = [](const Table &t) {
-    return (t.appearance & SharedVectorAppearance) == SharedVectorAppearance;
-  };
-  return any_table_of(p, hasSharedVectorAppearance);
+  return any_table_of(p, hasSharedVectorAppearance<Table>) || any_union_of(p, hasSharedVectorAppearance<Union>);
 }
 
-bool hasWeakAppearance(const Table &t)
+template <class T>
+bool hasWeakAppearance(const T &t)
 {
   return ((t.appearance & WeakAppearance) == WeakAppearance) ||
          ((t.appearance & WeakVectorAppearance) == WeakVectorAppearance);
@@ -58,18 +73,22 @@ bool hasWeakAppearance(const Table &t)
 
 bool someThingIsWeak(const Package &p)
 {
-  return any_table_of(p, hasWeakAppearance);
+  return any_table_of(p, hasWeakAppearance<Table>) || any_union_of(p, hasWeakAppearance<Union>);
 }
+
+template <class T>
+bool hasWeakVectorAppearance(const T &t)
+{
+  return (t.appearance & WeakVectorAppearance) == WeakVectorAppearance;
+};
 
 bool someThingIsWeakVector(const Package &p)
 {
-  static const auto hasWeakVectorAppearance = [](const Table &t) {
-    return (t.appearance & WeakVectorAppearance) == WeakVectorAppearance;
-  };
-  return any_table_of(p, hasWeakVectorAppearance);
+  return any_table_of(p, hasWeakVectorAppearance<Table>) || any_union_of(p, hasWeakVectorAppearance<Union>);
 }
 
-bool hasPlainVectorAppearance(const Table &t)
+template <class T>
+bool hasPlainVectorAppearance(const T &t)
 {
   return ((t.appearance & VectorAppearance) == VectorAppearance);
 }
@@ -462,6 +481,31 @@ string defaultValueLiteral(const Member &m)
   return string();
 }
 
+void WriteTableCompareFunctions(ostream &o, const Table &t)
+{
+  o << endl << "  friend bool operator==(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
+  o << "    return ";
+  bool first = true;
+  for (const auto &m : t.member)
+  {
+    o << endl << "      " << (first ? "" : "&& ") << "l." << m.name << " == r." << m.name;
+    first = false;
+  }
+  o << ";" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  friend bool operator!=(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
+  o << "    return ";
+  first = true;
+  for (const auto &m : t.member)
+  {
+    o << endl << "      " << (first ? "" : "|| ") << "l." << m.name << " != r." << m.name;
+    first = false;
+  }
+  o << ";" << endl;
+  o << "  }" << endl;
+}
+
 void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
 {
   o << "struct " << t.name << " {" << endl;
@@ -476,6 +520,8 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
 
   WriteTableInitializer(o, t);
 
+  WriteTableCompareFunctions(o, t);
+
   if (hasSharedAppearance(t))
   {
     o << endl;
@@ -486,13 +532,9 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
   o << "};" << endl << endl;
 }
 
-void WriteTableOutputFunctions(ostream &o, const Table &t)
+template <class T>
+void WritePointerOutputFor(ostream &o, const T &t)
 {
-  o << "  void Write(std::ostream &o, const " << t.name << " &v) {" << endl;
-  for (const auto &m : t.member)
-    o << "    Write(o, v." << m.name << ");" << endl;
-  o << "  }" << endl << endl;
-
   if (hasSharedAppearance(t))
   {
     o << "  void Write(std::ostream &o, const std::shared_ptr<" << t.name << "> &v) {" << endl;
@@ -515,13 +557,19 @@ void WriteTableOutputFunctions(ostream &o, const Table &t)
   }
 }
 
-void WriteTableInputFunctions(ostream &o, const Table &t)
+void WriteTableOutput(ostream &o, const Table &t)
 {
-  o << "  void Read(std::istream &s, " << t.name << " &v) {" << endl;
+  o << "  void Write(std::ostream &o, const " << t.name << " &v) {" << endl;
   for (const auto &m : t.member)
-    o << "    Read(s, v." << m.name << ");" << endl;
+    o << "    Write(o, v." << m.name << ");" << endl;
   o << "  }" << endl << endl;
 
+  WritePointerOutputFor(o, t);
+}
+
+template <class T>
+void WritePointerInputFor(ostream &o, const T &t)
+{
   if (hasSharedAppearance(t))
   {
     o << "  void Read(std::istream &s, std::shared_ptr<" << t.name << "> &v) {" << endl;
@@ -548,29 +596,14 @@ void WriteTableInputFunctions(ostream &o, const Table &t)
   }
 }
 
-void WriteTableCompareFunctions(ostream &o, const Table &t)
+void WriteTableInput(ostream &o, const Table &t)
 {
-  o << "bool operator==(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
-  o << "  return ";
-  bool first = true;
+  o << "  void Read(std::istream &s, " << t.name << " &v) {" << endl;
   for (const auto &m : t.member)
-  {
-    o << endl << "    " << (first ? "" : "&& ") << "l." << m.name << " == r." << m.name;
-    first = false;
-  }
-  o << ";" << endl;
-  o << "}" << endl << endl;
+    o << "    Read(s, v." << m.name << ");" << endl;
+  o << "  }" << endl << endl;
 
-  o << "bool operator!=(const " << t.name << "&l, const " << t.name << "&r) {" << endl;
-  o << "  return ";
-  first = true;
-  for (const auto &m : t.member)
-  {
-    o << endl << "    " << (first ? "" : "|| ") << "l." << m.name << " != r." << m.name;
-    first = false;
-  }
-  o << ";" << endl;
-  o << "}" << endl << endl;
+  WritePointerInputFor(o, t);
 }
 
 void WriteCompareOperatorForWeakPointer(ostream &o)
@@ -586,17 +619,14 @@ void WriteCompareOperatorForWeakPointer(ostream &o)
 
 void WriteTableDeclarations(ostream &o, const Package &p)
 {
-  for (const auto &t : p.tables)
-    WriteTableDeclaration(o, t, p.root_type.value);
-
   if (someThingIsWeak(p))
     WriteCompareOperatorForWeakPointer(o);
 
   for (const auto &t : p.tables)
-    WriteTableCompareFunctions(o, t);
+    WriteTableDeclaration(o, t, p.root_type.value);
 }
 
-void WriteUnionStruct(ostream &o, const Union &u)
+void WriteUnionStruct(ostream &o, const Union &u, const string &root_type)
 {
   o << "struct " << u.name << " {" << endl;
 
@@ -634,11 +664,16 @@ void WriteUnionStruct(ostream &o, const Union &u)
   o << "  }" << endl << endl;
 
   o << "  bool is_Defined() const noexcept { return _selection != no_selection; }" << endl;
+  o << "  void clear() { *this = " << u.name << "(); }" << endl << endl;
   for (const auto &t : u.tables)
   {
     o << "  bool is_" << t.value << "() const noexcept { return _selection == _" << t.value << "_selection; }" << endl;
     o << "  const " << t.value << " & as_" << t.value << "() const noexcept { return *_" << t.value << "; }" << endl;
-    o << "  " << t.value << " & as_" << t.value << "() { return *_" << t.value << "; }" << endl << endl;
+    o << "  " << t.value << " & as_" << t.value << "() { return *_" << t.value << "; }" << endl;
+
+    o << "  template<typename... Args> " << t.value << " & create_" << t.value << "(Args&&... args) {" << endl;
+    o << "    return (*this = " << t.value << "(std::forward<Args>(args)...)).as_" << t.value << "();" << endl;
+    o << "  }" << endl << endl;
   }
 
   for (const auto &t : u.tables)
@@ -699,9 +734,12 @@ void WriteUnionStruct(ostream &o, const Union &u)
   for (const auto &t : u.tables)
     o << "    case _" << t.value << "_selection: delete _" << t.value << "; break;" << endl;
   o << "    }" << endl;
+  o << "    no_value = nullptr;" << endl;
   o << "  }" << endl << endl;
 
   o << "  union {" << endl;
+  o << "    struct NoValue_t *no_value{nullptr};" << endl;
+
   for (const auto &t : u.tables)
     o << "    " << t.value << " * _" << t.value << ";" << endl;
   o << "  };" << endl << endl;
@@ -712,21 +750,62 @@ void WriteUnionStruct(ostream &o, const Union &u)
   o << "  };" << endl << endl;
 
   o << "  Selection_t _selection{no_selection};" << endl;
+  if (hasSharedAppearance(u))
+    o << "  unsigned int io_counter_{0};" << endl;
+  o << "  friend struct " << root_type << "_io;" << endl;
   o << "};" << endl << endl;
 }
 
 void WriteUnions(ostream &o, const Package &p)
 {
   for (const auto &u : p.unions)
-    WriteUnionStruct(o, u);
+    WriteUnionStruct(o, u, p.root_type.value);
 }
 
 void WriteTablesIOFunctions(ostream &o, const vector<Table> &tables)
 {
   for (const auto &t : tables)
   {
-    WriteTableOutputFunctions(o, t);
-    WriteTableInputFunctions(o, t);
+    WriteTableOutput(o, t);
+    WriteTableInput(o, t);
+  }
+}
+
+void WriteUnionOutput(ostream &o, const Union &u)
+{
+  o << "  void Write(std::ostream &o, const " << u.name << " &v) {" << endl;
+  o << "    o.write(reinterpret_cast<const char*>(&v._selection), sizeof(" << u.name << "::Selection_t));" << endl;
+  o << "    switch(v._selection) {" << endl;
+  o << "    case " << u.name << "::no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case " << u.name << "::_" << t.value << "_selection: Write(o, v.as_" << t.value << "()); break;" << endl;
+  o << "    }" << endl;
+  o << "  }" << endl << endl;
+
+  WritePointerOutputFor(o, u);
+}
+
+void WriteUnionInput(ostream &o, const Union &u)
+{
+  o << "  void Read(std::istream &i, " << u.name << " &v) {" << endl;
+  o << "    i.read(reinterpret_cast<char*>(&v._selection), sizeof(" << u.name << "::Selection_t));" << endl;
+  o << "    switch(v._selection) {" << endl;
+  o << "    case " << u.name << "::no_selection: while(false); /* hack for coverage tool */ break;" << endl;
+  for (const auto &t : u.tables)
+    o << "    case " << u.name << "::_" << t.value << "_selection: Read(i, v.create_" << t.value << "()); break;"
+      << endl;
+  o << "    }" << endl;
+  o << "  }" << endl << endl;
+
+  WritePointerInputFor(o, u);
+}
+
+void WriteUnionsIoFunctions(ostream &o, const vector<Union> &unions)
+{
+  for (const auto &t : unions)
+  {
+    WriteUnionOutput(o, t);
+    WriteUnionInput(o, t);
   }
 }
 
@@ -773,6 +852,14 @@ void WriteIOStructMember(const Package &p, ostream &o)
       o << "  std::vector<std::shared_ptr<" << t.name << ">> " << t.name << "_references_;" << endl << endl;
     }
   }
+  for (const auto &t : p.unions)
+  {
+    if (hasSharedAppearance(t))
+    {
+      o << "  unsigned int " << t.name << "_count_{0};" << endl;
+      o << "  std::vector<std::shared_ptr<" << t.name << ">> " << t.name << "_references_;" << endl << endl;
+    }
+  }
 }
 
 void WriteIOStruct(ostream &o, const Package &p)
@@ -783,6 +870,7 @@ void WriteIOStruct(ostream &o, const Package &p)
   WriteIOStructMember(p, o);
   WriteBaseTypeIoFnuctions(o, p);
   WriteTablesIOFunctions(o, p.tables);
+  WriteUnionsIoFunctions(o, p.unions);
 
   o << "public:" << endl;
 

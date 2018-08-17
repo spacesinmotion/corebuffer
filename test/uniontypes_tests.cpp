@@ -114,6 +114,19 @@ TEST_CASE("case", "[tag]")
       CHECK(AB(testB()) != ab);
     }
 
+    SECTION("clear content")
+    {
+      AB ab = testA();
+      CHECK(ab.is_Defined());
+      CHECK(ab.is_A());
+      CHECK_FALSE(ab.is_B());
+
+      ab.clear();
+      CHECK_FALSE(ab.is_Defined());
+      CHECK_FALSE(ab.is_A());
+      CHECK_FALSE(ab.is_B());
+    }
+
     SECTION("compare equal")
     {
       AB n;
@@ -220,6 +233,69 @@ TEST_CASE("case", "[tag]")
   }
 
   SECTION("reading whats written")
+  {
+    Root root;
+    root.c = std::make_shared<AB>();
+    root.c->create_A("Hallo");
+    root.cw = root.c;
+
+    root.d = std::unique_ptr<AB>(new AB);
+    root.d->create_B(54);
+
+    root.empty = std::unique_ptr<AB>(new AB);
+
+    Root rootIn;
+
+    std::stringstream sOut;
+    Root_io().WriteRoot(sOut, root);
+
+    const auto buffer = sOut.str();
+    std::stringstream sIn(buffer);
+
+    Root_io().ReadRoot(sIn, rootIn);
+
+    REQUIRE(root.c != nullptr);
+    REQUIRE(root.c->is_A());
+    CHECK(root.c->as_A().name == "Hallo");
+
+    REQUIRE(root.cw.lock() != nullptr);
+    CHECK(root.cw.lock() == root.c);
+
+    REQUIRE(root.d != nullptr);
+    REQUIRE(root.d->is_B());
+    CHECK(root.d->as_B().size == 54);
+
+    REQUIRE(root.empty != nullptr);
+    CHECK_FALSE(root.empty->is_Defined());
+
+    CHECK(root.null == nullptr);
+  }
+
+  SECTION("reading whats vector")
+  {
+    Root root;
+    root.e.emplace_back(A("funny name"));
+    root.e.emplace_back(B(54));
+
+    std::stringstream sOut;
+    Root_io().WriteRoot(sOut, root);
+
+    const auto buffer = sOut.str();
+    std::stringstream sIn(buffer);
+
+    Root rootIn;
+    Root_io().ReadRoot(sIn, rootIn);
+
+    REQUIRE(root.e.size() == 2);
+
+    REQUIRE(root.e[0].is_A());
+    CHECK(root.e[0].as_A().name == "funny name");
+
+    REQUIRE(root.e[1].is_B());
+    CHECK(root.e[1].as_B().size == 54);
+  }
+
+  SECTION("reading whats written non union types")
   {
     Root root;
     root.a = A("Hallo");

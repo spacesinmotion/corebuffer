@@ -752,12 +752,43 @@ Table *Parser::tableForType(const std::string &name)
   return nullptr;
 }
 
+Union *Parser::unionForType(const std::string &name)
+{
+  for (auto &u : package.unions)
+    if (u.name == name)
+      return &u;
+  return nullptr;
+}
+
 Enum *Parser::enumForType(const std::string &name)
 {
   for (auto &e : package.enums)
     if (e.name == name)
       return &e;
   return nullptr;
+}
+
+template <class T>
+void updateAppearance(T *t, const Member &m)
+{
+  if (!t)
+    return;
+  if (m.isVector && m.pointer == Pointer::Weak)
+    t->appearance |= WeakVectorAppearance;
+  else if (m.isVector && m.pointer == Pointer::Unique)
+    t->appearance |= UniqueVectorAppearance;
+  else if (m.isVector && m.pointer == Pointer::Shared)
+    t->appearance |= SharedVectorAppearance;
+  else if (m.isVector && m.pointer == Pointer::Plain)
+    t->appearance |= VectorAppearance;
+  else if (!m.isVector && m.pointer == Pointer::Weak)
+    t->appearance |= WeakAppearance;
+  else if (!m.isVector && m.pointer == Pointer::Unique)
+    t->appearance |= UniqueAppearance;
+  else if (!m.isVector && m.pointer == Pointer::Shared)
+    t->appearance |= SharedAppearance;
+  else
+    t->appearance |= PlainAppearance;
 }
 
 void Parser::updateTableAppearance()
@@ -787,25 +818,8 @@ void Parser::updateTableAppearance()
           m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
       }
 
-      auto *t = tableForType(m.type);
-      if (!t)
-        continue;
-      if (m.isVector && m.pointer == Pointer::Weak)
-        t->appearance |= WeakVectorAppearance;
-      else if (m.isVector && m.pointer == Pointer::Unique)
-        t->appearance |= UniqueVectorAppearance;
-      else if (m.isVector && m.pointer == Pointer::Shared)
-        t->appearance |= SharedVectorAppearance;
-      else if (m.isVector && m.pointer == Pointer::Plain)
-        t->appearance |= VectorAppearance;
-      else if (!m.isVector && m.pointer == Pointer::Weak)
-        t->appearance |= WeakAppearance;
-      else if (!m.isVector && m.pointer == Pointer::Unique)
-        t->appearance |= UniqueAppearance;
-      else if (!m.isVector && m.pointer == Pointer::Shared)
-        t->appearance |= SharedAppearance;
-      else
-        t->appearance |= PlainAppearance;
+      updateAppearance(tableForType(m.type), m);
+      updateAppearance(unionForType(m.type), m);
     }
   }
 }

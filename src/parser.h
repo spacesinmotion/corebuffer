@@ -75,6 +75,7 @@ private:
 
   void initBaseTypes();
   Table *tableForType(const std::string &t);
+  Union *unionForType(const std::string &t);
   Enum *enumForType(const std::string &t);
   void updateTableAppearance();
   std::string fullPackageScope() const;

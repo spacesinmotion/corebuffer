@@ -44,21 +44,21 @@ struct Dummy {
   std::vector<EnumTypes> en3;
 
   Dummy() = default;
+
+  friend bool operator==(const Dummy&l, const Dummy&r) {
+    return 
+      l.en1 == r.en1
+      && l.en2 == r.en2
+      && l.en3 == r.en3;
+  }
+
+  friend bool operator!=(const Dummy&l, const Dummy&r) {
+    return 
+      l.en1 != r.en1
+      || l.en2 != r.en2
+      || l.en3 != r.en3;
+  }
 };
-
-bool operator==(const Dummy&l, const Dummy&r) {
-  return 
-    l.en1 == r.en1
-    && l.en2 == r.en2
-    && l.en3 == r.en3;
-}
-
-bool operator!=(const Dummy&l, const Dummy&r) {
-  return 
-    l.en1 != r.en1
-    || l.en2 != r.en2
-    || l.en3 != r.en3;
-}
 
 inline const std::array<EnumTypes,4> & EnumTypesValues() {
   static const std::array<EnumTypes,4> values {{

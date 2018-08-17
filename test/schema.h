@@ -47,6 +47,18 @@ struct EnumEntry {
     : name(name_)
     , value(value_)
   {}
+
+  friend bool operator==(const EnumEntry&l, const EnumEntry&r) {
+    return 
+      l.name == r.name
+      && l.value == r.value;
+  }
+
+  friend bool operator!=(const EnumEntry&l, const EnumEntry&r) {
+    return 
+      l.name != r.name
+      || l.value != r.value;
+  }
 };
 
 struct Enum {
@@ -57,6 +69,18 @@ struct Enum {
   Enum(const std::string &name_)
     : name(name_)
   {}
+
+  friend bool operator==(const Enum&l, const Enum&r) {
+    return 
+      l.name == r.name
+      && l.entries == r.entries;
+  }
+
+  friend bool operator!=(const Enum&l, const Enum&r) {
+    return 
+      l.name != r.name
+      || l.entries != r.entries;
+  }
 };
 
 struct Member {
@@ -72,6 +96,26 @@ struct Member {
     : name(name_)
     , type(type_)
   {}
+
+  friend bool operator==(const Member&l, const Member&r) {
+    return 
+      l.name == r.name
+      && l.type == r.type
+      && l.defaultValue == r.defaultValue
+      && l.isVector == r.isVector
+      && l.isBaseType == r.isBaseType
+      && l.pointer == r.pointer;
+  }
+
+  friend bool operator!=(const Member&l, const Member&r) {
+    return 
+      l.name != r.name
+      || l.type != r.type
+      || l.defaultValue != r.defaultValue
+      || l.isVector != r.isVector
+      || l.isBaseType != r.isBaseType
+      || l.pointer != r.pointer;
+  }
 };
 
 struct Table {
@@ -83,6 +127,20 @@ struct Table {
   Table(const std::string &name_)
     : name(name_)
   {}
+
+  friend bool operator==(const Table&l, const Table&r) {
+    return 
+      l.name == r.name
+      && l.member == r.member
+      && l.appearance == r.appearance;
+  }
+
+  friend bool operator!=(const Table&l, const Table&r) {
+    return 
+      l.name != r.name
+      || l.member != r.member
+      || l.appearance != r.appearance;
+  }
 };
 
 struct Package {
@@ -99,85 +157,27 @@ struct Package {
     , version(version_)
     , root_type(root_type_)
   {}
+
+  friend bool operator==(const Package&l, const Package&r) {
+    return 
+      l.path == r.path
+      && l.version == r.version
+      && l.root_type == r.root_type
+      && l.tables == r.tables
+      && l.baseTypes == r.baseTypes
+      && l.enums == r.enums;
+  }
+
+  friend bool operator!=(const Package&l, const Package&r) {
+    return 
+      l.path != r.path
+      || l.version != r.version
+      || l.root_type != r.root_type
+      || l.tables != r.tables
+      || l.baseTypes != r.baseTypes
+      || l.enums != r.enums;
+  }
 };
-
-bool operator==(const EnumEntry&l, const EnumEntry&r) {
-  return 
-    l.name == r.name
-    && l.value == r.value;
-}
-
-bool operator!=(const EnumEntry&l, const EnumEntry&r) {
-  return 
-    l.name != r.name
-    || l.value != r.value;
-}
-
-bool operator==(const Enum&l, const Enum&r) {
-  return 
-    l.name == r.name
-    && l.entries == r.entries;
-}
-
-bool operator!=(const Enum&l, const Enum&r) {
-  return 
-    l.name != r.name
-    || l.entries != r.entries;
-}
-
-bool operator==(const Member&l, const Member&r) {
-  return 
-    l.name == r.name
-    && l.type == r.type
-    && l.defaultValue == r.defaultValue
-    && l.isVector == r.isVector
-    && l.isBaseType == r.isBaseType
-    && l.pointer == r.pointer;
-}
-
-bool operator!=(const Member&l, const Member&r) {
-  return 
-    l.name != r.name
-    || l.type != r.type
-    || l.defaultValue != r.defaultValue
-    || l.isVector != r.isVector
-    || l.isBaseType != r.isBaseType
-    || l.pointer != r.pointer;
-}
-
-bool operator==(const Table&l, const Table&r) {
-  return 
-    l.name == r.name
-    && l.member == r.member
-    && l.appearance == r.appearance;
-}
-
-bool operator!=(const Table&l, const Table&r) {
-  return 
-    l.name != r.name
-    || l.member != r.member
-    || l.appearance != r.appearance;
-}
-
-bool operator==(const Package&l, const Package&r) {
-  return 
-    l.path == r.path
-    && l.version == r.version
-    && l.root_type == r.root_type
-    && l.tables == r.tables
-    && l.baseTypes == r.baseTypes
-    && l.enums == r.enums;
-}
-
-bool operator!=(const Package&l, const Package&r) {
-  return 
-    l.path != r.path
-    || l.version != r.version
-    || l.root_type != r.root_type
-    || l.tables != r.tables
-    || l.baseTypes != r.baseTypes
-    || l.enums != r.enums;
-}
 
 inline const std::array<Pointer,4> & PointerValues() {
   static const std::array<Pointer,4> values {{

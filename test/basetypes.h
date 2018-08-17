@@ -36,12 +36,60 @@ struct BaseTypes {
   std::string m;
 
   BaseTypes() = default;
+
+  friend bool operator==(const BaseTypes&l, const BaseTypes&r) {
+    return 
+      l.a == r.a
+      && l.aa == r.aa
+      && l.ab == r.ab
+      && l.b == r.b
+      && l.c == r.c
+      && l.d == r.d
+      && l.e == r.e
+      && l.f == r.f
+      && l.g == r.g
+      && l.h == r.h
+      && l.i == r.i
+      && l.j == r.j
+      && l.k == r.k
+      && l.l == r.l
+      && l.m == r.m;
+  }
+
+  friend bool operator!=(const BaseTypes&l, const BaseTypes&r) {
+    return 
+      l.a != r.a
+      || l.aa != r.aa
+      || l.ab != r.ab
+      || l.b != r.b
+      || l.c != r.c
+      || l.d != r.d
+      || l.e != r.e
+      || l.f != r.f
+      || l.g != r.g
+      || l.h != r.h
+      || l.i != r.i
+      || l.j != r.j
+      || l.k != r.k
+      || l.l != r.l
+      || l.m != r.m;
+  }
 };
 
 struct PointerBaseTypes {
   std::vector<std::string> b1;
 
   PointerBaseTypes() = default;
+
+  friend bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
+    return 
+      l.b1 == r.b1;
+  }
+
+  friend bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
+    return 
+      l.b1 != r.b1;
+  }
 };
 
 struct Initializer {
@@ -57,6 +105,20 @@ struct Initializer {
     : a(a_)
     , b(b_)
   {}
+
+  friend bool operator==(const Initializer&l, const Initializer&r) {
+    return 
+      l.a == r.a
+      && l.b == r.b
+      && l.c == r.c;
+  }
+
+  friend bool operator!=(const Initializer&l, const Initializer&r) {
+    return 
+      l.a != r.a
+      || l.b != r.b
+      || l.c != r.c;
+  }
 };
 
 struct Root {
@@ -64,81 +126,19 @@ struct Root {
   PointerBaseTypes b;
 
   Root() = default;
+
+  friend bool operator==(const Root&l, const Root&r) {
+    return 
+      l.a == r.a
+      && l.b == r.b;
+  }
+
+  friend bool operator!=(const Root&l, const Root&r) {
+    return 
+      l.a != r.a
+      || l.b != r.b;
+  }
 };
-
-bool operator==(const BaseTypes&l, const BaseTypes&r) {
-  return 
-    l.a == r.a
-    && l.aa == r.aa
-    && l.ab == r.ab
-    && l.b == r.b
-    && l.c == r.c
-    && l.d == r.d
-    && l.e == r.e
-    && l.f == r.f
-    && l.g == r.g
-    && l.h == r.h
-    && l.i == r.i
-    && l.j == r.j
-    && l.k == r.k
-    && l.l == r.l
-    && l.m == r.m;
-}
-
-bool operator!=(const BaseTypes&l, const BaseTypes&r) {
-  return 
-    l.a != r.a
-    || l.aa != r.aa
-    || l.ab != r.ab
-    || l.b != r.b
-    || l.c != r.c
-    || l.d != r.d
-    || l.e != r.e
-    || l.f != r.f
-    || l.g != r.g
-    || l.h != r.h
-    || l.i != r.i
-    || l.j != r.j
-    || l.k != r.k
-    || l.l != r.l
-    || l.m != r.m;
-}
-
-bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
-  return 
-    l.b1 == r.b1;
-}
-
-bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
-  return 
-    l.b1 != r.b1;
-}
-
-bool operator==(const Initializer&l, const Initializer&r) {
-  return 
-    l.a == r.a
-    && l.b == r.b
-    && l.c == r.c;
-}
-
-bool operator!=(const Initializer&l, const Initializer&r) {
-  return 
-    l.a != r.a
-    || l.b != r.b
-    || l.c != r.c;
-}
-
-bool operator==(const Root&l, const Root&r) {
-  return 
-    l.a == r.a
-    && l.b == r.b;
-}
-
-bool operator!=(const Root&l, const Root&r) {
-  return 
-    l.a != r.a
-    || l.b != r.b;
-}
 
 struct Root_io {
 private:

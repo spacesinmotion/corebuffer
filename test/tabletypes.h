@@ -18,6 +18,14 @@ struct TableB;
 struct TableD;
 struct TableC;
 
+template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
+  return l.lock() == r.lock();
+}
+
+template<typename T> bool operator!=(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
+  return l.lock() != r.lock();
+}
+
 struct TableA {
   std::string name;
   std::unique_ptr<TableD> d1;
@@ -34,6 +42,24 @@ struct TableA {
     , d2(d2_)
   {}
 
+  friend bool operator==(const TableA&l, const TableA&r) {
+    return 
+      l.name == r.name
+      && l.d1 == r.d1
+      && l.d2 == r.d2
+      && l.d3 == r.d3
+      && l.d4 == r.d4;
+  }
+
+  friend bool operator!=(const TableA&l, const TableA&r) {
+    return 
+      l.name != r.name
+      || l.d1 != r.d1
+      || l.d2 != r.d2
+      || l.d3 != r.d3
+      || l.d4 != r.d4;
+  }
+
 private:
   unsigned int io_counter_{0};
   friend struct TableC_io;
@@ -43,6 +69,16 @@ struct TableB {
   std::string name;
 
   TableB() = default;
+
+  friend bool operator==(const TableB&l, const TableB&r) {
+    return 
+      l.name == r.name;
+  }
+
+  friend bool operator!=(const TableB&l, const TableB&r) {
+    return 
+      l.name != r.name;
+  }
 
 private:
   unsigned int io_counter_{0};
@@ -54,6 +90,18 @@ struct TableD {
   std::shared_ptr<TableA> a;
 
   TableD() = default;
+
+  friend bool operator==(const TableD&l, const TableD&r) {
+    return 
+      l.name == r.name
+      && l.a == r.a;
+  }
+
+  friend bool operator!=(const TableD&l, const TableD&r) {
+    return 
+      l.name != r.name
+      || l.a != r.a;
+  }
 
 private:
   unsigned int io_counter_{0};
@@ -71,73 +119,25 @@ struct TableC {
   TableC(std::vector<std::unique_ptr<TableA>> c_)
     : c(std::move(c_))
   {}
+
+  friend bool operator==(const TableC&l, const TableC&r) {
+    return 
+      l.a == r.a
+      && l.b == r.b
+      && l.c == r.c
+      && l.d == r.d
+      && l.e == r.e;
+  }
+
+  friend bool operator!=(const TableC&l, const TableC&r) {
+    return 
+      l.a != r.a
+      || l.b != r.b
+      || l.c != r.c
+      || l.d != r.d
+      || l.e != r.e;
+  }
 };
-
-template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
-  return l.lock() == r.lock();
-}
-
-template<typename T> bool operator!=(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
-  return l.lock() != r.lock();
-}
-
-bool operator==(const TableA&l, const TableA&r) {
-  return 
-    l.name == r.name
-    && l.d1 == r.d1
-    && l.d2 == r.d2
-    && l.d3 == r.d3
-    && l.d4 == r.d4;
-}
-
-bool operator!=(const TableA&l, const TableA&r) {
-  return 
-    l.name != r.name
-    || l.d1 != r.d1
-    || l.d2 != r.d2
-    || l.d3 != r.d3
-    || l.d4 != r.d4;
-}
-
-bool operator==(const TableB&l, const TableB&r) {
-  return 
-    l.name == r.name;
-}
-
-bool operator!=(const TableB&l, const TableB&r) {
-  return 
-    l.name != r.name;
-}
-
-bool operator==(const TableD&l, const TableD&r) {
-  return 
-    l.name == r.name
-    && l.a == r.a;
-}
-
-bool operator!=(const TableD&l, const TableD&r) {
-  return 
-    l.name != r.name
-    || l.a != r.a;
-}
-
-bool operator==(const TableC&l, const TableC&r) {
-  return 
-    l.a == r.a
-    && l.b == r.b
-    && l.c == r.c
-    && l.d == r.d
-    && l.e == r.e;
-}
-
-bool operator!=(const TableC&l, const TableC&r) {
-  return 
-    l.a != r.a
-    || l.b != r.b
-    || l.c != r.c
-    || l.d != r.d
-    || l.e != r.e;
-}
 
 struct TableC_io {
 private:

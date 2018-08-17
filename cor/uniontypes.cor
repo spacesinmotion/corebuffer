@@ -17,4 +17,14 @@ union AB { A, B }
 table Root {
   a:A;
   b:B;
+
+  c:shared AB;
+  cw:weak AB;
+
+  d:unique AB;
+
+  e:[AB];
+
+  empty:unique AB;
+  null:unique AB;
 }

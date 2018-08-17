@@ -109,6 +109,8 @@ struct Union
 
   string name;
   FilePosition location;
+
+  unsigned char appearance{0};
   vector<Attribute> tables;
 };
 

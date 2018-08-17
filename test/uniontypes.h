@@ -18,6 +18,14 @@ struct B;
 struct Root;
 struct AB;
 
+template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
+  return l.lock() == r.lock();
+}
+
+template<typename T> bool operator!=(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
+  return l.lock() != r.lock();
+}
+
 struct A {
   std::string name;
 
@@ -25,6 +33,16 @@ struct A {
   A(const std::string &name_)
     : name(name_)
   {}
+
+  friend bool operator==(const A&l, const A&r) {
+    return 
+      l.name == r.name;
+  }
+
+  friend bool operator!=(const A&l, const A&r) {
+    return 
+      l.name != r.name;
+  }
 };
 
 struct B {
@@ -34,46 +52,54 @@ struct B {
   B(const std::int64_t &size_)
     : size(size_)
   {}
+
+  friend bool operator==(const B&l, const B&r) {
+    return 
+      l.size == r.size;
+  }
+
+  friend bool operator!=(const B&l, const B&r) {
+    return 
+      l.size != r.size;
+  }
 };
 
 struct Root {
   A a;
   B b;
+  std::shared_ptr<AB> c;
+  std::weak_ptr<AB> cw;
+  std::unique_ptr<AB> d;
+  std::vector<AB> e;
+  std::unique_ptr<AB> empty;
+  std::unique_ptr<AB> null;
 
   Root() = default;
+
+  friend bool operator==(const Root&l, const Root&r) {
+    return 
+      l.a == r.a
+      && l.b == r.b
+      && l.c == r.c
+      && l.cw == r.cw
+      && l.d == r.d
+      && l.e == r.e
+      && l.empty == r.empty
+      && l.null == r.null;
+  }
+
+  friend bool operator!=(const Root&l, const Root&r) {
+    return 
+      l.a != r.a
+      || l.b != r.b
+      || l.c != r.c
+      || l.cw != r.cw
+      || l.d != r.d
+      || l.e != r.e
+      || l.empty != r.empty
+      || l.null != r.null;
+  }
 };
-
-bool operator==(const A&l, const A&r) {
-  return 
-    l.name == r.name;
-}
-
-bool operator!=(const A&l, const A&r) {
-  return 
-    l.name != r.name;
-}
-
-bool operator==(const B&l, const B&r) {
-  return 
-    l.size == r.size;
-}
-
-bool operator!=(const B&l, const B&r) {
-  return 
-    l.size != r.size;
-}
-
-bool operator==(const Root&l, const Root&r) {
-  return 
-    l.a == r.a
-    && l.b == r.b;
-}
-
-bool operator!=(const Root&l, const Root&r) {
-  return 
-    l.a != r.a
-    || l.b != r.b;
-}
 
 struct AB {
   AB() = default;
@@ -127,13 +153,21 @@ struct AB {
   }
 
   bool is_Defined() const noexcept { return _selection != no_selection; }
+  void clear() { *this = AB(); }
+
   bool is_A() const noexcept { return _selection == _A_selection; }
   const A & as_A() const noexcept { return *_A; }
   A & as_A() { return *_A; }
+  template<typename... Args> A & create_A(Args&&... args) {
+    return (*this = A(std::forward<Args>(args)...)).as_A();
+  }
 
   bool is_B() const noexcept { return _selection == _B_selection; }
   const B & as_B() const noexcept { return *_B; }
   B & as_B() { return *_B; }
+  template<typename... Args> B & create_B(Args&&... args) {
+    return (*this = B(std::forward<Args>(args)...)).as_B();
+  }
 
   friend bool operator==(const AB&ab, const A &o) noexcept  { return ab.is_A() && ab.as_A() == o; }
   friend bool operator==(const A &o, const AB&ab) noexcept  { return ab.is_A() && o == ab.as_A(); }
@@ -190,9 +224,11 @@ private:
     case _A_selection: delete _A; break;
     case _B_selection: delete _B; break;
     }
+    no_value = nullptr;
   }
 
   union {
+    struct NoValue_t *no_value{nullptr};
     A * _A;
     B * _B;
   };
@@ -204,10 +240,15 @@ private:
   };
 
   Selection_t _selection{no_selection};
+  unsigned int io_counter_{0};
+  friend struct Root_io;
 };
 
 struct Root_io {
 private:
+  unsigned int AB_count_{0};
+  std::vector<std::shared_ptr<AB>> AB_references_;
+
   template<typename T> void Write(std::ostream &, const T *) {
     static_assert(AlwaysFalse<T>::value, "Something not implemented");
   }
@@ -221,7 +262,33 @@ private:
     o.write(reinterpret_cast<const char *>(v.data()), sizeof(T) * v.size());
   }
 
+  template<typename T> void Write(std::ostream &o, const std::unique_ptr<T> &v) {
+    if (!v) {
+      o.write("\x0", 1);
+    } else {
+      o.write("\x1", 1);
+      Write(o, *v);
+    }
+  }
+
+  template<typename T> void Write(std::ostream &o, const std::shared_ptr<T> &v, unsigned int &counter) {
+    if (!v) {
+      o.write("\x0", 1);
+    } else if (v->io_counter_== 0) {
+      v->io_counter_ = ++counter;
+      o.write("\x1", 1);
+      Write(o, *v);
+    } else {
+      o.write("\x2", 1);
+      Write(o, v->io_counter_);
+    }
+  }
+
   template<typename T> void Write(std::ostream &, const std::shared_ptr<T> &) {
+    static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  }
+
+  template<typename T> void Write(std::ostream &, const std::weak_ptr<T> &) {
     static_assert(AlwaysFalse<T>::value, "Something not implemented");
   }
 
@@ -234,8 +301,35 @@ private:
     i.read(reinterpret_cast<char *>(&v), sizeof(T));
   }
 
+  template<typename T> void Read(std::istream &i, std::unique_ptr<T> &v) {
+    char ref = 0;
+    i.read(&ref, 1);
+    if (ref == '\x1') {
+      v = std::unique_ptr<T>(new T);
+      Read(i, *v);
+    }
+  }
+
   template<typename T> void Read(std::istream &, std::shared_ptr<T> &) {
     static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  }
+
+  template<typename T> void Read(std::istream &, std::weak_ptr<T> &) {
+    static_assert(AlwaysFalse<T>::value, "Something not implemented");
+  }
+
+  template<typename T> void Read(std::istream &s, std::shared_ptr<T> &v, std::vector<std::shared_ptr<T>> &cache) {
+    char ref = 0;
+    s.read(&ref, 1);
+    if (ref == '\x1') {
+      v = std::make_shared<T>();
+      cache.push_back(v);
+      Read(s, *v);
+    } else if (ref == '\x2') {
+      unsigned int index = 0;
+      Read(s, index);
+      v = cache[index - 1];
+    }
   }
 
   template<typename T> void Read(std::istream &i, std::vector<T> &v) {
@@ -271,11 +365,73 @@ private:
   void Write(std::ostream &o, const Root &v) {
     Write(o, v.a);
     Write(o, v.b);
+    Write(o, v.c);
+    Write(o, v.cw);
+    Write(o, v.d);
+    Write(o, v.e);
+    Write(o, v.empty);
+    Write(o, v.null);
   }
 
   void Read(std::istream &s, Root &v) {
     Read(s, v.a);
     Read(s, v.b);
+    Read(s, v.c);
+    Read(s, v.cw);
+    Read(s, v.d);
+    Read(s, v.e);
+    Read(s, v.empty);
+    Read(s, v.null);
+  }
+
+  void Write(std::ostream &o, const AB &v) {
+    o.write(reinterpret_cast<const char*>(&v._selection), sizeof(AB::Selection_t));
+    switch(v._selection) {
+    case AB::no_selection: while(false); /* hack for coverage tool */ break;
+    case AB::_A_selection: Write(o, v.as_A()); break;
+    case AB::_B_selection: Write(o, v.as_B()); break;
+    }
+  }
+
+  void Write(std::ostream &o, const std::shared_ptr<AB> &v) {
+    Write(o, v, AB_count_);
+  }
+
+  void Write(std::ostream &o, const std::weak_ptr<AB> &v) {
+    Write(o, v.lock(), AB_count_);
+  }
+
+  void Write(std::ostream &o, const std::vector<AB> &v) {
+    Write(o, v.size());
+    for (const auto &entry : v)
+      Write(o, entry);
+  }
+
+  void Read(std::istream &i, AB &v) {
+    i.read(reinterpret_cast<char*>(&v._selection), sizeof(AB::Selection_t));
+    switch(v._selection) {
+    case AB::no_selection: while(false); /* hack for coverage tool */ break;
+    case AB::_A_selection: Read(i, v.create_A()); break;
+    case AB::_B_selection: Read(i, v.create_B()); break;
+    }
+  }
+
+  void Read(std::istream &s, std::shared_ptr<AB> &v) {
+    Read(s, v, AB_references_);
+  }
+
+  void Read(std::istream &s, std::weak_ptr<AB> &v) {
+    auto t = v.lock();
+    Read(s, t, AB_references_);
+    v = t;
+  }
+
+  void Read(std::istream &s, std::vector<AB> &v) {
+    auto size = v.size();
+    Read(s, size);
+    v.resize(size);
+    for (auto &entry : v)
+      Read(s, entry);
   }
 
 public:
