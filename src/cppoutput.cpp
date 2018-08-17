@@ -9,13 +9,14 @@ using namespace std;
 template <typename Predicate>
 bool any_table_of(const Package &p, const Predicate &pr)
 {
-  return any_of(p.tables.begin(), p.tables.end(), pr) || any_of(p.baseTypes.begin(), p.baseTypes.end(), pr);
+  return any_of(p.types.begin(), p.types.end(), [&pr](const Type &t) { return t.is_Table() && pr(t.as_Table()); }) ||
+         any_of(p.baseTypes.begin(), p.baseTypes.end(), pr);
 }
 
 template <typename Predicate>
 bool any_union_of(const Package &p, const Predicate &pr)
 {
-  return any_of(p.unions.begin(), p.unions.end(), pr);
+  return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Union() && pr(u.as_Union()); });
 }
 
 template <class T>
@@ -125,10 +126,11 @@ void WriteNameSpaceEnd(ostream &o, const string &path, int pos = 0)
 
 void WriteForwardDeclarations(ostream &o, const Package &p)
 {
-  for (const auto &t : p.tables)
-    o << endl << "struct " << t.name << ";";
-  for (const auto &t : p.unions)
-    o << endl << "struct " << t.name << ";";
+  for (const auto &t : p.types)
+    if (t.is_Table())
+      o << endl << "struct " << t.as_Table().name << ";";
+    else if (t.is_Union())
+      o << endl << "struct " << t.as_Union().name << ";";
   o << endl << endl;
 }
 
@@ -169,12 +171,6 @@ void WriteEnumFunctions(ostream &o, const Enum &e)
   o << "  }" << endl;
   o << "  return \"<error>\";" << endl;
   o << "};" << endl << endl;
-}
-
-void WriteEnumDeclarations(ostream &o, const vector<Enum> &enums)
-{
-  for (const auto &e : enums)
-    WriteEnumDeclaration(o, e);
 }
 
 void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
@@ -617,15 +613,6 @@ void WriteCompareOperatorForWeakPointer(ostream &o)
   o << "}" << endl << endl;
 }
 
-void WriteTableDeclarations(ostream &o, const Package &p)
-{
-  if (someThingIsWeak(p))
-    WriteCompareOperatorForWeakPointer(o);
-
-  for (const auto &t : p.tables)
-    WriteTableDeclaration(o, t, p.root_type.value);
-}
-
 void WriteUnionStruct(ostream &o, const Union &u, const string &root_type)
 {
   o << "struct " << u.name << " {" << endl;
@@ -756,18 +743,22 @@ void WriteUnionStruct(ostream &o, const Union &u, const string &root_type)
   o << "};" << endl << endl;
 }
 
-void WriteUnions(ostream &o, const Package &p)
+void WriteTypeStructs(ostream &o, const Package &p)
 {
-  for (const auto &u : p.unions)
-    WriteUnionStruct(o, u, p.root_type.value);
-}
+  if (someThingIsWeak(p))
+    WriteCompareOperatorForWeakPointer(o);
 
-void WriteTablesIOFunctions(ostream &o, const vector<Table> &tables)
-{
-  for (const auto &t : tables)
+  for (const auto &t : p.types)
   {
-    WriteTableOutput(o, t);
-    WriteTableInput(o, t);
+    if (t.is_Table())
+      WriteTableDeclaration(o, t.as_Table(), p.root_type.value);
+    else if (t.is_Union())
+      WriteUnionStruct(o, t.as_Union(), p.root_type.value);
+    else if (t.is_Enum())
+    {
+      WriteEnumDeclaration(o, t.as_Enum());
+      WriteEnumFunctions(o, t.as_Enum());
+    }
   }
 }
 
@@ -800,21 +791,29 @@ void WriteUnionInput(ostream &o, const Union &u)
   WritePointerInputFor(o, u);
 }
 
-void WriteUnionsIoFunctions(ostream &o, const vector<Union> &unions)
+void WriteTablesIOFunctions(ostream &o, const vector<Type> &types)
 {
-  for (const auto &t : unions)
+  for (const auto &t : types)
   {
-    WriteUnionOutput(o, t);
-    WriteUnionInput(o, t);
+    if (t.is_Table())
+    {
+      WriteTableOutput(o, t.as_Table());
+      WriteTableInput(o, t.as_Table());
+    }
+    else if (t.is_Union())
+    {
+      WriteUnionOutput(o, t.as_Union());
+      WriteUnionInput(o, t.as_Union());
+    }
   }
 }
 
 void WriteBaseIO(ostream &o, const Package &p)
 {
   o << "  void Write" << p.root_type.value << "(std::ostream &o, const " << p.root_type.value << " &v) {" << endl;
-  for (const auto &t : p.tables)
-    if (hasSharedAppearance(t))
-      o << "    " << t.name << "_count_ = 0;" << endl;
+  for (const auto &t : p.types)
+    if (t.is_Table() && hasSharedAppearance(t.as_Table()))
+      o << "    " << t.as_Table().name << "_count_ = 0;" << endl;
 
   o << endl << "    o.write(\"CORE\", 4);" << endl;
   o << "    o.write(\"" << p.version.value << "\", " << p.version.value.size() << ");" << endl;
@@ -823,9 +822,9 @@ void WriteBaseIO(ostream &o, const Package &p)
 
   o << "  bool Read" << p.root_type.value << "(std::istream &i, " << p.root_type.value << " &v) {" << endl;
 
-  for (const auto &t : p.tables)
-    if (hasSharedAppearance(t))
-      o << "    " << t.name << "_references_.clear();" << endl;
+  for (const auto &t : p.types)
+    if (t.is_Table() && hasSharedAppearance(t.as_Table()))
+      o << "    " << t.as_Table().name << "_references_.clear();" << endl;
 
   o << endl << "    std::string marker(\"0000\");" << endl;
   o << "    i.read(&marker[0], 4);" << endl;
@@ -844,20 +843,21 @@ void WriteBaseIO(ostream &o, const Package &p)
 
 void WriteIOStructMember(const Package &p, ostream &o)
 {
-  for (const auto &t : p.tables)
+  for (const auto &t : p.types)
   {
-    if (hasSharedAppearance(t))
+    if (t.is_Table() && hasSharedAppearance(t.as_Table()))
     {
-      o << "  unsigned int " << t.name << "_count_{0};" << endl;
-      o << "  std::vector<std::shared_ptr<" << t.name << ">> " << t.name << "_references_;" << endl << endl;
+      o << "  unsigned int " << t.as_Table().name << "_count_{0};" << endl;
+      o << "  std::vector<std::shared_ptr<" << t.as_Table().name << ">> " << t.as_Table().name << "_references_;"
+        << endl
+        << endl;
     }
-  }
-  for (const auto &t : p.unions)
-  {
-    if (hasSharedAppearance(t))
+    else if (t.is_Union() && hasSharedAppearance(t.as_Union()))
     {
-      o << "  unsigned int " << t.name << "_count_{0};" << endl;
-      o << "  std::vector<std::shared_ptr<" << t.name << ">> " << t.name << "_references_;" << endl << endl;
+      o << "  unsigned int " << t.as_Union().name << "_count_{0};" << endl;
+      o << "  std::vector<std::shared_ptr<" << t.as_Union().name << ">> " << t.as_Union().name << "_references_;"
+        << endl
+        << endl;
     }
   }
 }
@@ -869,8 +869,7 @@ void WriteIOStruct(ostream &o, const Package &p)
 
   WriteIOStructMember(p, o);
   WriteBaseTypeIoFnuctions(o, p);
-  WriteTablesIOFunctions(o, p.tables);
-  WriteUnionsIoFunctions(o, p.unions);
+  WriteTablesIOFunctions(o, p.types);
 
   o << "public:" << endl;
 
@@ -903,12 +902,7 @@ void WriteCppCode(ostream &o, const Package &p)
   WriteHelperForNotImplementedTemplates(o);
 
   WriteForwardDeclarations(o, p);
-  WriteEnumDeclarations(o, p.enums);
-  WriteTableDeclarations(o, p);
-  WriteUnions(o, p);
-
-  for (const auto &e : p.enums)
-    WriteEnumFunctions(o, e);
+  WriteTypeStructs(o, p);
 
   WriteIOStruct(o, p);
 

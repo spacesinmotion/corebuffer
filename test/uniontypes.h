@@ -15,8 +15,8 @@ struct AlwaysFalse : std::false_type {};
 
 struct A;
 struct B;
-struct Root;
 struct AB;
+struct Root;
 
 template<typename T> bool operator==(const std::weak_ptr<T> &l, const std::weak_ptr<T> &r) {
   return l.lock() == r.lock();
@@ -61,43 +61,6 @@ struct B {
   friend bool operator!=(const B&l, const B&r) {
     return 
       l.size != r.size;
-  }
-};
-
-struct Root {
-  A a;
-  B b;
-  std::shared_ptr<AB> c;
-  std::weak_ptr<AB> cw;
-  std::unique_ptr<AB> d;
-  std::vector<AB> e;
-  std::unique_ptr<AB> empty;
-  std::unique_ptr<AB> null;
-
-  Root() = default;
-
-  friend bool operator==(const Root&l, const Root&r) {
-    return 
-      l.a == r.a
-      && l.b == r.b
-      && l.c == r.c
-      && l.cw == r.cw
-      && l.d == r.d
-      && l.e == r.e
-      && l.empty == r.empty
-      && l.null == r.null;
-  }
-
-  friend bool operator!=(const Root&l, const Root&r) {
-    return 
-      l.a != r.a
-      || l.b != r.b
-      || l.c != r.c
-      || l.cw != r.cw
-      || l.d != r.d
-      || l.e != r.e
-      || l.empty != r.empty
-      || l.null != r.null;
   }
 };
 
@@ -244,6 +207,46 @@ private:
   friend struct Root_io;
 };
 
+struct Root {
+  A a;
+  B b;
+  std::shared_ptr<AB> c;
+  std::weak_ptr<AB> cw;
+  std::unique_ptr<AB> d;
+  std::vector<AB> e;
+  AB f;
+  std::unique_ptr<AB> empty;
+  std::unique_ptr<AB> null;
+
+  Root() = default;
+
+  friend bool operator==(const Root&l, const Root&r) {
+    return 
+      l.a == r.a
+      && l.b == r.b
+      && l.c == r.c
+      && l.cw == r.cw
+      && l.d == r.d
+      && l.e == r.e
+      && l.f == r.f
+      && l.empty == r.empty
+      && l.null == r.null;
+  }
+
+  friend bool operator!=(const Root&l, const Root&r) {
+    return 
+      l.a != r.a
+      || l.b != r.b
+      || l.c != r.c
+      || l.cw != r.cw
+      || l.d != r.d
+      || l.e != r.e
+      || l.f != r.f
+      || l.empty != r.empty
+      || l.null != r.null;
+  }
+};
+
 struct Root_io {
 private:
   unsigned int AB_count_{0};
@@ -362,28 +365,6 @@ private:
     Read(s, v.size);
   }
 
-  void Write(std::ostream &o, const Root &v) {
-    Write(o, v.a);
-    Write(o, v.b);
-    Write(o, v.c);
-    Write(o, v.cw);
-    Write(o, v.d);
-    Write(o, v.e);
-    Write(o, v.empty);
-    Write(o, v.null);
-  }
-
-  void Read(std::istream &s, Root &v) {
-    Read(s, v.a);
-    Read(s, v.b);
-    Read(s, v.c);
-    Read(s, v.cw);
-    Read(s, v.d);
-    Read(s, v.e);
-    Read(s, v.empty);
-    Read(s, v.null);
-  }
-
   void Write(std::ostream &o, const AB &v) {
     o.write(reinterpret_cast<const char*>(&v._selection), sizeof(AB::Selection_t));
     switch(v._selection) {
@@ -432,6 +413,30 @@ private:
     v.resize(size);
     for (auto &entry : v)
       Read(s, entry);
+  }
+
+  void Write(std::ostream &o, const Root &v) {
+    Write(o, v.a);
+    Write(o, v.b);
+    Write(o, v.c);
+    Write(o, v.cw);
+    Write(o, v.d);
+    Write(o, v.e);
+    Write(o, v.f);
+    Write(o, v.empty);
+    Write(o, v.null);
+  }
+
+  void Read(std::istream &s, Root &v) {
+    Read(s, v.a);
+    Read(s, v.b);
+    Read(s, v.c);
+    Read(s, v.cw);
+    Read(s, v.d);
+    Read(s, v.e);
+    Read(s, v.f);
+    Read(s, v.empty);
+    Read(s, v.null);
   }
 
 public:

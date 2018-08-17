@@ -25,6 +25,8 @@ table Root {
 
   e:[AB];
 
+  f:AB;
+
   empty:unique AB;
   null:unique AB;
 }

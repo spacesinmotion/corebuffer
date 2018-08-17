@@ -26,6 +26,26 @@ enum class Pointer : std::int8_t {
   Shared = 3,
 };
 
+inline const std::array<Pointer,4> & PointerValues() {
+  static const std::array<Pointer,4> values {{
+    Pointer::Plain,
+    Pointer::Weak,
+    Pointer::Unique,
+    Pointer::Shared,
+  }};
+  return values;
+};
+
+inline const char * ValueName(const Pointer &v) {
+  switch(v) {
+    case Pointer::Plain: return "Plain";
+    case Pointer::Weak: return "Weak";
+    case Pointer::Unique: return "Unique";
+    case Pointer::Shared: return "Shared";
+  }
+  return "<error>";
+};
+
 enum class PointerAppearance : std::int8_t {
   NoPointer = 0,
   WeakAppearance = 1,
@@ -36,6 +56,36 @@ enum class PointerAppearance : std::int8_t {
   UniqueVectorAppearance = 6,
   SharedVectorAppearance = 7,
   PlainAppearance = 8,
+};
+
+inline const std::array<PointerAppearance,9> & PointerAppearanceValues() {
+  static const std::array<PointerAppearance,9> values {{
+    PointerAppearance::NoPointer,
+    PointerAppearance::WeakAppearance,
+    PointerAppearance::UniqueAppearance,
+    PointerAppearance::SharedAppearance,
+    PointerAppearance::VectorAppearance,
+    PointerAppearance::WeakVectorAppearance,
+    PointerAppearance::UniqueVectorAppearance,
+    PointerAppearance::SharedVectorAppearance,
+    PointerAppearance::PlainAppearance,
+  }};
+  return values;
+};
+
+inline const char * ValueName(const PointerAppearance &v) {
+  switch(v) {
+    case PointerAppearance::NoPointer: return "NoPointer";
+    case PointerAppearance::WeakAppearance: return "WeakAppearance";
+    case PointerAppearance::UniqueAppearance: return "UniqueAppearance";
+    case PointerAppearance::SharedAppearance: return "SharedAppearance";
+    case PointerAppearance::VectorAppearance: return "VectorAppearance";
+    case PointerAppearance::WeakVectorAppearance: return "WeakVectorAppearance";
+    case PointerAppearance::UniqueVectorAppearance: return "UniqueVectorAppearance";
+    case PointerAppearance::SharedVectorAppearance: return "SharedVectorAppearance";
+    case PointerAppearance::PlainAppearance: return "PlainAppearance";
+  }
+  return "<error>";
 };
 
 struct EnumEntry {
@@ -177,56 +227,6 @@ struct Package {
       || l.baseTypes != r.baseTypes
       || l.enums != r.enums;
   }
-};
-
-inline const std::array<Pointer,4> & PointerValues() {
-  static const std::array<Pointer,4> values {{
-    Pointer::Plain,
-    Pointer::Weak,
-    Pointer::Unique,
-    Pointer::Shared,
-  }};
-  return values;
-};
-
-inline const char * ValueName(const Pointer &v) {
-  switch(v) {
-    case Pointer::Plain: return "Plain";
-    case Pointer::Weak: return "Weak";
-    case Pointer::Unique: return "Unique";
-    case Pointer::Shared: return "Shared";
-  }
-  return "<error>";
-};
-
-inline const std::array<PointerAppearance,9> & PointerAppearanceValues() {
-  static const std::array<PointerAppearance,9> values {{
-    PointerAppearance::NoPointer,
-    PointerAppearance::WeakAppearance,
-    PointerAppearance::UniqueAppearance,
-    PointerAppearance::SharedAppearance,
-    PointerAppearance::VectorAppearance,
-    PointerAppearance::WeakVectorAppearance,
-    PointerAppearance::UniqueVectorAppearance,
-    PointerAppearance::SharedVectorAppearance,
-    PointerAppearance::PlainAppearance,
-  }};
-  return values;
-};
-
-inline const char * ValueName(const PointerAppearance &v) {
-  switch(v) {
-    case PointerAppearance::NoPointer: return "NoPointer";
-    case PointerAppearance::WeakAppearance: return "WeakAppearance";
-    case PointerAppearance::UniqueAppearance: return "UniqueAppearance";
-    case PointerAppearance::SharedAppearance: return "SharedAppearance";
-    case PointerAppearance::VectorAppearance: return "VectorAppearance";
-    case PointerAppearance::WeakVectorAppearance: return "WeakVectorAppearance";
-    case PointerAppearance::UniqueVectorAppearance: return "UniqueVectorAppearance";
-    case PointerAppearance::SharedVectorAppearance: return "SharedVectorAppearance";
-    case PointerAppearance::PlainAppearance: return "PlainAppearance";
-  }
-  return "<error>";
 };
 
 struct Package_io {

@@ -20,12 +20,12 @@ root_type BaseTypes;
 table BaseTypes {)" + member +
                        "\n}");
 
-  REQUIRE((p.tables.size() == 1 && p.tables.front().member.size() == 1));
-  CHECK(p.tables.front().member[0].isBaseType);
-  CHECK_FALSE(p.tables.front().member[0].isVector);
-  CHECK(p.tables.front().member[0].pointer == Pointer::Plain);
-  CHECK(p.tables.front().member[0].type == type);
-  CHECK(p.tables.front().member[0].defaultValue.value == defValue);
+  REQUIRE((p.types.size() == 1 && p.types.front().is_Table() && p.types.front().as_Table().member.size() == 1));
+  CHECK(p.types.front().as_Table().member[0].isBaseType);
+  CHECK_FALSE(p.types.front().as_Table().member[0].isVector);
+  CHECK(p.types.front().as_Table().member[0].pointer == Pointer::Plain);
+  CHECK(p.types.front().as_Table().member[0].type == type);
+  CHECK(p.types.front().as_Table().member[0].defaultValue.value == defValue);
 }
 
 TEST_CASE("Parsing packages", "[parser]")
@@ -61,76 +61,80 @@ enum Access { Private, Public = 3, Protected }
 
     SECTION("Checking parsed enum")
     {
-      REQUIRE(p.enums.size() == 1);
-      CHECK(p.enums.front().name == "Access");
+      REQUIRE((p.types.size() == 3 && p.types.back().is_Enum()));
+      CHECK(p.types.back().as_Enum().name == "Access");
 
-      REQUIRE(p.enums.front().entries.size() == 3);
-      CHECK(p.enums.front().entries[0].name == "Private");
-      CHECK(p.enums.front().entries[0].value == 0);
-      CHECK(p.enums.front().entries[1].name == "Public");
-      CHECK(p.enums.front().entries[1].value == 3);
-      CHECK(p.enums.front().entries[2].name == "Protected");
-      CHECK(p.enums.front().entries[2].value == 4);
+      REQUIRE(p.types.back().as_Enum().entries.size() == 3);
+      CHECK(p.types.back().as_Enum().entries[0].name == "Private");
+      CHECK(p.types.back().as_Enum().entries[0].value == 0);
+      CHECK(p.types.back().as_Enum().entries[1].name == "Public");
+      CHECK(p.types.back().as_Enum().entries[1].value == 3);
+      CHECK(p.types.back().as_Enum().entries[2].name == "Protected");
+      CHECK(p.types.back().as_Enum().entries[2].value == 4);
     }
 
     SECTION("Checking parsed XXX")
     {
-      REQUIRE(p.tables.size() == 2);
+      REQUIRE(p.types.size() == 3);
+      REQUIRE(p.types[0].is_Table());
+      REQUIRE(p.types[1].is_Table());
 
-      CHECK(p.tables[0].name == "XXX");
+      CHECK(p.types[0].as_Table().name == "XXX");
 
-      REQUIRE(p.tables[0].member.size() == 4);
+      REQUIRE(p.types[0].as_Table().member.size() == 4);
 
-      CHECK(p.tables[0].member[0].isBaseType);
-      CHECK(!p.tables[0].member[0].isVector);
-      CHECK(p.tables[0].member[0].name == "bill");
-      CHECK(p.tables[0].member[0].type == "std::int32_t");
-      CHECK(p.tables[0].member[0].defaultValue.value == "1");
-      CHECK(p.tables[0].member[0].pointer == Pointer::Plain);
+      CHECK(p.types[0].as_Table().member[0].isBaseType);
+      CHECK(!p.types[0].as_Table().member[0].isVector);
+      CHECK(p.types[0].as_Table().member[0].name == "bill");
+      CHECK(p.types[0].as_Table().member[0].type == "std::int32_t");
+      CHECK(p.types[0].as_Table().member[0].defaultValue.value == "1");
+      CHECK(p.types[0].as_Table().member[0].pointer == Pointer::Plain);
 
-      CHECK(!p.tables[0].member[1].isVector);
-      CHECK(p.tables[0].member[1].isBaseType);
-      CHECK(p.tables[0].member[1].name == "aul");
-      CHECK(p.tables[0].member[1].type == "bool");
-      CHECK(p.tables[0].member[1].defaultValue.value == "false");
-      CHECK(p.tables[0].member[1].pointer == Pointer::Plain);
+      CHECK(!p.types[0].as_Table().member[1].isVector);
+      CHECK(p.types[0].as_Table().member[1].isBaseType);
+      CHECK(p.types[0].as_Table().member[1].name == "aul");
+      CHECK(p.types[0].as_Table().member[1].type == "bool");
+      CHECK(p.types[0].as_Table().member[1].defaultValue.value == "false");
+      CHECK(p.types[0].as_Table().member[1].pointer == Pointer::Plain);
 
-      CHECK(!p.tables[0].member[2].isVector);
-      CHECK(p.tables[0].member[2].isBaseType);
-      CHECK(p.tables[0].member[2].name == "kaul");
-      CHECK(p.tables[0].member[2].type == "float");
-      CHECK(p.tables[0].member[2].defaultValue.value == "0.0f");
-      CHECK(p.tables[0].member[2].pointer == Pointer::Plain);
+      CHECK(!p.types[0].as_Table().member[2].isVector);
+      CHECK(p.types[0].as_Table().member[2].isBaseType);
+      CHECK(p.types[0].as_Table().member[2].name == "kaul");
+      CHECK(p.types[0].as_Table().member[2].type == "float");
+      CHECK(p.types[0].as_Table().member[2].defaultValue.value == "0.0f");
+      CHECK(p.types[0].as_Table().member[2].pointer == Pointer::Plain);
 
-      CHECK(p.tables[0].member[3].isVector);
-      CHECK(p.tables[0].member[3].isBaseType);
-      CHECK(p.tables[0].member[3].name == "baul");
-      CHECK(p.tables[0].member[3].type == "float");
-      CHECK(p.tables[0].member[3].defaultValue.value.empty());
-      CHECK(p.tables[0].member[3].pointer == Pointer::Plain);
+      CHECK(p.types[0].as_Table().member[3].isVector);
+      CHECK(p.types[0].as_Table().member[3].isBaseType);
+      CHECK(p.types[0].as_Table().member[3].name == "baul");
+      CHECK(p.types[0].as_Table().member[3].type == "float");
+      CHECK(p.types[0].as_Table().member[3].defaultValue.value.empty());
+      CHECK(p.types[0].as_Table().member[3].pointer == Pointer::Plain);
     }
 
     SECTION("Checking parsed XXX")
     {
-      REQUIRE(p.tables.size() == 2);
+      REQUIRE(p.types.size() == 3);
+      REQUIRE(p.types[0].is_Table());
+      REQUIRE(p.types[1].is_Table());
 
-      CHECK(p.tables[1].name == "YYY");
+      CHECK(p.types[1].as_Table().name == "YYY");
 
-      REQUIRE(p.tables[1].member.size() == 2);
+      REQUIRE(p.types[1].as_Table().member.size() == 2);
 
-      CHECK(!p.tables[1].member[0].isVector);
-      CHECK(!p.tables[1].member[0].isBaseType);
-      CHECK(p.tables[1].member[0].name == "still");
-      CHECK(p.tables[1].member[0].type == "XXX");
-      CHECK(p.tables[1].member[0].defaultValue.value.empty());
-      CHECK(p.tables[1].member[0].pointer == Pointer::Unique);
+      CHECK(!p.types[1].as_Table().member[0].isVector);
+      CHECK(!p.types[1].as_Table().member[0].isBaseType);
+      CHECK(p.types[1].as_Table().member[0].name == "still");
+      CHECK(p.types[1].as_Table().member[0].type == "XXX");
+      CHECK(p.types[1].as_Table().member[0].defaultValue.value.empty());
+      CHECK(p.types[1].as_Table().member[0].pointer == Pointer::Unique);
 
-      CHECK(p.tables[1].member[1].isVector);
-      CHECK(!p.tables[1].member[1].isBaseType);
-      CHECK(p.tables[1].member[1].name == "sub");
-      CHECK(p.tables[1].member[1].type == "YYY");
-      CHECK(p.tables[1].member[1].defaultValue.value.empty());
-      CHECK(p.tables[1].member[1].pointer == Pointer::Shared);
+      CHECK(p.types[1].as_Table().member[1].isVector);
+      CHECK(!p.types[1].as_Table().member[1].isBaseType);
+      CHECK(p.types[1].as_Table().member[1].name == "sub");
+      CHECK(p.types[1].as_Table().member[1].type == "YYY");
+      CHECK(p.types[1].as_Table().member[1].defaultValue.value.empty());
+      CHECK(p.types[1].as_Table().member[1].pointer == Pointer::Shared);
     }
   }
 
@@ -191,16 +195,16 @@ table PointerTypes {
   c:weak Test;
 })");
 
-    REQUIRE((p.tables.size() == 2 && p.tables.back().member.size() == 3));
+    REQUIRE((p.types.size() == 2 && p.types.back().is_Table() && p.types.back().as_Table().member.size() == 3));
 
-    CHECK(!p.tables.back().member[0].isBaseType);
-    CHECK(p.tables.back().member[0].pointer == Pointer::Unique);
+    CHECK(!p.types.back().as_Table().member[0].isBaseType);
+    CHECK(p.types.back().as_Table().member[0].pointer == Pointer::Unique);
 
-    CHECK(!p.tables.back().member[1].isBaseType);
-    CHECK(p.tables.back().member[1].pointer == Pointer::Shared);
+    CHECK(!p.types.back().as_Table().member[1].isBaseType);
+    CHECK(p.types.back().as_Table().member[1].pointer == Pointer::Shared);
 
-    CHECK(!p.tables.back().member[2].isBaseType);
-    CHECK(p.tables.back().member[2].pointer == Pointer::Weak);
+    CHECK(!p.types.back().as_Table().member[2].isBaseType);
+    CHECK(p.types.back().as_Table().member[2].pointer == Pointer::Weak);
   }
 
   SECTION("Vector types")
@@ -219,23 +223,23 @@ table VectorTypes {
   d:[float];
 })");
 
-    REQUIRE((p.tables.size() == 2 && p.tables.back().member.size() == 4));
+    REQUIRE((p.types.size() == 2 && p.types.back().is_Table() && p.types.back().as_Table().member.size() == 4));
 
-    CHECK(!p.tables.back().member[0].isBaseType);
-    CHECK(p.tables.back().member[0].isVector);
-    CHECK(p.tables.back().member[0].pointer == Pointer::Unique);
+    CHECK(!p.types.back().as_Table().member[0].isBaseType);
+    CHECK(p.types.back().as_Table().member[0].isVector);
+    CHECK(p.types.back().as_Table().member[0].pointer == Pointer::Unique);
 
-    CHECK(!p.tables.back().member[1].isBaseType);
-    CHECK(p.tables.back().member[1].isVector);
-    CHECK(p.tables.back().member[1].pointer == Pointer::Shared);
+    CHECK(!p.types.back().as_Table().member[1].isBaseType);
+    CHECK(p.types.back().as_Table().member[1].isVector);
+    CHECK(p.types.back().as_Table().member[1].pointer == Pointer::Shared);
 
-    CHECK(!p.tables.back().member[2].isBaseType);
-    CHECK(p.tables.back().member[2].isVector);
-    CHECK(p.tables.back().member[2].pointer == Pointer::Weak);
+    CHECK(!p.types.back().as_Table().member[2].isBaseType);
+    CHECK(p.types.back().as_Table().member[2].isVector);
+    CHECK(p.types.back().as_Table().member[2].pointer == Pointer::Weak);
 
-    CHECK(p.tables.back().member[3].isBaseType);
-    CHECK(p.tables.back().member[3].isVector);
-    CHECK(p.tables.back().member[3].pointer == Pointer::Plain);
+    CHECK(p.types.back().as_Table().member[3].isBaseType);
+    CHECK(p.types.back().as_Table().member[3].isVector);
+    CHECK(p.types.back().as_Table().member[3].pointer == Pointer::Plain);
   }
 
   SECTION("Enums as member")
@@ -251,8 +255,8 @@ table VectorTypes {
   a:Test;
 })");
 
-    CHECK((p.enums.size() == 1 && p.enums.back().entries.size() == 3));
-    CHECK((p.tables.size() == 1 && p.tables.back().member.size() == 1));
+    CHECK((p.types.size() == 2 && p.types.front().is_Enum() && p.types.front().as_Enum().entries.size() == 3));
+    CHECK((p.types.size() == 2 && p.types.back().is_Table() && p.types.back().as_Table().member.size() == 1));
   }
 
   SECTION("default values for enums")
@@ -270,11 +274,11 @@ table Dummy
   en2:EnumTypes=delta;
 })");
 
-    REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 4));
-    REQUIRE((p.tables.size() == 1 && p.tables.back().member.size() == 2));
+    REQUIRE((p.types.size() == 2 && p.types.front().is_Enum() && p.types.front().as_Enum().entries.size() == 4));
+    REQUIRE((p.types.size() == 2 && p.types.back().is_Table() && p.types.back().as_Table().member.size() == 2));
 
-    CHECK(p.tables[0].member[0].defaultValue.value == "Scope::Sub::EnumTypes::alpha");
-    CHECK(p.tables[0].member[1].defaultValue.value == "Scope::Sub::EnumTypes::delta");
+    CHECK(p.types[1].as_Table().member[0].defaultValue.value == "Scope::Sub::EnumTypes::alpha");
+    CHECK(p.types[1].as_Table().member[1].defaultValue.value == "Scope::Sub::EnumTypes::delta");
   }
 
   SECTION("default values for enums without package")
@@ -291,11 +295,11 @@ table Dummy
   en2:EnumTypes=delta;
 })");
 
-    REQUIRE((p.enums.size() == 1 && p.enums.back().entries.size() == 4));
-    REQUIRE((p.tables.size() == 1 && p.tables.back().member.size() == 2));
+    REQUIRE((p.types.size() == 2 && p.types.front().is_Enum() && p.types.front().as_Enum().entries.size() == 4));
+    REQUIRE((p.types.size() == 2 && p.types.back().is_Table() && p.types.back().as_Table().member.size() == 2));
 
-    CHECK(p.tables[0].member[0].defaultValue.value == "EnumTypes::alpha");
-    CHECK(p.tables[0].member[1].defaultValue.value == "EnumTypes::delta");
+    CHECK(p.types[1].as_Table().member[0].defaultValue.value == "EnumTypes::alpha");
+    CHECK(p.types[1].as_Table().member[1].defaultValue.value == "EnumTypes::delta");
   }
 
   SECTION("empty table or enum")
@@ -342,19 +346,19 @@ table Dummy
           "  init();\n"
           "}");
 
-      REQUIRE(p.tables.size() == 1);
+      REQUIRE((p.types.size() == 1 && p.types[0].is_Table()));
 
-      REQUIRE(p.tables[0].methods.size() == 3);
-      CHECK(p.tables[0].methods[0].name == "init");
-      CHECK(p.tables[0].methods[1].name == "init");
-      CHECK(p.tables[0].methods[2].name == "init");
+      REQUIRE(p.types[0].as_Table().methods.size() == 3);
+      CHECK(p.types[0].as_Table().methods[0].name == "init");
+      CHECK(p.types[0].as_Table().methods[1].name == "init");
+      CHECK(p.types[0].as_Table().methods[2].name == "init");
 
-      REQUIRE(p.tables[0].methods[0].parameter.size() == 2);
-      CHECK(p.tables[0].methods[0].parameter[0].name == "a");
-      CHECK(p.tables[0].methods[0].parameter[1].name == "b");
+      REQUIRE(p.types[0].as_Table().methods[0].parameter.size() == 2);
+      CHECK(p.types[0].as_Table().methods[0].parameter[0].name == "a");
+      CHECK(p.types[0].as_Table().methods[0].parameter[1].name == "b");
 
-      CHECK(p.tables[0].methods[1].parameter.size() == 1);
-      CHECK(p.tables[0].methods[2].parameter.empty());
+      CHECK(p.types[0].as_Table().methods[1].parameter.size() == 1);
+      CHECK(p.types[0].as_Table().methods[2].parameter.empty());
     }
   }
 
@@ -371,12 +375,12 @@ table Dummy
     SECTION("parsing content test")
     {
       const auto p = parse("union U { A, B }\n");
-      REQUIRE(p.unions.size() == 1);
-      CHECK(p.unions[0].name == "U");
+      REQUIRE((p.types.size() == 1 && p.types[0].is_Union()));
+      CHECK(p.types[0].as_Union().name == "U");
 
-      REQUIRE(p.unions[0].tables.size() == 2);
-      CHECK(p.unions[0].tables[0].value == "A");
-      CHECK(p.unions[0].tables[1].value == "B");
+      REQUIRE(p.types[0].as_Union().tables.size() == 2);
+      CHECK(p.types[0].as_Union().tables[0].value == "A");
+      CHECK(p.types[0].as_Union().tables[1].value == "B");
     }
   }
 }

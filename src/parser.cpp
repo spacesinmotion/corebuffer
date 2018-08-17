@@ -260,7 +260,7 @@ bool Parser::readTable()
           return true;
         }))
     {
-      package.tables.push_back(t);
+      package.types.emplace_back(t);
       return true;
     }
   }
@@ -285,7 +285,7 @@ bool Parser::readEnum()
           return true;
         }))
     {
-      package.enums.push_back(e);
+      package.types.emplace_back(e);
       return true;
     }
   }
@@ -310,7 +310,7 @@ bool Parser::readUnion()
           return true;
         }))
     {
-      package.unions.push_back(u);
+      package.types.emplace_back(u);
       return true;
     }
   }
@@ -743,9 +743,9 @@ void Parser::initBaseTypes()
 
 Table *Parser::tableForType(const std::string &name)
 {
-  for (auto &t : package.tables)
-    if (t.name == name)
-      return &t;
+  for (auto &t : package.types)
+    if (t.is_Table() && t.as_Table().name == name)
+      return &t.as_Table();
   for (auto &t : package.baseTypes)
     if (t.name == name)
       return &t;
@@ -754,17 +754,17 @@ Table *Parser::tableForType(const std::string &name)
 
 Union *Parser::unionForType(const std::string &name)
 {
-  for (auto &u : package.unions)
-    if (u.name == name)
-      return &u;
+  for (auto &u : package.types)
+    if (u.is_Union() && u.as_Union().name == name)
+      return &u.as_Union();
   return nullptr;
 }
 
 Enum *Parser::enumForType(const std::string &name)
 {
-  for (auto &e : package.enums)
-    if (e.name == name)
-      return &e;
+  for (auto &e : package.types)
+    if (e.is_Enum() && e.as_Enum().name == name)
+      return &e.as_Enum();
   return nullptr;
 }
 
@@ -793,9 +793,11 @@ void updateAppearance(T *t, const Member &m)
 
 void Parser::updateTableAppearance()
 {
-  for (auto &t : package.tables)
+  for (auto &t : package.types)
   {
-    for (auto &m : t.member)
+    if (!t.is_Table())
+      continue;
+    for (auto &m : t.as_Table().member)
     {
       if (aliases.find(m.type) != aliases.end())
       {
