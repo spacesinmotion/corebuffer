@@ -6,6 +6,7 @@
 #include <istream>
 #include <memory>
 #include <array>
+#include <algorithm>
 #include <type_traits>
 
 namespace Scope {
@@ -134,6 +135,79 @@ struct Dummy {
       || l.en2 != r.en2
       || l.en3 != r.en3;
   }
+  template<class T> void fill_en3(const T &v) {
+    std::fill(en3.begin(), en3.end(), v);
+  }
+
+  template<class Generator> void generate_en3(Generator gen) {
+    std::generate(en3.begin(), en3.end(), gen);
+  }
+
+  template<class T> std::vector<EnumTypes>::iterator remove_en3(const T &v) {
+    return std::remove(en3.begin(), en3.end(), v);
+  }
+  template<class Pred> std::vector<EnumTypes>::iterator remove_en3_if(Pred v) {
+    return std::remove_if(en3.begin(), en3.end(), v);
+  }
+
+  template<class T> void erase_en3(const T &v) {
+    en3.erase(remove_en3(v));
+  }
+  template<class Pred> void erase_en3_if(Pred v) {
+    en3.erase(remove_en3_if(v));
+  }
+
+  void reverse_en3() {
+    std::reverse(en3.begin(), en3.end());
+  }
+
+  void rotate_en3(std::vector<EnumTypes>::iterator i) {
+    std::rotate(en3.begin(), i, en3.end());
+  }
+
+  template<class Comp> void sort_en3(Comp p) {
+    std::sort(en3.begin(), en3.end(), p);
+  }
+
+  template<class Comp> bool any_of_en3(Comp p) {
+    return std::any_of(en3.begin(), en3.end(), p);
+  }
+  template<class T> bool any_of_en3_is(const T &p) {
+    return any_of_en3([&p](const EnumTypes &x) { return p == x; });
+  }
+
+  template<class Comp> bool all_of_en3(Comp p) {
+    return std::all_of(en3.begin(), en3.end(), p);
+  }
+  template<class T> bool all_of_en3_are(const T &p) {
+    return all_of_en3([&p](const EnumTypes &x) { return p == x; });
+  }
+
+  template<class Comp> bool none_of_en3(Comp p) {
+    return std::none_of(en3.begin(), en3.end(), p);
+  }
+  template<class T> bool none_of_en3_is(const T &p) {
+    return none_of_en3([&p](const EnumTypes &x) { return p == x; });
+  }
+
+  template<class Fn> Fn for_each_en3(Fn p) {
+    return std::for_each(en3.begin(), en3.end(), p);
+  }
+
+  template<class T> std::vector<EnumTypes>::iterator find_in_en3(const T &p) {
+    return std::find(en3.begin(), en3.end(), p);
+  }
+  template<class Comp> std::vector<EnumTypes>::iterator find_in_en3_if(Comp p) {
+    return std::find_if(en3.begin(), en3.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<EnumTypes>::iterator>::difference_type count_in_en3(const T &p) {
+    return std::count(en3.begin(), en3.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<EnumTypes>::iterator>::difference_type count_in_en3_if(Comp p) {
+    return std::count_if(en3.begin(), en3.end(), p);
+  }
+
 };
 
 struct Dummy_io {
