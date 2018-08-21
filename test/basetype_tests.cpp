@@ -159,11 +159,20 @@ TEST_CASE("base type output test", "[output, base types]")
     }
   }
 
-  SECTION("vector algorithm")
+  SECTION("vector algorithm int")
   {
     PointerBaseTypes p;
     p.x.resize(3, 0);
     REQUIRE(p.x.size() == 3);
+    int x = 0;
+    p.generate_x([&x]() { return x++; });
+
+    SECTION("generate")
+    {
+      CHECK(p.x[0] == 0);
+      CHECK(p.x[1] == 1);
+      CHECK(p.x[2] == 2);
+    }
 
     SECTION("fill")
     {
@@ -174,20 +183,8 @@ TEST_CASE("base type output test", "[output, base types]")
       CHECK(p.x[2] == 42);
     }
 
-    SECTION("generate")
-    {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
-      CHECK(p.x[0] == 0);
-      CHECK(p.x[1] == 1);
-      CHECK(p.x[2] == 2);
-    }
-
     SECTION("remove")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
       auto e = p.remove_x(1);
 
       CHECK(e == p.x.end() - 1);
@@ -198,8 +195,6 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("remove_if")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
       auto e = p.remove_x_if([](int i) { return i % 2 == 1; });
 
       CHECK(e == p.x.end() - 1);
@@ -210,8 +205,6 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("erase")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
       p.erase_x(1);
 
       CHECK(2 == p.x.size());
@@ -221,8 +214,6 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("erase_if")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
       p.erase_x_if([](int i) { return i % 2 == 1; });
 
       CHECK(2 == p.x.size());
@@ -232,8 +223,6 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("reverse")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
       p.reverse_x();
 
       REQUIRE(3 == p.x.size());
@@ -244,8 +233,6 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("rotate")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
       p.rotate_x(p.x.begin() + 1);
 
       REQUIRE(3 == p.x.size());
@@ -282,45 +269,30 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("any of")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK(p.any_of_x([](int x) { return x == 1; }));
       CHECK_FALSE(p.any_of_x([](int x) { return x == 42; }));
     }
 
     SECTION("all of")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK_FALSE(p.all_of_x([](int x) { return x == 1; }));
       CHECK(p.any_of_x([](int x) { return x >= 0; }));
     }
 
     SECTION("none of")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK_FALSE(p.none_of_x([](int x) { return x == 1; }));
       CHECK(p.none_of_x([](int x) { return x < 0; }));
     }
 
     SECTION("any of is")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK(p.any_of_x_is(1));
       CHECK_FALSE(p.any_of_x_is(42));
     }
 
     SECTION("all of are")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK_FALSE(p.all_of_x_are(1));
       p.x[0] = 1;
       p.x[2] = 1;
@@ -329,18 +301,12 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("none of value")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK_FALSE(p.none_of_x_is(1));
       CHECK(p.none_of_x_is(42));
     }
 
     SECTION("for each")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       x = 0;
       p.for_each_x([&x](int i) { x += i; });
 
@@ -349,38 +315,205 @@ TEST_CASE("base type output test", "[output, base types]")
 
     SECTION("find")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK(p.find_in_x(1) == p.x.begin() + 1);
       CHECK(p.find_in_x(42) == p.x.end());
     }
 
     SECTION("find if")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK(p.find_in_x_if([](int x) { return x == 1; }) == p.x.begin() + 1);
       CHECK(p.find_in_x_if([](int x) { return x == 42; }) == p.x.end());
     }
 
     SECTION("count")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK(p.count_in_x(1) == 1);
       CHECK(p.count_in_x(42) == 0);
     }
 
     SECTION("count if")
     {
-      int x = 0;
-      p.generate_x([&x]() { return x++; });
-
       CHECK(p.count_in_x_if([](int x) { return x == 1; }) == 1);
       CHECK(p.count_in_x_if([](int x) { return x % 2 == 0; }) == 2);
+    }
+  }
+
+  SECTION("vector algorithm string")
+  {
+    PointerBaseTypes p;
+    p.b1.resize(3);
+    REQUIRE(p.b1.size() == 3);
+    std::string x;
+    p.generate_b1([&x]() { return x += "x"; });
+
+    SECTION("generate")
+    {
+      CHECK(p.b1[0] == "x");
+      CHECK(p.b1[1] == "xx");
+      CHECK(p.b1[2] == "xxx");
+    }
+
+    SECTION("fill")
+    {
+      p.fill_b1("42");
+
+      CHECK(p.b1[0] == "42");
+      CHECK(p.b1[1] == "42");
+      CHECK(p.b1[2] == "42");
+    }
+
+    SECTION("remove")
+    {
+      auto e = p.remove_b1("xx");
+
+      CHECK(e == p.b1.end() - 1);
+      CHECK(3 == p.b1.size());
+      CHECK(p.b1[0] == "x");
+      CHECK(p.b1[1] == "xxx");
+    }
+
+    SECTION("remove_if")
+    {
+      auto e = p.remove_b1_if([](const std::string &b) { return b == "xx"; });
+
+      CHECK(e == p.b1.end() - 1);
+      CHECK(3 == p.b1.size());
+      CHECK(p.b1[0] == "x");
+      CHECK(p.b1[1] == "xxx");
+    }
+
+    SECTION("erase")
+    {
+      p.erase_b1("xx");
+
+      CHECK(2 == p.b1.size());
+      CHECK(p.b1[0] == "x");
+      CHECK(p.b1[1] == "xxx");
+    }
+
+    SECTION("erase_if")
+    {
+      p.erase_b1_if([](const std::string &b) { return b == "xx"; });
+
+      CHECK(2 == p.b1.size());
+      CHECK(p.b1[0] == "x");
+      CHECK(p.b1[1] == "xxx");
+    }
+
+    SECTION("reverse")
+    {
+      p.reverse_b1();
+
+      REQUIRE(3 == p.b1.size());
+      CHECK(p.b1[0] == "xxx");
+      CHECK(p.b1[1] == "xx");
+      CHECK(p.b1[2] == "x");
+    }
+
+    SECTION("rotate")
+    {
+      p.rotate_b1(p.b1.begin() + 1);
+
+      REQUIRE(3 == p.b1.size());
+      CHECK(p.b1[0] == "xx");
+      CHECK(p.b1[1] == "xxx");
+      CHECK(p.b1[2] == "x");
+    }
+
+    SECTION("sort")
+    {
+      p.b1[0] = "32";
+      p.b1[1] = "124";
+      p.b1[2] = "42";
+      p.sort_b1();
+
+      REQUIRE(3 == p.b1.size());
+      CHECK(p.b1[0] == "124");
+      CHECK(p.b1[1] == "32");
+      CHECK(p.b1[2] == "42");
+    }
+
+    SECTION("sort with comparator")
+    {
+      p.b1[0] = "32";
+      p.b1[1] = "124";
+      p.b1[2] = "42";
+      p.sort_b1([](const std::string &l, const std::string &r) { return l > r; });
+
+      REQUIRE(3 == p.b1.size());
+      CHECK(p.b1[0] == "42");
+      CHECK(p.b1[1] == "32");
+      CHECK(p.b1[2] == "124");
+    }
+
+    SECTION("any of")
+    {
+      CHECK(p.any_of_b1([](const std::string &x) { return x == "xx"; }));
+      CHECK_FALSE(p.any_of_b1([](const std::string &x) { return x == "42"; }));
+    }
+
+    SECTION("all of")
+    {
+      CHECK(p.all_of_b1([](const std::string &x) { return !x.empty() && x[0] == 'x'; }));
+      CHECK_FALSE(p.all_of_b1([](const std::string &x) { return x.size() == 2; }));
+    }
+
+    SECTION("none of")
+    {
+      CHECK_FALSE(p.none_of_b1([](const std::string &x) { return !x.empty() && x[0] == 'x'; }));
+      CHECK_FALSE(p.none_of_b1([](const std::string &x) { return x.size() == 2; }));
+      CHECK(p.none_of_b1([](const std::string &x) { return x.size() > 3; }));
+    }
+
+    SECTION("any of is")
+    {
+      CHECK(p.any_of_b1_is("xx"));
+      CHECK_FALSE(p.any_of_b1_is("42"));
+    }
+
+    SECTION("all of are")
+    {
+      CHECK_FALSE(p.all_of_b1_are("42"));
+      p.fill_b1("42");
+      CHECK(p.b1.size() == 3);
+      CHECK(p.all_of_b1_are("42"));
+    }
+
+    SECTION("none of value")
+    {
+      CHECK_FALSE(p.none_of_b1_is("x"));
+      CHECK(p.none_of_b1_is("42"));
+    }
+
+    SECTION("for each")
+    {
+      std::string x;
+      p.for_each_b1([&x](const std::string &i) { x += i; });
+      CHECK(x == std::string("x") + "xx" + "xxx");
+    }
+
+    SECTION("find")
+    {
+      CHECK(p.find_in_b1("xx") == p.b1.begin() + 1);
+      CHECK(p.find_in_b1("42") == p.b1.end());
+    }
+
+    SECTION("find if")
+    {
+      CHECK(p.find_in_b1_if([](const std::string &x) { return x == "xx"; }) == p.b1.begin() + 1);
+      CHECK(p.find_in_b1_if([](const std::string &x) { return x == "42"; }) == p.b1.end());
+    }
+
+    SECTION("count")
+    {
+      CHECK(p.count_in_b1("xx") == 1);
+      CHECK(p.count_in_b1("42") == 0);
+    }
+
+    SECTION("count if")
+    {
+      CHECK(p.count_in_b1_if([](const std::string &x) { return x.size() % 2 == 1; }) == 2);
+      CHECK(p.count_in_b1_if([](const std::string &x) { return x.size() > 42; }) == 0);
     }
   }
 }

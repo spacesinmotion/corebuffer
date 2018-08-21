@@ -5,39 +5,41 @@
 
 #include <sstream>
 
+using namespace Scope;
+
 TEST_CASE("TableType test", "[output, table]")
 {
   SECTION("Compare operator")
   {
-    CHECK(Scope::TableA() == Scope::TableA());
-    CHECK_FALSE(Scope::TableA() != Scope::TableA());
+    CHECK(TableA() == TableA());
+    CHECK_FALSE(TableA() != TableA());
 
-    CHECK(Scope::TableB() == Scope::TableB());
-    CHECK_FALSE(Scope::TableB() != Scope::TableB());
+    CHECK(TableB() == TableB());
+    CHECK_FALSE(TableB() != TableB());
 
-    CHECK(Scope::TableC() == Scope::TableC());
-    CHECK_FALSE(Scope::TableC() != Scope::TableC());
+    CHECK(TableC() == TableC());
+    CHECK_FALSE(TableC() != TableC());
   }
 
   SECTION("reading whats written")
   {
-    Scope::TableB b;
+    TableB b;
     b.name = "TableB";
-    Scope::TableC c;
+    TableC c;
     c.a.emplace_back();
     c.a.front().name = "TableA";
     c.b.emplace_back(b);
 
-    Scope::TableC cIn;
+    TableC cIn;
     CHECK_FALSE(c == cIn);
 
     std::stringstream sOut;
-    Scope::TableC_io().WriteTableC(sOut, c);
+    TableC_io().WriteTableC(sOut, c);
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
 
-    Scope::TableC_io().ReadTableC(sIn, cIn);
+    TableC_io().ReadTableC(sIn, cIn);
 
     CHECK(c == cIn);
   }
@@ -46,24 +48,24 @@ TEST_CASE("TableType test", "[output, table]")
   {
     std::stringstream sOut;
     {
-      Scope::TableC c;
+      TableC c;
       c.a.emplace_back();
       c.a.front().name = "TableA";
-      c.a.front().d1.reset(new Scope::TableD());
+      c.a.front().d1.reset(new TableD());
       c.a.front().d1->name = "TableD_1";
-      c.a.front().d3 = std::make_shared<Scope::TableD>();
+      c.a.front().d3 = std::make_shared<TableD>();
       c.a.front().d3->name = "TableD_3";
       c.a.front().d2 = c.a.front().d3;
       c.a.front().d4 = c.a.front().d3;
 
-      Scope::TableC_io().WriteTableC(sOut, c);
+      TableC_io().WriteTableC(sOut, c);
     }
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
 
-    Scope::TableC cIn;
-    Scope::TableC_io().ReadTableC(sIn, cIn);
+    TableC cIn;
+    TableC_io().ReadTableC(sIn, cIn);
 
     REQUIRE(cIn.a.size() == 1);
     CHECK(cIn.a.front().name == "TableA");
@@ -87,24 +89,24 @@ TEST_CASE("TableType test", "[output, table]")
     std::stringstream sOut;
 
     {
-      Scope::TableC c;
+      TableC c;
       c.a.emplace_back();
       c.a.front().name = "TableA";
-      c.a.front().d3 = std::make_shared<Scope::TableD>();
+      c.a.front().d3 = std::make_shared<TableD>();
       c.a.front().d3->name = "TableD_3";
-      c.a.front().d3->a = std::make_shared<Scope::TableA>();
+      c.a.front().d3->a = std::make_shared<TableA>();
       c.a.front().d3->a->d2 = c.a.front().d3;
       c.a.front().d3->a->d3 = c.a.front().d3;
       c.a.front().d3->a->d4 = c.a.front().d3;
 
-      Scope::TableC_io().WriteTableC(sOut, c);
+      TableC_io().WriteTableC(sOut, c);
     }
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
 
-    Scope::TableC cIn;
-    Scope::TableC_io().ReadTableC(sIn, cIn);
+    TableC cIn;
+    TableC_io().ReadTableC(sIn, cIn);
 
     REQUIRE(cIn.a.size() == 1);
     CHECK(cIn.a.front().name == "TableA");
@@ -125,22 +127,22 @@ TEST_CASE("TableType test", "[output, table]")
   {
     std::stringstream sOut;
     {
-      Scope::TableC c;
-      c.c.emplace_back(new Scope::TableA);
+      TableC c;
+      c.c.emplace_back(new TableA);
       c.c.back()->name = "TableA_c";
-      c.d.emplace_back(new Scope::TableB);
+      c.d.emplace_back(new TableB);
       c.d.back()->name = "TableB_d";
       c.d.push_back(c.d.front());
       c.e.push_back(c.d.front());
       c.e.push_back(c.d.front());
-      Scope::TableC_io().WriteTableC(sOut, c);
+      TableC_io().WriteTableC(sOut, c);
     }
 
     const auto buffer = sOut.str();
     std::stringstream sIn(buffer);
 
-    Scope::TableC cIn;
-    Scope::TableC_io().ReadTableC(sIn, cIn);
+    TableC cIn;
+    TableC_io().ReadTableC(sIn, cIn);
 
     REQUIRE(cIn.c.size() == 1);
     REQUIRE(cIn.d.size() == 2);
@@ -161,8 +163,8 @@ TEST_CASE("TableType test", "[output, table]")
 
   SECTION("Compare operations")
   {
-    Scope::TableD d1;
-    Scope::TableD d2;
+    TableD d1;
+    TableD d2;
     CHECK(d1 == d2);
     CHECK_FALSE(d1 != d2);
 
@@ -175,27 +177,27 @@ TEST_CASE("TableType test", "[output, table]")
 
   SECTION("Reading fails with wrong data")
   {
-    Scope::TableC c;
+    TableC c;
 
     std::stringstream s1("FALSE");
-    CHECK_FALSE(Scope::TableC_io().ReadTableC(s1, c));
+    CHECK_FALSE(TableC_io().ReadTableC(s1, c));
 
     std::stringstream s2("COREfails");
-    CHECK_FALSE(Scope::TableC_io().ReadTableC(s2, c));
+    CHECK_FALSE(TableC_io().ReadTableC(s2, c));
   }
 
   SECTION("initializing methods with pointer")
   {
-    auto d = std::make_shared<Scope::TableD>();
+    auto d = std::make_shared<TableD>();
 
-    auto _inited = Scope::TableA(d);
+    auto _inited = TableA(d);
 
     CHECK(nullptr == _inited.d1);
     CHECK(nullptr == _inited.d2.lock());
     CHECK(d == _inited.d3);
     CHECK(nullptr == _inited.d4);
 
-    _inited = Scope::TableA(d, std::unique_ptr<Scope::TableD>(new Scope::TableD));
+    _inited = TableA(d, std::unique_ptr<TableD>(new TableD));
 
     CHECK(nullptr != _inited.d1);
     CHECK(d == _inited.d2.lock());
@@ -205,12 +207,180 @@ TEST_CASE("TableType test", "[output, table]")
 
   SECTION("initializing methods vector of unique pointer")
   {
-    std::vector<std::unique_ptr<Scope::TableA>> list;
-    list.emplace_back(new Scope::TableA);
-    list.emplace_back(new Scope::TableA);
+    std::vector<std::unique_ptr<TableA>> list;
+    list.emplace_back(new TableA);
+    list.emplace_back(new TableA);
 
-    Scope::TableC _inited(std::move(list));
+    TableC _inited(std::move(list));
 
     CHECK(_inited.c.size() == 2);
+  }
+
+  SECTION("vector algorithm table")
+  {
+    TableC p;
+    p.b.emplace_back("x");
+    p.b.emplace_back("xx");
+    p.b.emplace_back("xxx");
+    REQUIRE(p.b.size() == 3);
+
+    SECTION("generate")
+    {
+      std::string x("x");
+      p.generate_b([&x]() { return TableB(x += "x"); });
+      CHECK(p.b[0] == TableB("xx"));
+      CHECK(p.b[1] == TableB("xxx"));
+      CHECK(p.b[2] == TableB("xxxx"));
+    }
+
+    SECTION("fill")
+    {
+      p.fill_b(TableB("42"));
+
+      CHECK(p.b[0] == TableB("42"));
+      CHECK(p.b[1] == TableB("42"));
+      CHECK(p.b[2] == TableB("42"));
+    }
+
+    SECTION("remove")
+    {
+      auto e = p.remove_b(TableB("xx"));
+
+      CHECK(e == p.b.end() - 1);
+      CHECK(3 == p.b.size());
+      CHECK(p.b[0] == TableB("x"));
+      CHECK(p.b[1] == TableB("xxx"));
+    }
+
+    SECTION("remove_if")
+    {
+      auto e = p.remove_b_if([](const TableB &b) { return b == TableB("xx"); });
+
+      CHECK(e == p.b.end() - 1);
+      CHECK(3 == p.b.size());
+      CHECK(p.b[0] == TableB("x"));
+      CHECK(p.b[1] == TableB("xxx"));
+    }
+
+    SECTION("erase")
+    {
+      p.erase_b(TableB("xx"));
+
+      CHECK(2 == p.b.size());
+      CHECK(p.b[0] == TableB("x"));
+      CHECK(p.b[1] == TableB("xxx"));
+    }
+
+    SECTION("erase_if")
+    {
+      p.erase_b_if([](const TableB &b) { return b == TableB("xx"); });
+
+      CHECK(2 == p.b.size());
+      CHECK(p.b[0] == TableB("x"));
+      CHECK(p.b[1] == TableB("xxx"));
+    }
+
+    SECTION("reverse")
+    {
+      p.reverse_b();
+
+      REQUIRE(3 == p.b.size());
+      CHECK(p.b[0] == TableB("xxx"));
+      CHECK(p.b[1] == TableB("xx"));
+      CHECK(p.b[2] == TableB("x"));
+    }
+
+    SECTION("rotate")
+    {
+      p.rotate_b(p.b.begin() + 1);
+
+      REQUIRE(3 == p.b.size());
+      CHECK(p.b[0] == TableB("xx"));
+      CHECK(p.b[1] == TableB("xxx"));
+      CHECK(p.b[2] == TableB("x"));
+    }
+
+    SECTION("sort with comparator")
+    {
+      p.b[0] = TableB("32");
+      p.b[1] = TableB("124");
+      p.b[2] = TableB("42");
+      p.sort_b([](const TableB &l, const TableB &r) { return l.name > r.name; });
+
+      REQUIRE(3 == p.b.size());
+      CHECK(p.b[0] == TableB("42"));
+      CHECK(p.b[1] == TableB("32"));
+      CHECK(p.b[2] == TableB("124"));
+    }
+
+    SECTION("any of")
+    {
+      CHECK(p.any_of_b([](const TableB &x) { return x.name == "xx"; }));
+      CHECK_FALSE(p.any_of_b([](const TableB &x) { return x.name == "42"; }));
+    }
+
+    SECTION("all of")
+    {
+      CHECK(p.all_of_b([](const TableB &x) { return !x.name.empty() && x.name[0] == 'x'; }));
+      CHECK_FALSE(p.all_of_b([](const TableB &x) { return x.name.size() == 2; }));
+    }
+
+    SECTION("none of")
+    {
+      CHECK_FALSE(p.none_of_b([](const TableB &x) { return !x.name.empty() && x.name[0] == 'x'; }));
+      CHECK_FALSE(p.none_of_b([](const TableB &x) { return x.name.size() == 2; }));
+      CHECK(p.none_of_b([](const TableB &x) { return x.name.size() > 3; }));
+    }
+
+    SECTION("any of is")
+    {
+      CHECK(p.any_of_b_is(TableB("xx")));
+      CHECK_FALSE(p.any_of_b_is(TableB("42")));
+    }
+
+    SECTION("all of are")
+    {
+      CHECK_FALSE(p.all_of_b_are(TableB("42")));
+      p.fill_b(TableB("42"));
+      CHECK(p.b.size() == 3);
+      CHECK(p.all_of_b_are(TableB("42")));
+    }
+
+    SECTION("none of value")
+    {
+      CHECK_FALSE(p.none_of_b_is(TableB("x")));
+      CHECK(p.none_of_b_is(TableB("42")));
+    }
+
+    SECTION("for each")
+    {
+      std::string x;
+      p.for_each_b([&x](const TableB &i) { x += i.name; });
+      CHECK(x == std::string("x") + "xx" + "xxx");
+    }
+
+    SECTION("find")
+    {
+      CHECK(p.find_in_b(TableB("xx").name) == p.b.begin() + 1);
+      CHECK(p.find_in_b(TableB("42").name) == p.b.end());
+    }
+
+    SECTION("find if")
+    {
+      CHECK(p.find_in_b_if([](const TableB &x) { return x.name == "xx"; }) == p.b.begin() + 1);
+      CHECK(p.find_in_b_if([](const TableB &x) { return x.name == "42"; }) == p.b.end());
+    }
+
+    SECTION("count")
+    {
+      CHECK(p.count_in_b(TableB("xx")) == 1);
+      CHECK(p.count_in_b(TableB("42")) == 0);
+    }
+
+    SECTION("count if")
+    {
+      CHECK(p.count_in_b_if([](const TableB &x) { return x.name.size() % 2 == 1; }) == 2);
+      CHECK(p.count_in_b_if([](const TableB &x) { return x.name.size() > 42; }) == 0);
+    }
   }
 }

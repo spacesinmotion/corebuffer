@@ -9,12 +9,14 @@ table TableA {
   d3:shared TableD;
   d4:shared TableD;
 
+  init(name);
   init(d3);
   init(d2, d1);
 }
 
 table TableB {
   name:string;
+  init(name);
 }
 
 table TableD {

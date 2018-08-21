@@ -35,6 +35,9 @@ struct TableA {
   std::shared_ptr<TableD> d4;
 
   TableA() = default;
+  TableA(const std::string &name_)
+    : name(name_)
+  {}
   TableA(const std::shared_ptr<TableD> &d3_)
     : d3(d3_)
   {}
@@ -70,6 +73,9 @@ struct TableB {
   std::string name;
 
   TableB() = default;
+  TableB(const std::string &name_)
+    : name(name_)
+  {}
 
   friend bool operator==(const TableB&l, const TableB&r) {
     return 
