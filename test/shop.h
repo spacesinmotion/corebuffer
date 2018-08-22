@@ -83,6 +83,7 @@ struct Order {
       l.items != r.items
       || l.customer != r.customer;
   }
+
   template<class T> void fill_items(const T &v) {
     std::fill(items.begin(), items.end(), v);
   }
@@ -155,7 +156,6 @@ struct Order {
   template<class Comp>   typename std::iterator_traits<std::vector<std::shared_ptr<Item>>::iterator>::difference_type count_in_items_if(Comp p) {
     return std::count_if(items.begin(), items.end(), p);
   }
-
 };
 
 struct Shop {
@@ -178,6 +178,7 @@ struct Shop {
       || l.customers != r.customers
       || l.orders != r.orders;
   }
+
   template<class T> void fill_items(const T &v) {
     std::fill(items.begin(), items.end(), v);
   }
@@ -396,7 +397,6 @@ struct Shop {
   template<class Comp>   typename std::iterator_traits<std::vector<Order>::iterator>::difference_type count_in_orders_if(Comp p) {
     return std::count_if(orders.begin(), orders.end(), p);
   }
-
 };
 
 struct Shop_io {

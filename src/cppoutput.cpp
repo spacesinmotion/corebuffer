@@ -19,6 +19,12 @@ bool any_union_of(const Package &p, const Predicate &pr)
   return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Union() && pr(u.as_Union()); });
 }
 
+template <typename Predicate>
+bool any_enum_of(const Package &p, const Predicate &pr)
+{
+  return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Enum() && pr(u.as_Enum()); });
+}
+
 template <class T>
 bool hasUniqueAppearance(const T &t)
 {
@@ -100,6 +106,19 @@ bool hasVectorOfString(const Package &p)
     return any_of(t.member.begin(), t.member.end(),
                   [](const Member &m) { return m.isBaseType && m.isVector && m.type == "std::string"; });
   });
+}
+
+bool hasPlainString(const Package &p)
+{
+  return any_table_of(p, [](const Table &t) {
+    return any_of(t.member.begin(), t.member.end(),
+                  [](const Member &m) { return m.isBaseType && !m.isVector && m.type == "std::string"; });
+  });
+}
+
+bool isEnum(const Package &p, const string &type)
+{
+  return any_enum_of(p, [&type](const Enum &e) { return e.name == type; });
 }
 
 void WriteNameSpaceBegin(ostream &o, const string &path, int pos = 0)
@@ -266,10 +285,13 @@ void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
     o << "  }" << endl << endl;
   }
 
-  o << "  void Write(std::ostream &o, const std::string &v) {" << endl;
-  o << "    Write(o, v.size());" << endl;
-  o << "    o.write(v.data(), v.size());" << endl;
-  o << "  }" << endl << endl;
+  if (hasPlainString(p))
+  {
+    o << "  void Write(std::ostream &o, const std::string &v) {" << endl;
+    o << "    Write(o, v.size());" << endl;
+    o << "    o.write(v.data(), v.size());" << endl;
+    o << "  }" << endl << endl;
+  }
 
   o << "  template<typename T> void Read(std::istream &i, T &v) {" << endl;
   o << "    i.read(reinterpret_cast<char *>(&v), sizeof(T));" << endl;
@@ -367,12 +389,15 @@ void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
     o << "  }" << endl << endl;
   }
 
-  o << "  void Read(std::istream &i, std::string &v) {" << endl;
-  o << "    std::string::size_type s{0};" << endl;
-  o << "    Read(i, s);" << endl;
-  o << "    v.resize(s);" << endl;
-  o << "    i.read(&v[0], s);" << endl;
-  o << "  }" << endl << endl;
+  if (hasPlainString(p))
+  {
+    o << "  void Read(std::istream &i, std::string &v) {" << endl;
+    o << "    std::string::size_type s{0};" << endl;
+    o << "    Read(i, s);" << endl;
+    o << "    v.resize(s);" << endl;
+    o << "    i.read(&v[0], s);" << endl;
+    o << "  }" << endl << endl;
+  }
 }
 
 ostream &WriteType(ostream &o, const Member &m)
@@ -502,11 +527,12 @@ void WriteTableCompareFunctions(ostream &o, const Table &t)
   o << "  }" << endl;
 }
 
-void WriteMemberVectorFunctions(ostream &o, const Member &m)
+void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
 {
   if (!m.isVector)
     return;
 
+  o << endl;
   o << "  template<class T> void fill_" << m.name << "(const T &v) {" << endl;
   o << "    std::fill(" << m.name << ".begin(), " << m.name << ".end(), v);" << endl;
   o << "  }" << endl << endl;
@@ -540,7 +566,7 @@ void WriteMemberVectorFunctions(ostream &o, const Member &m)
   o << "    std::rotate(" << m.name << ".begin(), i, " << m.name << ".end());" << endl;
   o << "  }" << endl << endl;
 
-  if (m.isBaseType)
+  if (m.isBaseType || isEnum(p, m.type))
   {
     o << "  void sort_" << m.name << "() {" << endl;
     o << "    std::sort(" << m.name << ".begin(), " << m.name << ".end());" << endl;
@@ -599,10 +625,10 @@ void WriteMemberVectorFunctions(ostream &o, const Member &m)
   o << "  typename std::iterator_traits<";
   WriteType(o, m) << "::iterator>::difference_type count_in_" << m.name << "_if(Comp p) {" << endl;
   o << "    return std::count_if(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
-  o << "  }" << endl << endl;
+  o << "  }" << endl;
 }
 
-void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
+void WriteTableDeclaration(ostream &o, const Package &p, const Table &t, const string &root_type)
 {
   o << "struct " << t.name << " {" << endl;
   for (const auto &m : t.member)
@@ -619,7 +645,7 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
   WriteTableCompareFunctions(o, t);
 
   for (const auto &m : t.member)
-    WriteMemberVectorFunctions(o, m);
+    WriteMemberVectorFunctions(o, p, m);
 
   if (hasSharedAppearance(t))
   {
@@ -854,7 +880,7 @@ void WriteTypeStructs(ostream &o, const Package &p)
   for (const auto &t : p.types)
   {
     if (t.is_Table())
-      WriteTableDeclaration(o, t.as_Table(), p.root_type.value);
+      WriteTableDeclaration(o, p, t.as_Table(), p.root_type.value);
     else if (t.is_Union())
       WriteUnionStruct(o, t.as_Union(), p.root_type.value);
     else if (t.is_Enum())

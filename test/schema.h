@@ -130,6 +130,7 @@ struct Enum {
     return 
       l.entries != r.entries;
   }
+
   template<class T> void fill_entries(const T &v) {
     std::fill(entries.begin(), entries.end(), v);
   }
@@ -202,7 +203,6 @@ struct Enum {
   template<class Comp>   typename std::iterator_traits<std::vector<EnumEntry>::iterator>::difference_type count_in_entries_if(Comp p) {
     return std::count_if(entries.begin(), entries.end(), p);
   }
-
 };
 
 struct Member {
@@ -257,6 +257,7 @@ struct Table {
       l.member != r.member
       || l.appearance != r.appearance;
   }
+
   template<class T> void fill_member(const T &v) {
     std::fill(member.begin(), member.end(), v);
   }
@@ -329,7 +330,6 @@ struct Table {
   template<class Comp>   typename std::iterator_traits<std::vector<Member>::iterator>::difference_type count_in_member_if(Comp p) {
     return std::count_if(member.begin(), member.end(), p);
   }
-
 };
 
 struct Union {
@@ -346,6 +346,7 @@ struct Union {
     return 
       l.tables != r.tables;
   }
+
   template<class T> void fill_tables(const T &v) {
     std::fill(tables.begin(), tables.end(), v);
   }
@@ -421,7 +422,6 @@ struct Union {
   template<class Comp>   typename std::iterator_traits<std::vector<std::string>::iterator>::difference_type count_in_tables_if(Comp p) {
     return std::count_if(tables.begin(), tables.end(), p);
   }
-
 };
 
 struct BaseType {
@@ -717,6 +717,7 @@ struct Package {
       || l.root_type != r.root_type
       || l.types != r.types;
   }
+
   template<class T> void fill_types(const T &v) {
     std::fill(types.begin(), types.end(), v);
   }
@@ -789,7 +790,6 @@ struct Package {
   template<class Comp>   typename std::iterator_traits<std::vector<Type>::iterator>::difference_type count_in_types_if(Comp p) {
     return std::count_if(types.begin(), types.end(), p);
   }
-
 };
 
 struct Package_io {

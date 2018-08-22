@@ -94,6 +94,7 @@ struct PointerBaseTypes {
       l.b1 != r.b1
       || l.x != r.x;
   }
+
   template<class T> void fill_b1(const T &v) {
     std::fill(b1.begin(), b1.end(), v);
   }
@@ -245,7 +246,6 @@ struct PointerBaseTypes {
   template<class Comp>   typename std::iterator_traits<std::vector<std::int32_t>::iterator>::difference_type count_in_x_if(Comp p) {
     return std::count_if(x.begin(), x.end(), p);
   }
-
 };
 
 struct Initializer {
@@ -280,19 +280,22 @@ struct Initializer {
 struct Root {
   BaseTypes a;
   PointerBaseTypes b;
+  Initializer c;
 
   Root() = default;
 
   friend bool operator==(const Root&l, const Root&r) {
     return 
       l.a == r.a
-      && l.b == r.b;
+      && l.b == r.b
+      && l.c == r.c;
   }
 
   friend bool operator!=(const Root&l, const Root&r) {
     return 
       l.a != r.a
-      || l.b != r.b;
+      || l.b != r.b
+      || l.c != r.c;
   }
 };
 
@@ -417,11 +420,13 @@ private:
   void Write(std::ostream &o, const Root &v) {
     Write(o, v.a);
     Write(o, v.b);
+    Write(o, v.c);
   }
 
   void Read(std::istream &s, Root &v) {
     Read(s, v.a);
     Read(s, v.b);
+    Read(s, v.c);
   }
 
 public:

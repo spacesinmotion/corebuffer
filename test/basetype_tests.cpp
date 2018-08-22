@@ -89,6 +89,25 @@ TEST_CASE("base type output test", "[output, base types]")
     CHECK(dOut == dIn);
   }
 
+  SECTION("reading whats written Initializer table")
+  {
+    Root dOut;
+    dOut.c = Initializer(5.2f, 42);
+
+    Root dIn;
+    CHECK_FALSE(dOut == dIn);
+
+    std::stringstream sOut;
+    Root_io().WriteRoot(sOut, dOut);
+
+    const auto buffer = sOut.str();
+    std::stringstream sIn(buffer);
+
+    Root_io().ReadRoot(sIn, dIn);
+
+    CHECK(dOut == dIn);
+  }
+
   SECTION("Reading fails with wrong data")
   {
     Root r;

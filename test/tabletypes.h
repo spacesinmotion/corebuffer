@@ -144,6 +144,7 @@ struct TableC {
       || l.d != r.d
       || l.e != r.e;
   }
+
   template<class T> void fill_a(const T &v) {
     std::fill(a.begin(), a.end(), v);
   }
@@ -508,7 +509,6 @@ struct TableC {
   template<class Comp>   typename std::iterator_traits<std::vector<std::weak_ptr<TableB>>::iterator>::difference_type count_in_e_if(Comp p) {
     return std::count_if(e.begin(), e.end(), p);
   }
-
 };
 
 struct TableC_io {

@@ -135,6 +135,7 @@ struct Dummy {
       || l.en2 != r.en2
       || l.en3 != r.en3;
   }
+
   template<class T> void fill_en3(const T &v) {
     std::fill(en3.begin(), en3.end(), v);
   }
@@ -165,6 +166,9 @@ struct Dummy {
     std::rotate(en3.begin(), i, en3.end());
   }
 
+  void sort_en3() {
+    std::sort(en3.begin(), en3.end());
+  }
   template<class Comp> void sort_en3(Comp p) {
     std::sort(en3.begin(), en3.end(), p);
   }
@@ -207,7 +211,6 @@ struct Dummy {
   template<class Comp>   typename std::iterator_traits<std::vector<EnumTypes>::iterator>::difference_type count_in_en3_if(Comp p) {
     return std::count_if(en3.begin(), en3.end(), p);
   }
-
 };
 
 struct Dummy_io {
@@ -229,11 +232,6 @@ private:
     static_assert(AlwaysFalse<T>::value, "Something not implemented");
   }
 
-  void Write(std::ostream &o, const std::string &v) {
-    Write(o, v.size());
-    o.write(v.data(), v.size());
-  }
-
   template<typename T> void Read(std::istream &i, T &v) {
     i.read(reinterpret_cast<char *>(&v), sizeof(T));
   }
@@ -247,13 +245,6 @@ private:
     Read(i, s);
     v.resize(s);
     i.read(reinterpret_cast<char *>(v.data()), sizeof(T) * s);
-  }
-
-  void Read(std::istream &i, std::string &v) {
-    std::string::size_type s{0};
-    Read(i, s);
-    v.resize(s);
-    i.read(&v[0], s);
   }
 
   void Write(std::ostream &o, const Dummy &v) {

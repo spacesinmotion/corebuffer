@@ -246,6 +246,7 @@ struct Root {
       || l.empty != r.empty
       || l.null != r.null;
   }
+
   template<class T> void fill_e(const T &v) {
     std::fill(e.begin(), e.end(), v);
   }
@@ -318,7 +319,6 @@ struct Root {
   template<class Comp>   typename std::iterator_traits<std::vector<AB>::iterator>::difference_type count_in_e_if(Comp p) {
     return std::count_if(e.begin(), e.end(), p);
   }
-
 };
 
 struct Root_io {
