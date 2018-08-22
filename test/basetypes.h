@@ -136,21 +136,21 @@ struct PointerBaseTypes {
     return std::any_of(b1.begin(), b1.end(), p);
   }
   template<class T> bool any_of_b1_is(const T &p) {
-    return any_of_b1([&p](const std::string &x) { return p == x; });
+    return any_of_b1([&p](const std::string &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_b1(Comp p) {
     return std::all_of(b1.begin(), b1.end(), p);
   }
   template<class T> bool all_of_b1_are(const T &p) {
-    return all_of_b1([&p](const std::string &x) { return p == x; });
+    return all_of_b1([&p](const std::string &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_b1(Comp p) {
     return std::none_of(b1.begin(), b1.end(), p);
   }
   template<class T> bool none_of_b1_is(const T &p) {
-    return none_of_b1([&p](const std::string &x) { return p == x; });
+    return none_of_b1([&p](const std::string &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_b1(Fn p) {
@@ -212,21 +212,21 @@ struct PointerBaseTypes {
     return std::any_of(x.begin(), x.end(), p);
   }
   template<class T> bool any_of_x_is(const T &p) {
-    return any_of_x([&p](const std::int32_t &x) { return p == x; });
+    return any_of_x([&p](const std::int32_t &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_x(Comp p) {
     return std::all_of(x.begin(), x.end(), p);
   }
   template<class T> bool all_of_x_are(const T &p) {
-    return all_of_x([&p](const std::int32_t &x) { return p == x; });
+    return all_of_x([&p](const std::int32_t &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_x(Comp p) {
     return std::none_of(x.begin(), x.end(), p);
   }
   template<class T> bool none_of_x_is(const T &p) {
-    return none_of_x([&p](const std::int32_t &x) { return p == x; });
+    return none_of_x([&p](const std::int32_t &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_x(Fn p) {

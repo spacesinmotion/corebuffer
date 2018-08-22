@@ -169,21 +169,21 @@ struct Enum {
     return std::any_of(entries.begin(), entries.end(), p);
   }
   template<class T> bool any_of_entries_is(const T &p) {
-    return any_of_entries([&p](const EnumEntry &x) { return p == x; });
+    return any_of_entries([&p](const EnumEntry &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_entries(Comp p) {
     return std::all_of(entries.begin(), entries.end(), p);
   }
   template<class T> bool all_of_entries_are(const T &p) {
-    return all_of_entries([&p](const EnumEntry &x) { return p == x; });
+    return all_of_entries([&p](const EnumEntry &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_entries(Comp p) {
     return std::none_of(entries.begin(), entries.end(), p);
   }
   template<class T> bool none_of_entries_is(const T &p) {
-    return none_of_entries([&p](const EnumEntry &x) { return p == x; });
+    return none_of_entries([&p](const EnumEntry &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_entries(Fn p) {
@@ -296,21 +296,21 @@ struct Table {
     return std::any_of(member.begin(), member.end(), p);
   }
   template<class T> bool any_of_member_is(const T &p) {
-    return any_of_member([&p](const Member &x) { return p == x; });
+    return any_of_member([&p](const Member &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_member(Comp p) {
     return std::all_of(member.begin(), member.end(), p);
   }
   template<class T> bool all_of_member_are(const T &p) {
-    return all_of_member([&p](const Member &x) { return p == x; });
+    return all_of_member([&p](const Member &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_member(Comp p) {
     return std::none_of(member.begin(), member.end(), p);
   }
   template<class T> bool none_of_member_is(const T &p) {
-    return none_of_member([&p](const Member &x) { return p == x; });
+    return none_of_member([&p](const Member &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_member(Fn p) {
@@ -388,21 +388,21 @@ struct Union {
     return std::any_of(tables.begin(), tables.end(), p);
   }
   template<class T> bool any_of_tables_is(const T &p) {
-    return any_of_tables([&p](const std::string &x) { return p == x; });
+    return any_of_tables([&p](const std::string &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_tables(Comp p) {
     return std::all_of(tables.begin(), tables.end(), p);
   }
   template<class T> bool all_of_tables_are(const T &p) {
-    return all_of_tables([&p](const std::string &x) { return p == x; });
+    return all_of_tables([&p](const std::string &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_tables(Comp p) {
     return std::none_of(tables.begin(), tables.end(), p);
   }
   template<class T> bool none_of_tables_is(const T &p) {
-    return none_of_tables([&p](const std::string &x) { return p == x; });
+    return none_of_tables([&p](const std::string &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_tables(Fn p) {
@@ -756,21 +756,21 @@ struct Package {
     return std::any_of(types.begin(), types.end(), p);
   }
   template<class T> bool any_of_types_is(const T &p) {
-    return any_of_types([&p](const Type &x) { return p == x; });
+    return any_of_types([&p](const Type &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_types(Comp p) {
     return std::all_of(types.begin(), types.end(), p);
   }
   template<class T> bool all_of_types_are(const T &p) {
-    return all_of_types([&p](const Type &x) { return p == x; });
+    return all_of_types([&p](const Type &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_types(Comp p) {
     return std::none_of(types.begin(), types.end(), p);
   }
   template<class T> bool none_of_types_is(const T &p) {
-    return none_of_types([&p](const Type &x) { return p == x; });
+    return none_of_types([&p](const Type &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_types(Fn p) {

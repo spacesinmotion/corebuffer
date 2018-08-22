@@ -122,21 +122,21 @@ struct Order {
     return std::any_of(items.begin(), items.end(), p);
   }
   template<class T> bool any_of_items_is(const T &p) {
-    return any_of_items([&p](const Item &x) { return *p == x; });
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool all_of_items(Comp p) {
     return std::all_of(items.begin(), items.end(), p);
   }
   template<class T> bool all_of_items_are(const T &p) {
-    return all_of_items([&p](const Item &x) { return *p == x; });
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool none_of_items(Comp p) {
     return std::none_of(items.begin(), items.end(), p);
   }
   template<class T> bool none_of_items_is(const T &p) {
-    return none_of_items([&p](const Item &x) { return *p == x; });
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
   template<class Fn> Fn for_each_items(Fn p) {
@@ -217,21 +217,21 @@ struct Shop {
     return std::any_of(items.begin(), items.end(), p);
   }
   template<class T> bool any_of_items_is(const T &p) {
-    return any_of_items([&p](const Item &x) { return *p == x; });
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool all_of_items(Comp p) {
     return std::all_of(items.begin(), items.end(), p);
   }
   template<class T> bool all_of_items_are(const T &p) {
-    return all_of_items([&p](const Item &x) { return *p == x; });
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool none_of_items(Comp p) {
     return std::none_of(items.begin(), items.end(), p);
   }
   template<class T> bool none_of_items_is(const T &p) {
-    return none_of_items([&p](const Item &x) { return *p == x; });
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
   template<class Fn> Fn for_each_items(Fn p) {
@@ -290,21 +290,21 @@ struct Shop {
     return std::any_of(customers.begin(), customers.end(), p);
   }
   template<class T> bool any_of_customers_is(const T &p) {
-    return any_of_customers([&p](const Customer &x) { return *p == x; });
+    return any_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool all_of_customers(Comp p) {
     return std::all_of(customers.begin(), customers.end(), p);
   }
   template<class T> bool all_of_customers_are(const T &p) {
-    return all_of_customers([&p](const Customer &x) { return *p == x; });
+    return all_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool none_of_customers(Comp p) {
     return std::none_of(customers.begin(), customers.end(), p);
   }
   template<class T> bool none_of_customers_is(const T &p) {
-    return none_of_customers([&p](const Customer &x) { return *p == x; });
+    return none_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
   }
 
   template<class Fn> Fn for_each_customers(Fn p) {
@@ -363,21 +363,21 @@ struct Shop {
     return std::any_of(orders.begin(), orders.end(), p);
   }
   template<class T> bool any_of_orders_is(const T &p) {
-    return any_of_orders([&p](const Order &x) { return p == x; });
+    return any_of_orders([&p](const Order &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_orders(Comp p) {
     return std::all_of(orders.begin(), orders.end(), p);
   }
   template<class T> bool all_of_orders_are(const T &p) {
-    return all_of_orders([&p](const Order &x) { return p == x; });
+    return all_of_orders([&p](const Order &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_orders(Comp p) {
     return std::none_of(orders.begin(), orders.end(), p);
   }
   template<class T> bool none_of_orders_is(const T &p) {
-    return none_of_orders([&p](const Order &x) { return p == x; });
+    return none_of_orders([&p](const Order &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_orders(Fn p) {

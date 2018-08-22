@@ -533,9 +533,12 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
     return;
 
   o << endl;
-  o << "  template<class T> void fill_" << m.name << "(const T &v) {" << endl;
-  o << "    std::fill(" << m.name << ".begin(), " << m.name << ".end(), v);" << endl;
-  o << "  }" << endl << endl;
+  if (m.pointer != Pointer::Unique)
+  {
+    o << "  template<class T> void fill_" << m.name << "(const T &v) {" << endl;
+    o << "    std::fill(" << m.name << ".begin(), " << m.name << ".end(), v);" << endl;
+    o << "  }" << endl << endl;
+  }
 
   o << "  template<class Generator> void generate_" << m.name << "(Generator gen) {" << endl;
   o << "    std::generate(" << m.name << ".begin(), " << m.name << ".end(), gen);" << endl;
@@ -580,8 +583,12 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << "    return std::any_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
   o << "  }" << endl;
   o << "  template<class T> bool any_of_" << m.name << "_is(const T &p) {" << endl;
-  o << "    return any_of_" << m.name << "([&p](const " << m.type << " &x) { return ";
-  o << (m.pointer != Pointer::Plain ? "*" : "") << "p" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == x; });"
+  o << "    return any_of_" << m.name << "([&p](const ";
+  auto mm = m;
+  mm.isVector = false;
+  WriteType(o, mm) << " &x) { return " << (m.pointer != Pointer::Plain ? "x && " : "");
+
+  o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
 
@@ -589,8 +596,9 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << "    return std::all_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
   o << "  }" << endl;
   o << "  template<class T> bool all_of_" << m.name << "_are(const T &p) {" << endl;
-  o << "    return all_of_" << m.name << "([&p](const " << m.type << " &x) { return ";
-  o << (m.pointer != Pointer::Plain ? "*" : "") << "p" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == x; });"
+  o << "    return all_of_" << m.name << "([&p](const ";
+  WriteType(o, mm) << " &x) { return " << (m.pointer != Pointer::Plain ? "x && " : "");
+  o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
 
@@ -598,8 +606,9 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << "    return std::none_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
   o << "  }" << endl;
   o << "  template<class T> bool none_of_" << m.name << "_is(const T &p) {" << endl;
-  o << "    return none_of_" << m.name << "([&p](const " << m.type << " &x) { return ";
-  o << (m.pointer != Pointer::Plain ? "*" : "") << "p" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == x; });"
+  o << "    return none_of_" << m.name << "([&p](const ";
+  WriteType(o, mm) << " &x) { return " << (m.pointer != Pointer::Plain ? "x && " : "");
+  o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
 

@@ -177,21 +177,21 @@ struct Dummy {
     return std::any_of(en3.begin(), en3.end(), p);
   }
   template<class T> bool any_of_en3_is(const T &p) {
-    return any_of_en3([&p](const EnumTypes &x) { return p == x; });
+    return any_of_en3([&p](const EnumTypes &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_en3(Comp p) {
     return std::all_of(en3.begin(), en3.end(), p);
   }
   template<class T> bool all_of_en3_are(const T &p) {
-    return all_of_en3([&p](const EnumTypes &x) { return p == x; });
+    return all_of_en3([&p](const EnumTypes &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_en3(Comp p) {
     return std::none_of(en3.begin(), en3.end(), p);
   }
   template<class T> bool none_of_en3_is(const T &p) {
-    return none_of_en3([&p](const EnumTypes &x) { return p == x; });
+    return none_of_en3([&p](const EnumTypes &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_en3(Fn p) {

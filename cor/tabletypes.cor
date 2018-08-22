@@ -25,10 +25,10 @@ table TableD {
 }
 
 table TableC {
-  a:[TableA];
+  a:TableA;
   b:[TableB];
 
-  c:[unique TableA];
+  c:[unique TableB];
   d:[shared TableB];
   e:[weak TableB];
 

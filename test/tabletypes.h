@@ -116,14 +116,14 @@ private:
 };
 
 struct TableC {
-  std::vector<TableA> a;
+  TableA a;
   std::vector<TableB> b;
-  std::vector<std::unique_ptr<TableA>> c;
+  std::vector<std::unique_ptr<TableB>> c;
   std::vector<std::shared_ptr<TableB>> d;
   std::vector<std::weak_ptr<TableB>> e;
 
   TableC() = default;
-  TableC(std::vector<std::unique_ptr<TableA>> c_)
+  TableC(std::vector<std::unique_ptr<TableB>> c_)
     : c(std::move(c_))
   {}
 
@@ -143,79 +143,6 @@ struct TableC {
       || l.c != r.c
       || l.d != r.d
       || l.e != r.e;
-  }
-
-  template<class T> void fill_a(const T &v) {
-    std::fill(a.begin(), a.end(), v);
-  }
-
-  template<class Generator> void generate_a(Generator gen) {
-    std::generate(a.begin(), a.end(), gen);
-  }
-
-  template<class T> std::vector<TableA>::iterator remove_a(const T &v) {
-    return std::remove(a.begin(), a.end(), v);
-  }
-  template<class Pred> std::vector<TableA>::iterator remove_a_if(Pred v) {
-    return std::remove_if(a.begin(), a.end(), v);
-  }
-
-  template<class T> void erase_a(const T &v) {
-    a.erase(remove_a(v));
-  }
-  template<class Pred> void erase_a_if(Pred v) {
-    a.erase(remove_a_if(v));
-  }
-
-  void reverse_a() {
-    std::reverse(a.begin(), a.end());
-  }
-
-  void rotate_a(std::vector<TableA>::iterator i) {
-    std::rotate(a.begin(), i, a.end());
-  }
-
-  template<class Comp> void sort_a(Comp p) {
-    std::sort(a.begin(), a.end(), p);
-  }
-
-  template<class Comp> bool any_of_a(Comp p) {
-    return std::any_of(a.begin(), a.end(), p);
-  }
-  template<class T> bool any_of_a_is(const T &p) {
-    return any_of_a([&p](const TableA &x) { return p == x; });
-  }
-
-  template<class Comp> bool all_of_a(Comp p) {
-    return std::all_of(a.begin(), a.end(), p);
-  }
-  template<class T> bool all_of_a_are(const T &p) {
-    return all_of_a([&p](const TableA &x) { return p == x; });
-  }
-
-  template<class Comp> bool none_of_a(Comp p) {
-    return std::none_of(a.begin(), a.end(), p);
-  }
-  template<class T> bool none_of_a_is(const T &p) {
-    return none_of_a([&p](const TableA &x) { return p == x; });
-  }
-
-  template<class Fn> Fn for_each_a(Fn p) {
-    return std::for_each(a.begin(), a.end(), p);
-  }
-
-  template<class T> std::vector<TableA>::iterator find_in_a(const T &p) {
-    return std::find(a.begin(), a.end(), p);
-  }
-  template<class Comp> std::vector<TableA>::iterator find_in_a_if(Comp p) {
-    return std::find_if(a.begin(), a.end(), p);
-  }
-
-  template<class T>   typename std::iterator_traits<std::vector<TableA>::iterator>::difference_type count_in_a(const T &p) {
-    return std::count(a.begin(), a.end(), p);
-  }
-  template<class Comp>   typename std::iterator_traits<std::vector<TableA>::iterator>::difference_type count_in_a_if(Comp p) {
-    return std::count_if(a.begin(), a.end(), p);
   }
 
   template<class T> void fill_b(const T &v) {
@@ -256,21 +183,21 @@ struct TableC {
     return std::any_of(b.begin(), b.end(), p);
   }
   template<class T> bool any_of_b_is(const T &p) {
-    return any_of_b([&p](const TableB &x) { return p == x; });
+    return any_of_b([&p](const TableB &x) { return x == p; });
   }
 
   template<class Comp> bool all_of_b(Comp p) {
     return std::all_of(b.begin(), b.end(), p);
   }
   template<class T> bool all_of_b_are(const T &p) {
-    return all_of_b([&p](const TableB &x) { return p == x; });
+    return all_of_b([&p](const TableB &x) { return x == p; });
   }
 
   template<class Comp> bool none_of_b(Comp p) {
     return std::none_of(b.begin(), b.end(), p);
   }
   template<class T> bool none_of_b_is(const T &p) {
-    return none_of_b([&p](const TableB &x) { return p == x; });
+    return none_of_b([&p](const TableB &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_b(Fn p) {
@@ -291,18 +218,14 @@ struct TableC {
     return std::count_if(b.begin(), b.end(), p);
   }
 
-  template<class T> void fill_c(const T &v) {
-    std::fill(c.begin(), c.end(), v);
-  }
-
   template<class Generator> void generate_c(Generator gen) {
     std::generate(c.begin(), c.end(), gen);
   }
 
-  template<class T> std::vector<std::unique_ptr<TableA>>::iterator remove_c(const T &v) {
+  template<class T> std::vector<std::unique_ptr<TableB>>::iterator remove_c(const T &v) {
     return std::remove(c.begin(), c.end(), v);
   }
-  template<class Pred> std::vector<std::unique_ptr<TableA>>::iterator remove_c_if(Pred v) {
+  template<class Pred> std::vector<std::unique_ptr<TableB>>::iterator remove_c_if(Pred v) {
     return std::remove_if(c.begin(), c.end(), v);
   }
 
@@ -317,7 +240,7 @@ struct TableC {
     std::reverse(c.begin(), c.end());
   }
 
-  void rotate_c(std::vector<std::unique_ptr<TableA>>::iterator i) {
+  void rotate_c(std::vector<std::unique_ptr<TableB>>::iterator i) {
     std::rotate(c.begin(), i, c.end());
   }
 
@@ -329,38 +252,38 @@ struct TableC {
     return std::any_of(c.begin(), c.end(), p);
   }
   template<class T> bool any_of_c_is(const T &p) {
-    return any_of_c([&p](const TableA &x) { return *p == x; });
+    return any_of_c([&p](const std::unique_ptr<TableB> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool all_of_c(Comp p) {
     return std::all_of(c.begin(), c.end(), p);
   }
   template<class T> bool all_of_c_are(const T &p) {
-    return all_of_c([&p](const TableA &x) { return *p == x; });
+    return all_of_c([&p](const std::unique_ptr<TableB> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool none_of_c(Comp p) {
     return std::none_of(c.begin(), c.end(), p);
   }
   template<class T> bool none_of_c_is(const T &p) {
-    return none_of_c([&p](const TableA &x) { return *p == x; });
+    return none_of_c([&p](const std::unique_ptr<TableB> &x) { return x && *x == p; });
   }
 
   template<class Fn> Fn for_each_c(Fn p) {
     return std::for_each(c.begin(), c.end(), p);
   }
 
-  template<class T> std::vector<std::unique_ptr<TableA>>::iterator find_in_c(const T &p) {
+  template<class T> std::vector<std::unique_ptr<TableB>>::iterator find_in_c(const T &p) {
     return std::find(c.begin(), c.end(), p);
   }
-  template<class Comp> std::vector<std::unique_ptr<TableA>>::iterator find_in_c_if(Comp p) {
+  template<class Comp> std::vector<std::unique_ptr<TableB>>::iterator find_in_c_if(Comp p) {
     return std::find_if(c.begin(), c.end(), p);
   }
 
-  template<class T>   typename std::iterator_traits<std::vector<std::unique_ptr<TableA>>::iterator>::difference_type count_in_c(const T &p) {
+  template<class T>   typename std::iterator_traits<std::vector<std::unique_ptr<TableB>>::iterator>::difference_type count_in_c(const T &p) {
     return std::count(c.begin(), c.end(), p);
   }
-  template<class Comp>   typename std::iterator_traits<std::vector<std::unique_ptr<TableA>>::iterator>::difference_type count_in_c_if(Comp p) {
+  template<class Comp>   typename std::iterator_traits<std::vector<std::unique_ptr<TableB>>::iterator>::difference_type count_in_c_if(Comp p) {
     return std::count_if(c.begin(), c.end(), p);
   }
 
@@ -402,21 +325,21 @@ struct TableC {
     return std::any_of(d.begin(), d.end(), p);
   }
   template<class T> bool any_of_d_is(const T &p) {
-    return any_of_d([&p](const TableB &x) { return *p == x; });
+    return any_of_d([&p](const std::shared_ptr<TableB> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool all_of_d(Comp p) {
     return std::all_of(d.begin(), d.end(), p);
   }
   template<class T> bool all_of_d_are(const T &p) {
-    return all_of_d([&p](const TableB &x) { return *p == x; });
+    return all_of_d([&p](const std::shared_ptr<TableB> &x) { return x && *x == p; });
   }
 
   template<class Comp> bool none_of_d(Comp p) {
     return std::none_of(d.begin(), d.end(), p);
   }
   template<class T> bool none_of_d_is(const T &p) {
-    return none_of_d([&p](const TableB &x) { return *p == x; });
+    return none_of_d([&p](const std::shared_ptr<TableB> &x) { return x && *x == p; });
   }
 
   template<class Fn> Fn for_each_d(Fn p) {
@@ -475,21 +398,21 @@ struct TableC {
     return std::any_of(e.begin(), e.end(), p);
   }
   template<class T> bool any_of_e_is(const T &p) {
-    return any_of_e([&p](const TableB &x) { return *p.lock() == x; });
+    return any_of_e([&p](const std::weak_ptr<TableB> &x) { return x && *x.lock() == p; });
   }
 
   template<class Comp> bool all_of_e(Comp p) {
     return std::all_of(e.begin(), e.end(), p);
   }
   template<class T> bool all_of_e_are(const T &p) {
-    return all_of_e([&p](const TableB &x) { return *p.lock() == x; });
+    return all_of_e([&p](const std::weak_ptr<TableB> &x) { return x && *x.lock() == p; });
   }
 
   template<class Comp> bool none_of_e(Comp p) {
     return std::none_of(e.begin(), e.end(), p);
   }
   template<class T> bool none_of_e_is(const T &p) {
-    return none_of_e([&p](const TableB &x) { return *p.lock() == x; });
+    return none_of_e([&p](const std::weak_ptr<TableB> &x) { return x && *x.lock() == p; });
   }
 
   template<class Fn> Fn for_each_e(Fn p) {
@@ -673,12 +596,6 @@ private:
     Write(o, v, TableA_count_);
   }
 
-  void Write(std::ostream &o, const std::vector<TableA> &v) {
-    Write(o, v.size());
-    for (const auto &entry : v)
-      Write(o, entry);
-  }
-
   void Read(std::istream &s, TableA &v) {
     Read(s, v.name);
     Read(s, v.d1);
@@ -689,14 +606,6 @@ private:
 
   void Read(std::istream &s, std::shared_ptr<TableA> &v) {
     Read(s, v, TableA_references_);
-  }
-
-  void Read(std::istream &s, std::vector<TableA> &v) {
-    auto size = v.size();
-    Read(s, size);
-    v.resize(size);
-    for (auto &entry : v)
-      Read(s, entry);
   }
 
   void Write(std::ostream &o, const TableB &v) {
