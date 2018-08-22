@@ -125,6 +125,10 @@ struct Order {
     return any_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
+  bool any_of_items_is(const std::shared_ptr<Item> &p) {
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
   template<class Comp> bool all_of_items(Comp p) {
     return std::all_of(items.begin(), items.end(), p);
   }
@@ -132,11 +136,19 @@ struct Order {
     return all_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
+  bool all_of_items_are(const std::shared_ptr<Item> &p) {
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
   template<class Comp> bool none_of_items(Comp p) {
     return std::none_of(items.begin(), items.end(), p);
   }
   template<class T> bool none_of_items_is(const T &p) {
     return none_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool none_of_items_is(const std::shared_ptr<Item> &p) {
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_items(Fn p) {
@@ -220,6 +232,10 @@ struct Shop {
     return any_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
+  bool any_of_items_is(const std::shared_ptr<Item> &p) {
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
   template<class Comp> bool all_of_items(Comp p) {
     return std::all_of(items.begin(), items.end(), p);
   }
@@ -227,11 +243,19 @@ struct Shop {
     return all_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
   }
 
+  bool all_of_items_are(const std::shared_ptr<Item> &p) {
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
   template<class Comp> bool none_of_items(Comp p) {
     return std::none_of(items.begin(), items.end(), p);
   }
   template<class T> bool none_of_items_is(const T &p) {
     return none_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool none_of_items_is(const std::shared_ptr<Item> &p) {
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_items(Fn p) {
@@ -293,6 +317,10 @@ struct Shop {
     return any_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
   }
 
+  bool any_of_customers_is(const std::shared_ptr<Customer> &p) {
+    return any_of_customers([&p](const std::shared_ptr<Customer> &x) { return x == p; });
+  }
+
   template<class Comp> bool all_of_customers(Comp p) {
     return std::all_of(customers.begin(), customers.end(), p);
   }
@@ -300,11 +328,19 @@ struct Shop {
     return all_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
   }
 
+  bool all_of_customers_are(const std::shared_ptr<Customer> &p) {
+    return all_of_customers([&p](const std::shared_ptr<Customer> &x) { return x == p; });
+  }
+
   template<class Comp> bool none_of_customers(Comp p) {
     return std::none_of(customers.begin(), customers.end(), p);
   }
   template<class T> bool none_of_customers_is(const T &p) {
     return none_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
+  }
+
+  bool none_of_customers_is(const std::shared_ptr<Customer> &p) {
+    return none_of_customers([&p](const std::shared_ptr<Customer> &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_customers(Fn p) {

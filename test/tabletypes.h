@@ -328,6 +328,10 @@ struct TableC {
     return any_of_d([&p](const std::shared_ptr<TableB> &x) { return x && *x == p; });
   }
 
+  bool any_of_d_is(const std::shared_ptr<TableB> &p) {
+    return any_of_d([&p](const std::shared_ptr<TableB> &x) { return x == p; });
+  }
+
   template<class Comp> bool all_of_d(Comp p) {
     return std::all_of(d.begin(), d.end(), p);
   }
@@ -335,11 +339,19 @@ struct TableC {
     return all_of_d([&p](const std::shared_ptr<TableB> &x) { return x && *x == p; });
   }
 
+  bool all_of_d_are(const std::shared_ptr<TableB> &p) {
+    return all_of_d([&p](const std::shared_ptr<TableB> &x) { return x == p; });
+  }
+
   template<class Comp> bool none_of_d(Comp p) {
     return std::none_of(d.begin(), d.end(), p);
   }
   template<class T> bool none_of_d_is(const T &p) {
     return none_of_d([&p](const std::shared_ptr<TableB> &x) { return x && *x == p; });
+  }
+
+  bool none_of_d_is(const std::shared_ptr<TableB> &p) {
+    return none_of_d([&p](const std::shared_ptr<TableB> &x) { return x == p; });
   }
 
   template<class Fn> Fn for_each_d(Fn p) {

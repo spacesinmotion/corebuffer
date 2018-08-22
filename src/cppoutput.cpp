@@ -587,10 +587,18 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   auto mm = m;
   mm.isVector = false;
   WriteType(o, mm) << " &x) { return " << (m.pointer != Pointer::Plain ? "x && " : "");
-
   o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
+  if (m.pointer == Pointer::Shared)
+  {
+    o << "  bool any_of_" << m.name << "_is(const ";
+    WriteType(o, mm) << " &p) {" << endl;
+    o << "    return any_of_" << m.name << "([&p](const ";
+    WriteType(o, mm) << " &x) { return ";
+    o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
+    o << "  }" << endl << endl;
+  }
 
   o << "  template<class Comp> bool all_of_" << m.name << "(Comp p) {" << endl;
   o << "    return std::all_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
@@ -601,6 +609,15 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
+  if (m.pointer == Pointer::Shared)
+  {
+    o << "  bool all_of_" << m.name << "_are(const ";
+    WriteType(o, mm) << " &p) {" << endl;
+    o << "    return all_of_" << m.name << "([&p](const ";
+    WriteType(o, mm) << " &x) { return ";
+    o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
+    o << "  }" << endl << endl;
+  }
 
   o << "  template<class Comp> bool none_of_" << m.name << "(Comp p) {" << endl;
   o << "    return std::none_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
@@ -611,6 +628,15 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
+  if (m.pointer == Pointer::Shared)
+  {
+    o << "  bool none_of_" << m.name << "_is(const ";
+    WriteType(o, mm) << " &p) {" << endl;
+    o << "    return none_of_" << m.name << "([&p](const ";
+    WriteType(o, mm) << " &x) { return ";
+    o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
+    o << "  }" << endl << endl;
+  }
 
   o << "  template<class Fn> Fn for_each_" << m.name << "(Fn p) {" << endl;
   o << "    return std::for_each(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;

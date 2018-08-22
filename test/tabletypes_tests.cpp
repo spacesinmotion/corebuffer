@@ -543,4 +543,201 @@ TEST_CASE("TableType test", "[output, table]")
       CHECK(p.count_in_c_if([](const std::unique_ptr<TableB> &x) { return x->name.size() > 42; }) == 0);
     }
   }
+
+  SECTION("vector algorithm shared table")
+  {
+    TableC p;
+    p.d.emplace_back(new TableB("x"));
+    p.d.emplace_back(new TableB("xx"));
+    p.d.emplace_back(new TableB("xxx"));
+    REQUIRE(p.d.size() == 3);
+
+    SECTION("fill")
+    {
+      p.fill_d(std::make_shared<TableB>("42"));
+
+      CHECK(p.d[0] == p.d[1]);
+      CHECK(p.d[0] == p.d[2]);
+      CHECK(*p.d[2] == TableB("42"));
+    }
+
+    SECTION("generate")
+    {
+      std::string x("x");
+      p.generate_d([&x]() { return std::make_shared<TableB>(x += "x"); });
+      CHECK(p.d[0]->name == "xx");
+      CHECK(p.d[1]->name == "xxx");
+      CHECK(p.d[2]->name == "xxxx");
+    }
+
+    SECTION("remove")
+    {
+      auto e = p.remove_d(p.d[1]);
+
+      CHECK(e == p.d.end() - 1);
+      CHECK(3 == p.d.size());
+      CHECK(p.d[0]->name == "x");
+      CHECK(p.d[1]->name == "xxx");
+    }
+
+    SECTION("remove_if")
+    {
+      auto e = p.remove_d_if([](const std::shared_ptr<TableB> &b) { return *b == TableB("xx"); });
+
+      CHECK(e == p.d.end() - 1);
+      CHECK(3 == p.d.size());
+      CHECK(p.d[0]->name == "x");
+      CHECK(p.d[1]->name == "xxx");
+    }
+
+    SECTION("erase")
+    {
+      p.erase_d(p.d[1]);
+
+      CHECK(2 == p.d.size());
+      CHECK(p.d[0]->name == "x");
+      CHECK(p.d[1]->name == "xxx");
+    }
+
+    SECTION("erase_if")
+    {
+      p.erase_d_if([](const std::shared_ptr<TableB> &b) { return *b == TableB("xx"); });
+
+      CHECK(2 == p.d.size());
+      CHECK(p.d[0]->name == "x");
+      CHECK(p.d[1]->name == "xxx");
+    }
+
+    SECTION("reverse")
+    {
+      p.reverse_d();
+
+      REQUIRE(3 == p.d.size());
+      CHECK(p.d[0]->name == "xxx");
+      CHECK(p.d[1]->name == "xx");
+      CHECK(p.d[2]->name == "x");
+    }
+
+    SECTION("rotate")
+    {
+      p.rotate_d(p.d.begin() + 1);
+
+      REQUIRE(3 == p.d.size());
+      CHECK(p.d[0]->name == "xx");
+      CHECK(p.d[1]->name == "xxx");
+      CHECK(p.d[2]->name == "x");
+    }
+
+    SECTION("sort with comparator")
+    {
+      p.d[0] = std::shared_ptr<TableB>(new TableB("32"));
+      p.d[1] = std::shared_ptr<TableB>(new TableB("124"));
+      p.d[2] = std::shared_ptr<TableB>(new TableB("42"));
+      p.sort_d([](const std::shared_ptr<TableB> &l, const std::shared_ptr<TableB> &r) { return l->name > r->name; });
+
+      REQUIRE(3 == p.d.size());
+      CHECK(p.d[0]->name == "42");
+      CHECK(p.d[1]->name == "32");
+      CHECK(p.d[2]->name == "124");
+    }
+
+    SECTION("any of")
+    {
+      CHECK(p.any_of_d([](const std::shared_ptr<TableB> &x) { return x->name == "xx"; }));
+      CHECK_FALSE(p.any_of_d([](const std::shared_ptr<TableB> &x) { return x->name == "42"; }));
+    }
+
+    SECTION("all of")
+    {
+      CHECK(p.all_of_d([](const std::shared_ptr<TableB> &x) { return !x->name.empty() && x->name[0] == 'x'; }));
+      CHECK_FALSE(p.all_of_d([](const std::shared_ptr<TableB> &x) { return x->name.size() == 2; }));
+    }
+
+    SECTION("none of")
+    {
+      CHECK_FALSE(p.none_of_d([](const std::shared_ptr<TableB> &x) { return !x->name.empty() && x->name[0] == 'x'; }));
+      CHECK_FALSE(p.none_of_d([](const std::shared_ptr<TableB> &x) { return x->name.size() == 2; }));
+      CHECK(p.none_of_d([](const std::shared_ptr<TableB> &x) { return x->name.size() > 3; }));
+    }
+
+    SECTION("any of is")
+    {
+      p.d.push_back(nullptr);
+      CHECK(p.any_of_d_is(TableB("xx")));
+      CHECK_FALSE(p.any_of_d_is(TableB("42")));
+    }
+
+    SECTION("any of is pointer")
+    {
+      p.d.push_back(nullptr);
+      CHECK(p.any_of_d_is(p.d[1]));
+      CHECK_FALSE(p.any_of_d_is(std::make_shared<TableB>("42")));
+    }
+
+    SECTION("all of are")
+    {
+      p.d.push_back(nullptr);
+      CHECK_FALSE(p.all_of_d_are(TableB("42")));
+      for (auto &c : p.d)
+        if (c)
+          c->name = "42";
+      CHECK_FALSE(p.all_of_d_are(TableB("42")));
+      p.d.pop_back();
+      CHECK(p.all_of_d_are(TableB("42")));
+    }
+
+    SECTION("all of are pointer")
+    {
+      p.d.push_back(nullptr);
+      CHECK_FALSE(p.all_of_d_are(p.d[1]));
+      CHECK_FALSE(p.all_of_d_are(std::make_shared<TableB>("42")));
+      p.d = {p.d[2], p.d[2], p.d[2]};
+      CHECK(p.all_of_d_are(p.d[2]));
+    }
+
+    SECTION("none of value")
+    {
+      p.d.push_back(nullptr);
+      CHECK_FALSE(p.none_of_d_is(TableB("x")));
+      CHECK(p.none_of_d_is(TableB("42")));
+    }
+
+    SECTION("none of value pointer")
+    {
+      p.d.push_back(nullptr);
+      CHECK_FALSE(p.none_of_d_is(p.d[1]));
+      CHECK(p.none_of_d_is(std::make_shared<TableB>("42")));
+    }
+
+    SECTION("for each")
+    {
+      std::string x;
+      p.for_each_d([&x](const std::shared_ptr<TableB> &i) { x += i->name; });
+      CHECK(x == std::string("x") + "xx" + "xxx");
+    }
+
+    SECTION("find")
+    {
+      CHECK(p.find_in_d(p.d[1]) == p.d.begin() + 1);
+      CHECK(p.find_in_d(nullptr) == p.d.end());
+    }
+
+    SECTION("find if")
+    {
+      CHECK(p.find_in_d_if([](const std::shared_ptr<TableB> &x) { return x->name == "xx"; }) == p.d.begin() + 1);
+      CHECK(p.find_in_d_if([](const std::shared_ptr<TableB> &x) { return x->name == "42"; }) == p.d.end());
+    }
+
+    SECTION("count")
+    {
+      CHECK(p.count_in_d(p.d[1]) == 1);
+      CHECK(p.count_in_d(nullptr) == 0);
+    }
+
+    SECTION("count if")
+    {
+      CHECK(p.count_in_d_if([](const std::shared_ptr<TableB> &x) { return x->name.size() % 2 == 1; }) == 2);
+      CHECK(p.count_in_d_if([](const std::shared_ptr<TableB> &x) { return x->name.size() > 42; }) == 0);
+    }
+  }
 }
