@@ -740,4 +740,221 @@ TEST_CASE("TableType test", "[output, table]")
       CHECK(p.count_in_d_if([](const std::shared_ptr<TableB> &x) { return x->name.size() > 42; }) == 0);
     }
   }
+
+  SECTION("vector algorithm weak table")
+  {
+    TableC p;
+    p.d.emplace_back(new TableB("x"));
+    p.d.emplace_back(new TableB("xx"));
+    p.d.emplace_back(new TableB("xxx"));
+    p.e.emplace_back(p.d[0]);
+    p.e.emplace_back(p.d[1]);
+    p.e.emplace_back(p.d[2]);
+    REQUIRE(p.e.size() == 3);
+
+    SECTION("fill")
+    {
+      const auto x = std::make_shared<TableB>("42");
+      p.fill_e(x);
+
+      CHECK(p.e[0].lock() == p.e[1].lock());
+      CHECK(p.e[0].lock() == p.e[2].lock());
+      CHECK(p.e[2].lock() == x);
+    }
+
+    SECTION("generate")
+    {
+      std::string x("x");
+      p.generate_e([&]() {
+        p.d.emplace_back(new TableB(x += "x"));
+        return p.d.back();
+      });
+      CHECK(p.e[0].lock()->name == "xx");
+      CHECK(p.e[1].lock()->name == "xxx");
+      CHECK(p.e[2].lock()->name == "xxxx");
+      CHECK(p.e[0].lock() == p.d[3]);
+      CHECK(p.e[1].lock() == p.d[4]);
+      CHECK(p.e[2].lock() == p.d[5]);
+    }
+
+    SECTION("remove")
+    {
+      auto e = p.remove_e(p.e[1]);
+
+      CHECK(e == p.e.end() - 1);
+      CHECK(3 == p.e.size());
+      CHECK(p.e[0].lock()->name == "x");
+      CHECK(p.e[1].lock()->name == "xxx");
+    }
+
+    SECTION("remove_if")
+    {
+      auto e = p.remove_e_if([](const std::weak_ptr<TableB> &b) { return b.lock() && *b.lock() == TableB("xx"); });
+
+      CHECK(e == p.e.end() - 1);
+      CHECK(3 == p.e.size());
+      CHECK(p.e[0].lock()->name == "x");
+      CHECK(p.e[1].lock()->name == "xxx");
+    }
+
+    SECTION("erase")
+    {
+      p.erase_e(p.e[1]);
+
+      CHECK(2 == p.e.size());
+      CHECK(p.e[0].lock()->name == "x");
+      CHECK(p.e[1].lock()->name == "xxx");
+    }
+
+    SECTION("erase_if")
+    {
+      p.erase_e_if([](const std::weak_ptr<TableB> &b) { return b.lock() && *b.lock() == TableB("xx"); });
+
+      CHECK(2 == p.e.size());
+      CHECK(p.e[0].lock()->name == "x");
+      CHECK(p.e[1].lock()->name == "xxx");
+    }
+
+    SECTION("reverse")
+    {
+      p.reverse_e();
+
+      REQUIRE(3 == p.e.size());
+      CHECK(p.e[0].lock()->name == "xxx");
+      CHECK(p.e[1].lock()->name == "xx");
+      CHECK(p.e[2].lock()->name == "x");
+    }
+
+    SECTION("rotate")
+    {
+      p.rotate_e(p.e.begin() + 1);
+
+      REQUIRE(3 == p.e.size());
+      CHECK(p.e[0].lock()->name == "xx");
+      CHECK(p.e[1].lock()->name == "xxx");
+      CHECK(p.e[2].lock()->name == "x");
+    }
+
+    SECTION("sort with comparator")
+    {
+      p.d[0]->name = "32";
+      p.d[1]->name = "124";
+      p.d[2]->name = "42";
+      p.sort_e([](const std::weak_ptr<TableB> &l, const std::weak_ptr<TableB> &r) {
+        return l.lock() && r.lock() && l.lock()->name > r.lock()->name;
+      });
+
+      REQUIRE(3 == p.e.size());
+      CHECK(p.e[0].lock()->name == "42");
+      CHECK(p.e[1].lock()->name == "32");
+      CHECK(p.e[2].lock()->name == "124");
+    }
+
+    SECTION("any of")
+    {
+      CHECK(p.any_of_e([](const std::weak_ptr<TableB> &x) { return x.lock()->name == "xx"; }));
+      CHECK_FALSE(p.any_of_e([](const std::weak_ptr<TableB> &x) { return x.lock()->name == "42"; }));
+    }
+
+    SECTION("all of")
+    {
+      CHECK(p.all_of_e(
+          [](const std::weak_ptr<TableB> &x) { return !x.lock()->name.empty() && x.lock()->name[0] == 'x'; }));
+      CHECK_FALSE(p.all_of_e([](const std::weak_ptr<TableB> &x) { return x.lock()->name.size() == 2; }));
+    }
+
+    SECTION("none of")
+    {
+      CHECK_FALSE(p.none_of_e(
+          [](const std::weak_ptr<TableB> &x) { return !x.lock()->name.empty() && x.lock()->name[0] == 'x'; }));
+      CHECK_FALSE(p.none_of_e([](const std::weak_ptr<TableB> &x) { return x.lock()->name.size() == 2; }));
+      CHECK(p.none_of_e([](const std::weak_ptr<TableB> &x) { return x.lock()->name.size() > 3; }));
+    }
+
+    SECTION("any of is")
+    {
+      p.e.push_back(std::make_shared<TableB>());
+      CHECK(p.e.back().lock() == nullptr);
+      CHECK(p.any_of_e_is(TableB("xx")));
+      CHECK_FALSE(p.any_of_e_is(TableB("42")));
+    }
+
+    SECTION("any of is pointer")
+    {
+      p.e.push_back(std::make_shared<TableB>());
+      CHECK(p.e.back().lock() == nullptr);
+      CHECK(p.any_of_e_is(p.e[1].lock()));
+      CHECK_FALSE(p.any_of_e_is(std::make_shared<TableB>("42")));
+    }
+
+    SECTION("all of are")
+    {
+      p.e.push_back(std::make_shared<TableB>());
+      CHECK(p.e.back().lock() == nullptr);
+      CHECK_FALSE(p.all_of_e_are(TableB("42")));
+      for (auto &c : p.e)
+        if (c.lock())
+          c.lock()->name = "42";
+      CHECK_FALSE(p.all_of_e_are(TableB("42")));
+      p.e.pop_back();
+      CHECK(p.all_of_e_are(TableB("42")));
+    }
+
+    SECTION("all of are pointer")
+    {
+      p.e.push_back(std::make_shared<TableB>());
+      CHECK(p.e.back().lock() == nullptr);
+      CHECK_FALSE(p.all_of_e_are(p.e[1].lock()));
+      CHECK_FALSE(p.all_of_e_are(std::make_shared<TableB>("42")));
+      p.e = {p.e[2], p.e[2], p.e[2]};
+      CHECK(p.all_of_e_are(p.e[2].lock()));
+    }
+
+    SECTION("none of value")
+    {
+      p.e.push_back(std::make_shared<TableB>());
+      CHECK(p.e.back().lock() == nullptr);
+      CHECK_FALSE(p.none_of_e_is(TableB("x")));
+      CHECK(p.none_of_e_is(TableB("42")));
+    }
+
+    SECTION("none of value pointer")
+    {
+      p.e.push_back(std::make_shared<TableB>());
+      CHECK(p.e.back().lock() == nullptr);
+      CHECK_FALSE(p.none_of_e_is(p.e[1].lock()));
+      CHECK(p.none_of_e_is(std::make_shared<TableB>("42")));
+    }
+
+    SECTION("for each")
+    {
+      std::string x;
+      p.for_each_e([&x](const std::weak_ptr<TableB> &i) { x += i.lock()->name; });
+      CHECK(x == std::string("x") + "xx" + "xxx");
+    }
+
+    SECTION("find")
+    {
+      CHECK(p.find_in_e(p.e[1]) == p.e.begin() + 1);
+      // CHECK(p.find_in_e(nullptr) == p.e.end());
+    }
+
+    SECTION("find if")
+    {
+      CHECK(p.find_in_e_if([](const std::weak_ptr<TableB> &x) { return x.lock()->name == "xx"; }) == p.e.begin() + 1);
+      CHECK(p.find_in_e_if([](const std::weak_ptr<TableB> &x) { return x.lock()->name == "42"; }) == p.e.end());
+    }
+
+    SECTION("count")
+    {
+      CHECK(p.count_in_e(p.e[1]) == 1);
+      // CHECK(p.count_in_e(p.d[1]) == 0);
+    }
+
+    SECTION("count if")
+    {
+      CHECK(p.count_in_e_if([](const std::weak_ptr<TableB> &x) { return x.lock()->name.size() % 2 == 1; }) == 2);
+      CHECK(p.count_in_e_if([](const std::weak_ptr<TableB> &x) { return x.lock()->name.size() > 42; }) == 0);
+    }
+  }
 }

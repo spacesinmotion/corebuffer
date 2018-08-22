@@ -586,14 +586,20 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << "    return any_of_" << m.name << "([&p](const ";
   auto mm = m;
   mm.isVector = false;
-  WriteType(o, mm) << " &x) { return " << (m.pointer != Pointer::Plain ? "x && " : "");
+  auto mmm = mm;
+  mmm.pointer = Pointer::Shared;
+  WriteType(o, mm) << " &x) { return ";
+  if (m.pointer == Pointer::Weak)
+    o << "x.lock() && ";
+  else if (m.pointer != Pointer::Plain)
+    o << "x && ";
   o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
-  if (m.pointer == Pointer::Shared)
+  if (m.pointer == Pointer::Shared || m.pointer == Pointer::Weak)
   {
     o << "  bool any_of_" << m.name << "_is(const ";
-    WriteType(o, mm) << " &p) {" << endl;
+    WriteType(o, mmm) << " &p) {" << endl;
     o << "    return any_of_" << m.name << "([&p](const ";
     WriteType(o, mm) << " &x) { return ";
     o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
@@ -605,14 +611,18 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << "  }" << endl;
   o << "  template<class T> bool all_of_" << m.name << "_are(const T &p) {" << endl;
   o << "    return all_of_" << m.name << "([&p](const ";
-  WriteType(o, mm) << " &x) { return " << (m.pointer != Pointer::Plain ? "x && " : "");
+  WriteType(o, mm) << " &x) { return ";
+  if (m.pointer == Pointer::Weak)
+    o << "x.lock() && ";
+  else if (m.pointer != Pointer::Plain)
+    o << "x && ";
   o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
-  if (m.pointer == Pointer::Shared)
+  if (m.pointer == Pointer::Shared || m.pointer == Pointer::Weak)
   {
     o << "  bool all_of_" << m.name << "_are(const ";
-    WriteType(o, mm) << " &p) {" << endl;
+    WriteType(o, mmm) << " &p) {" << endl;
     o << "    return all_of_" << m.name << "([&p](const ";
     WriteType(o, mm) << " &x) { return ";
     o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
@@ -624,14 +634,18 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << "  }" << endl;
   o << "  template<class T> bool none_of_" << m.name << "_is(const T &p) {" << endl;
   o << "    return none_of_" << m.name << "([&p](const ";
-  WriteType(o, mm) << " &x) { return " << (m.pointer != Pointer::Plain ? "x && " : "");
+  WriteType(o, mm) << " &x) { return ";
+  if (m.pointer == Pointer::Weak)
+    o << "x.lock() && ";
+  else if (m.pointer != Pointer::Plain)
+    o << "x && ";
   o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
     << endl;
   o << "  }" << endl << endl;
-  if (m.pointer == Pointer::Shared)
+  if (m.pointer == Pointer::Shared || m.pointer == Pointer::Weak)
   {
     o << "  bool none_of_" << m.name << "_is(const ";
-    WriteType(o, mm) << " &p) {" << endl;
+    WriteType(o, mmm) << " &p) {" << endl;
     o << "    return none_of_" << m.name << "([&p](const ";
     WriteType(o, mm) << " &x) { return ";
     o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
