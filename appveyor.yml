@@ -33,5 +33,5 @@ build_script:
 
 test_script:
 - sh: ctest --output-on-failure
-- cmd: ctest --output-on-failure
+- cmd: ctest --output-on-failure -C Release
 
