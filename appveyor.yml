@@ -35,3 +35,10 @@ test_script:
 - sh: ctest --output-on-failure -C Release
 - cmd: ctest --output-on-failure -C Release
 
+artifacts:
+  - path: build/CoreBufferC
+    name: CoreBufferC
+
+  - path: Testing/Temporary/LastTest.log
+    name: LastTest.log
+
