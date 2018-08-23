@@ -20,18 +20,18 @@ build_script:
 
     cmake ..
 
-    cmake --build . --target all
+    cmake --build . --config Release
 
 - cmd: >-
     mkdir build
 
     cd build
 
-    cmake ..
+    cmake -G "Visual Studio 15 2017 Win64" ..
 
     cmake --build . --config Release
 
 test_script:
-- sh: ctest --output-on-failure
+- sh: ctest --output-on-failure -C Release
 - cmd: ctest --output-on-failure -C Release
 
