@@ -118,95 +118,30 @@ struct Type
 {
   Type() = default;
   Type(const Type &o) { _clone(o); }
-  Type &operator=(const Type &o)
-  {
-    _destroy();
-    _clone(o);
-    return *this;
-  }
+  Type &operator=(const Type &) = delete;
 
   Type(const Enum &v) : _Enum(new Enum(v)), _selection(_Enum_selection) {}
   Type(Enum &&v) : _Enum(new Enum(std::forward<Enum>(v))), _selection(_Enum_selection) {}
-  Type &operator=(const Enum &v)
-  {
-    _destroy();
-    _Enum = new Enum(v);
-    _selection = _Enum_selection;
-    return *this;
-  }
-  Type &operator=(Enum &&v)
-  {
-    _destroy();
-    _Enum = new Enum(std::forward<Enum>(v));
-    _selection = _Enum_selection;
-    return *this;
-  }
-
   Type(const Table &v) : _Table(new Table(v)), _selection(_Table_selection) {}
   Type(Table &&v) : _Table(new Table(std::forward<Table>(v))), _selection(_Table_selection) {}
-  Type &operator=(const Table &v)
-  {
-    _destroy();
-    _Table = new Table(v);
-    _selection = _Table_selection;
-    return *this;
-  }
-  Type &operator=(Table &&v)
-  {
-    _destroy();
-    _Table = new Table(std::forward<Table>(v));
-    _selection = _Table_selection;
-    return *this;
-  }
-
   Type(const Union &v) : _Union(new Union(v)), _selection(_Union_selection) {}
   Type(Union &&v) : _Union(new Union(std::forward<Union>(v))), _selection(_Union_selection) {}
-  Type &operator=(const Union &v)
-  {
-    _destroy();
-    _Union = new Union(v);
-    _selection = _Union_selection;
-    return *this;
-  }
-  Type &operator=(Union &&v)
-  {
-    _destroy();
-    _Union = new Union(std::forward<Union>(v));
-    _selection = _Union_selection;
-    return *this;
-  }
 
   ~Type() { _destroy(); }
 
   bool is_Defined() const noexcept { return _selection != no_selection; }
-  void clear() { *this = Type(); }
 
   bool is_Enum() const noexcept { return _selection == _Enum_selection; }
   const Enum &as_Enum() const noexcept { return *_Enum; }
   Enum &as_Enum() { return *_Enum; }
-  template <typename... Args>
-  Enum &create_Enum(Args &&... args)
-  {
-    return (*this = Enum(std::forward<Args>(args)...)).as_Enum();
-  }
 
   bool is_Table() const noexcept { return _selection == _Table_selection; }
   const Table &as_Table() const noexcept { return *_Table; }
   Table &as_Table() { return *_Table; }
-  template <typename... Args>
-  Table &create_Table(Args &&... args)
-  {
-    return (*this = Table(std::forward<Args>(args)...)).as_Table();
-  }
 
   bool is_Union() const noexcept { return _selection == _Union_selection; }
   const Union &as_Union() const noexcept { return *_Union; }
   Union &as_Union() { return *_Union; }
-  template <typename... Args>
-  Union &create_Union(Args &&... args)
-  {
-    return (*this = Union(std::forward<Args>(args)...)).as_Union();
-  }
 
 private:
   void _clone(const Type &o) noexcept
@@ -215,8 +150,6 @@ private:
     switch (_selection)
     {
       case no_selection:
-        while (false)
-          ; /* hack for coverage tool */
         break;
       case _Enum_selection:
         _Enum = new Enum(*o._Enum);
@@ -235,8 +168,6 @@ private:
     switch (_selection)
     {
       case no_selection:
-        while (false)
-          ; /* hack for coverage tool */
         break;
       case _Enum_selection:
         delete _Enum;
