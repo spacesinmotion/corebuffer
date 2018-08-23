@@ -39,7 +39,7 @@ artifacts:
   - path: build/CoreBufferC
     name: CoreBufferC
 
-  - path: build/CoreBufferC.exe
+  - path: build/Release/CoreBufferC.exe
     name: CoreBufferC.exe
 
   - path: build/Testing/Temporary/LastTest.log
