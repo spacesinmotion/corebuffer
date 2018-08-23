@@ -9,6 +9,9 @@ image:
 - Visual Studio 2017
 - Ubuntu
 
+environment:
+  CMAKE_BUILD_TYPE: Release
+
 build_script:
 - sh: >-
     mkdir build
@@ -21,3 +24,4 @@ build_script:
 
 test_script:
 - sh: ctest --output-on-failure
+
