@@ -6,6 +6,7 @@
 #include <istream>
 #include <memory>
 #include <array>
+#include <algorithm>
 #include <type_traits>
 
 namespace CoreBuffer {
@@ -129,6 +130,79 @@ struct Enum {
     return 
       l.entries != r.entries;
   }
+
+  template<class T> void fill_entries(const T &v) {
+    std::fill(entries.begin(), entries.end(), v);
+  }
+
+  template<class Generator> void generate_entries(Generator gen) {
+    std::generate(entries.begin(), entries.end(), gen);
+  }
+
+  template<class T> std::vector<EnumEntry>::iterator remove_entries(const T &v) {
+    return std::remove(entries.begin(), entries.end(), v);
+  }
+  template<class Pred> std::vector<EnumEntry>::iterator remove_entries_if(Pred v) {
+    return std::remove_if(entries.begin(), entries.end(), v);
+  }
+
+  template<class T> void erase_entries(const T &v) {
+    entries.erase(remove_entries(v));
+  }
+  template<class Pred> void erase_entries_if(Pred v) {
+    entries.erase(remove_entries_if(v));
+  }
+
+  void reverse_entries() {
+    std::reverse(entries.begin(), entries.end());
+  }
+
+  void rotate_entries(std::vector<EnumEntry>::iterator i) {
+    std::rotate(entries.begin(), i, entries.end());
+  }
+
+  template<class Comp> void sort_entries(Comp p) {
+    std::sort(entries.begin(), entries.end(), p);
+  }
+
+  template<class Comp> bool any_of_entries(Comp p) {
+    return std::any_of(entries.begin(), entries.end(), p);
+  }
+  template<class T> bool any_of_entries_is(const T &p) {
+    return any_of_entries([&p](const EnumEntry &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_entries(Comp p) {
+    return std::all_of(entries.begin(), entries.end(), p);
+  }
+  template<class T> bool all_of_entries_are(const T &p) {
+    return all_of_entries([&p](const EnumEntry &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_entries(Comp p) {
+    return std::none_of(entries.begin(), entries.end(), p);
+  }
+  template<class T> bool none_of_entries_is(const T &p) {
+    return none_of_entries([&p](const EnumEntry &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_entries(Fn p) {
+    return std::for_each(entries.begin(), entries.end(), p);
+  }
+
+  template<class T> std::vector<EnumEntry>::iterator find_in_entries(const T &p) {
+    return std::find(entries.begin(), entries.end(), p);
+  }
+  template<class Comp> std::vector<EnumEntry>::iterator find_in_entries_if(Comp p) {
+    return std::find_if(entries.begin(), entries.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<EnumEntry>::iterator>::difference_type count_in_entries(const T &p) {
+    return std::count(entries.begin(), entries.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<EnumEntry>::iterator>::difference_type count_in_entries_if(Comp p) {
+    return std::count_if(entries.begin(), entries.end(), p);
+  }
 };
 
 struct Member {
@@ -183,6 +257,79 @@ struct Table {
       l.member != r.member
       || l.appearance != r.appearance;
   }
+
+  template<class T> void fill_member(const T &v) {
+    std::fill(member.begin(), member.end(), v);
+  }
+
+  template<class Generator> void generate_member(Generator gen) {
+    std::generate(member.begin(), member.end(), gen);
+  }
+
+  template<class T> std::vector<Member>::iterator remove_member(const T &v) {
+    return std::remove(member.begin(), member.end(), v);
+  }
+  template<class Pred> std::vector<Member>::iterator remove_member_if(Pred v) {
+    return std::remove_if(member.begin(), member.end(), v);
+  }
+
+  template<class T> void erase_member(const T &v) {
+    member.erase(remove_member(v));
+  }
+  template<class Pred> void erase_member_if(Pred v) {
+    member.erase(remove_member_if(v));
+  }
+
+  void reverse_member() {
+    std::reverse(member.begin(), member.end());
+  }
+
+  void rotate_member(std::vector<Member>::iterator i) {
+    std::rotate(member.begin(), i, member.end());
+  }
+
+  template<class Comp> void sort_member(Comp p) {
+    std::sort(member.begin(), member.end(), p);
+  }
+
+  template<class Comp> bool any_of_member(Comp p) {
+    return std::any_of(member.begin(), member.end(), p);
+  }
+  template<class T> bool any_of_member_is(const T &p) {
+    return any_of_member([&p](const Member &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_member(Comp p) {
+    return std::all_of(member.begin(), member.end(), p);
+  }
+  template<class T> bool all_of_member_are(const T &p) {
+    return all_of_member([&p](const Member &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_member(Comp p) {
+    return std::none_of(member.begin(), member.end(), p);
+  }
+  template<class T> bool none_of_member_is(const T &p) {
+    return none_of_member([&p](const Member &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_member(Fn p) {
+    return std::for_each(member.begin(), member.end(), p);
+  }
+
+  template<class T> std::vector<Member>::iterator find_in_member(const T &p) {
+    return std::find(member.begin(), member.end(), p);
+  }
+  template<class Comp> std::vector<Member>::iterator find_in_member_if(Comp p) {
+    return std::find_if(member.begin(), member.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<Member>::iterator>::difference_type count_in_member(const T &p) {
+    return std::count(member.begin(), member.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<Member>::iterator>::difference_type count_in_member_if(Comp p) {
+    return std::count_if(member.begin(), member.end(), p);
+  }
 };
 
 struct Union {
@@ -198,6 +345,82 @@ struct Union {
   friend bool operator!=(const Union&l, const Union&r) {
     return 
       l.tables != r.tables;
+  }
+
+  template<class T> void fill_tables(const T &v) {
+    std::fill(tables.begin(), tables.end(), v);
+  }
+
+  template<class Generator> void generate_tables(Generator gen) {
+    std::generate(tables.begin(), tables.end(), gen);
+  }
+
+  template<class T> std::vector<std::string>::iterator remove_tables(const T &v) {
+    return std::remove(tables.begin(), tables.end(), v);
+  }
+  template<class Pred> std::vector<std::string>::iterator remove_tables_if(Pred v) {
+    return std::remove_if(tables.begin(), tables.end(), v);
+  }
+
+  template<class T> void erase_tables(const T &v) {
+    tables.erase(remove_tables(v));
+  }
+  template<class Pred> void erase_tables_if(Pred v) {
+    tables.erase(remove_tables_if(v));
+  }
+
+  void reverse_tables() {
+    std::reverse(tables.begin(), tables.end());
+  }
+
+  void rotate_tables(std::vector<std::string>::iterator i) {
+    std::rotate(tables.begin(), i, tables.end());
+  }
+
+  void sort_tables() {
+    std::sort(tables.begin(), tables.end());
+  }
+  template<class Comp> void sort_tables(Comp p) {
+    std::sort(tables.begin(), tables.end(), p);
+  }
+
+  template<class Comp> bool any_of_tables(Comp p) {
+    return std::any_of(tables.begin(), tables.end(), p);
+  }
+  template<class T> bool any_of_tables_is(const T &p) {
+    return any_of_tables([&p](const std::string &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_tables(Comp p) {
+    return std::all_of(tables.begin(), tables.end(), p);
+  }
+  template<class T> bool all_of_tables_are(const T &p) {
+    return all_of_tables([&p](const std::string &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_tables(Comp p) {
+    return std::none_of(tables.begin(), tables.end(), p);
+  }
+  template<class T> bool none_of_tables_is(const T &p) {
+    return none_of_tables([&p](const std::string &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_tables(Fn p) {
+    return std::for_each(tables.begin(), tables.end(), p);
+  }
+
+  template<class T> std::vector<std::string>::iterator find_in_tables(const T &p) {
+    return std::find(tables.begin(), tables.end(), p);
+  }
+  template<class Comp> std::vector<std::string>::iterator find_in_tables_if(Comp p) {
+    return std::find_if(tables.begin(), tables.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<std::string>::iterator>::difference_type count_in_tables(const T &p) {
+    return std::count(tables.begin(), tables.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<std::string>::iterator>::difference_type count_in_tables_if(Comp p) {
+    return std::count_if(tables.begin(), tables.end(), p);
   }
 };
 
@@ -493,6 +716,79 @@ struct Package {
       || l.version != r.version
       || l.root_type != r.root_type
       || l.types != r.types;
+  }
+
+  template<class T> void fill_types(const T &v) {
+    std::fill(types.begin(), types.end(), v);
+  }
+
+  template<class Generator> void generate_types(Generator gen) {
+    std::generate(types.begin(), types.end(), gen);
+  }
+
+  template<class T> std::vector<Type>::iterator remove_types(const T &v) {
+    return std::remove(types.begin(), types.end(), v);
+  }
+  template<class Pred> std::vector<Type>::iterator remove_types_if(Pred v) {
+    return std::remove_if(types.begin(), types.end(), v);
+  }
+
+  template<class T> void erase_types(const T &v) {
+    types.erase(remove_types(v));
+  }
+  template<class Pred> void erase_types_if(Pred v) {
+    types.erase(remove_types_if(v));
+  }
+
+  void reverse_types() {
+    std::reverse(types.begin(), types.end());
+  }
+
+  void rotate_types(std::vector<Type>::iterator i) {
+    std::rotate(types.begin(), i, types.end());
+  }
+
+  template<class Comp> void sort_types(Comp p) {
+    std::sort(types.begin(), types.end(), p);
+  }
+
+  template<class Comp> bool any_of_types(Comp p) {
+    return std::any_of(types.begin(), types.end(), p);
+  }
+  template<class T> bool any_of_types_is(const T &p) {
+    return any_of_types([&p](const Type &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_types(Comp p) {
+    return std::all_of(types.begin(), types.end(), p);
+  }
+  template<class T> bool all_of_types_are(const T &p) {
+    return all_of_types([&p](const Type &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_types(Comp p) {
+    return std::none_of(types.begin(), types.end(), p);
+  }
+  template<class T> bool none_of_types_is(const T &p) {
+    return none_of_types([&p](const Type &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_types(Fn p) {
+    return std::for_each(types.begin(), types.end(), p);
+  }
+
+  template<class T> std::vector<Type>::iterator find_in_types(const T &p) {
+    return std::find(types.begin(), types.end(), p);
+  }
+  template<class Comp> std::vector<Type>::iterator find_in_types_if(Comp p) {
+    return std::find_if(types.begin(), types.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<Type>::iterator>::difference_type count_in_types(const T &p) {
+    return std::count(types.begin(), types.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<Type>::iterator>::difference_type count_in_types_if(Comp p) {
+    return std::count_if(types.begin(), types.end(), p);
   }
 };
 

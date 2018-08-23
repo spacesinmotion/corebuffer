@@ -6,6 +6,7 @@
 #include <istream>
 #include <memory>
 #include <array>
+#include <algorithm>
 #include <type_traits>
 
 namespace UnionTypes {
@@ -244,6 +245,79 @@ struct Root {
       || l.f != r.f
       || l.empty != r.empty
       || l.null != r.null;
+  }
+
+  template<class T> void fill_e(const T &v) {
+    std::fill(e.begin(), e.end(), v);
+  }
+
+  template<class Generator> void generate_e(Generator gen) {
+    std::generate(e.begin(), e.end(), gen);
+  }
+
+  template<class T> std::vector<AB>::iterator remove_e(const T &v) {
+    return std::remove(e.begin(), e.end(), v);
+  }
+  template<class Pred> std::vector<AB>::iterator remove_e_if(Pred v) {
+    return std::remove_if(e.begin(), e.end(), v);
+  }
+
+  template<class T> void erase_e(const T &v) {
+    e.erase(remove_e(v));
+  }
+  template<class Pred> void erase_e_if(Pred v) {
+    e.erase(remove_e_if(v));
+  }
+
+  void reverse_e() {
+    std::reverse(e.begin(), e.end());
+  }
+
+  void rotate_e(std::vector<AB>::iterator i) {
+    std::rotate(e.begin(), i, e.end());
+  }
+
+  template<class Comp> void sort_e(Comp p) {
+    std::sort(e.begin(), e.end(), p);
+  }
+
+  template<class Comp> bool any_of_e(Comp p) {
+    return std::any_of(e.begin(), e.end(), p);
+  }
+  template<class T> bool any_of_e_is(const T &p) {
+    return any_of_e([&p](const AB &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_e(Comp p) {
+    return std::all_of(e.begin(), e.end(), p);
+  }
+  template<class T> bool all_of_e_are(const T &p) {
+    return all_of_e([&p](const AB &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_e(Comp p) {
+    return std::none_of(e.begin(), e.end(), p);
+  }
+  template<class T> bool none_of_e_is(const T &p) {
+    return none_of_e([&p](const AB &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_e(Fn p) {
+    return std::for_each(e.begin(), e.end(), p);
+  }
+
+  template<class T> std::vector<AB>::iterator find_in_e(const T &p) {
+    return std::find(e.begin(), e.end(), p);
+  }
+  template<class Comp> std::vector<AB>::iterator find_in_e_if(Comp p) {
+    return std::find_if(e.begin(), e.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<AB>::iterator>::difference_type count_in_e(const T &p) {
+    return std::count(e.begin(), e.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<AB>::iterator>::difference_type count_in_e_if(Comp p) {
+    return std::count_if(e.begin(), e.end(), p);
   }
 };
 

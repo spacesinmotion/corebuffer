@@ -6,6 +6,7 @@
 #include <istream>
 #include <memory>
 #include <array>
+#include <algorithm>
 #include <type_traits>
 
 namespace Scope {
@@ -78,17 +79,172 @@ struct BaseTypes {
 
 struct PointerBaseTypes {
   std::vector<std::string> b1;
+  std::vector<std::int32_t> x;
 
   PointerBaseTypes() = default;
 
   friend bool operator==(const PointerBaseTypes&l, const PointerBaseTypes&r) {
     return 
-      l.b1 == r.b1;
+      l.b1 == r.b1
+      && l.x == r.x;
   }
 
   friend bool operator!=(const PointerBaseTypes&l, const PointerBaseTypes&r) {
     return 
-      l.b1 != r.b1;
+      l.b1 != r.b1
+      || l.x != r.x;
+  }
+
+  template<class T> void fill_b1(const T &v) {
+    std::fill(b1.begin(), b1.end(), v);
+  }
+
+  template<class Generator> void generate_b1(Generator gen) {
+    std::generate(b1.begin(), b1.end(), gen);
+  }
+
+  template<class T> std::vector<std::string>::iterator remove_b1(const T &v) {
+    return std::remove(b1.begin(), b1.end(), v);
+  }
+  template<class Pred> std::vector<std::string>::iterator remove_b1_if(Pred v) {
+    return std::remove_if(b1.begin(), b1.end(), v);
+  }
+
+  template<class T> void erase_b1(const T &v) {
+    b1.erase(remove_b1(v));
+  }
+  template<class Pred> void erase_b1_if(Pred v) {
+    b1.erase(remove_b1_if(v));
+  }
+
+  void reverse_b1() {
+    std::reverse(b1.begin(), b1.end());
+  }
+
+  void rotate_b1(std::vector<std::string>::iterator i) {
+    std::rotate(b1.begin(), i, b1.end());
+  }
+
+  void sort_b1() {
+    std::sort(b1.begin(), b1.end());
+  }
+  template<class Comp> void sort_b1(Comp p) {
+    std::sort(b1.begin(), b1.end(), p);
+  }
+
+  template<class Comp> bool any_of_b1(Comp p) {
+    return std::any_of(b1.begin(), b1.end(), p);
+  }
+  template<class T> bool any_of_b1_is(const T &p) {
+    return any_of_b1([&p](const std::string &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_b1(Comp p) {
+    return std::all_of(b1.begin(), b1.end(), p);
+  }
+  template<class T> bool all_of_b1_are(const T &p) {
+    return all_of_b1([&p](const std::string &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_b1(Comp p) {
+    return std::none_of(b1.begin(), b1.end(), p);
+  }
+  template<class T> bool none_of_b1_is(const T &p) {
+    return none_of_b1([&p](const std::string &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_b1(Fn p) {
+    return std::for_each(b1.begin(), b1.end(), p);
+  }
+
+  template<class T> std::vector<std::string>::iterator find_in_b1(const T &p) {
+    return std::find(b1.begin(), b1.end(), p);
+  }
+  template<class Comp> std::vector<std::string>::iterator find_in_b1_if(Comp p) {
+    return std::find_if(b1.begin(), b1.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<std::string>::iterator>::difference_type count_in_b1(const T &p) {
+    return std::count(b1.begin(), b1.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<std::string>::iterator>::difference_type count_in_b1_if(Comp p) {
+    return std::count_if(b1.begin(), b1.end(), p);
+  }
+
+  template<class T> void fill_x(const T &v) {
+    std::fill(x.begin(), x.end(), v);
+  }
+
+  template<class Generator> void generate_x(Generator gen) {
+    std::generate(x.begin(), x.end(), gen);
+  }
+
+  template<class T> std::vector<std::int32_t>::iterator remove_x(const T &v) {
+    return std::remove(x.begin(), x.end(), v);
+  }
+  template<class Pred> std::vector<std::int32_t>::iterator remove_x_if(Pred v) {
+    return std::remove_if(x.begin(), x.end(), v);
+  }
+
+  template<class T> void erase_x(const T &v) {
+    x.erase(remove_x(v));
+  }
+  template<class Pred> void erase_x_if(Pred v) {
+    x.erase(remove_x_if(v));
+  }
+
+  void reverse_x() {
+    std::reverse(x.begin(), x.end());
+  }
+
+  void rotate_x(std::vector<std::int32_t>::iterator i) {
+    std::rotate(x.begin(), i, x.end());
+  }
+
+  void sort_x() {
+    std::sort(x.begin(), x.end());
+  }
+  template<class Comp> void sort_x(Comp p) {
+    std::sort(x.begin(), x.end(), p);
+  }
+
+  template<class Comp> bool any_of_x(Comp p) {
+    return std::any_of(x.begin(), x.end(), p);
+  }
+  template<class T> bool any_of_x_is(const T &p) {
+    return any_of_x([&p](const std::int32_t &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_x(Comp p) {
+    return std::all_of(x.begin(), x.end(), p);
+  }
+  template<class T> bool all_of_x_are(const T &p) {
+    return all_of_x([&p](const std::int32_t &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_x(Comp p) {
+    return std::none_of(x.begin(), x.end(), p);
+  }
+  template<class T> bool none_of_x_is(const T &p) {
+    return none_of_x([&p](const std::int32_t &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_x(Fn p) {
+    return std::for_each(x.begin(), x.end(), p);
+  }
+
+  template<class T> std::vector<std::int32_t>::iterator find_in_x(const T &p) {
+    return std::find(x.begin(), x.end(), p);
+  }
+  template<class Comp> std::vector<std::int32_t>::iterator find_in_x_if(Comp p) {
+    return std::find_if(x.begin(), x.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<std::int32_t>::iterator>::difference_type count_in_x(const T &p) {
+    return std::count(x.begin(), x.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<std::int32_t>::iterator>::difference_type count_in_x_if(Comp p) {
+    return std::count_if(x.begin(), x.end(), p);
   }
 };
 
@@ -124,19 +280,22 @@ struct Initializer {
 struct Root {
   BaseTypes a;
   PointerBaseTypes b;
+  Initializer c;
 
   Root() = default;
 
   friend bool operator==(const Root&l, const Root&r) {
     return 
       l.a == r.a
-      && l.b == r.b;
+      && l.b == r.b
+      && l.c == r.c;
   }
 
   friend bool operator!=(const Root&l, const Root&r) {
     return 
       l.a != r.a
-      || l.b != r.b;
+      || l.b != r.b
+      || l.c != r.c;
   }
 };
 
@@ -238,10 +397,12 @@ private:
 
   void Write(std::ostream &o, const PointerBaseTypes &v) {
     Write(o, v.b1);
+    Write(o, v.x);
   }
 
   void Read(std::istream &s, PointerBaseTypes &v) {
     Read(s, v.b1);
+    Read(s, v.x);
   }
 
   void Write(std::ostream &o, const Initializer &v) {
@@ -259,11 +420,13 @@ private:
   void Write(std::ostream &o, const Root &v) {
     Write(o, v.a);
     Write(o, v.b);
+    Write(o, v.c);
   }
 
   void Read(std::istream &s, Root &v) {
     Read(s, v.a);
     Read(s, v.b);
+    Read(s, v.c);
   }
 
 public:

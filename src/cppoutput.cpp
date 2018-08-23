@@ -19,6 +19,12 @@ bool any_union_of(const Package &p, const Predicate &pr)
   return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Union() && pr(u.as_Union()); });
 }
 
+template <typename Predicate>
+bool any_enum_of(const Package &p, const Predicate &pr)
+{
+  return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Enum() && pr(u.as_Enum()); });
+}
+
 template <class T>
 bool hasUniqueAppearance(const T &t)
 {
@@ -100,6 +106,19 @@ bool hasVectorOfString(const Package &p)
     return any_of(t.member.begin(), t.member.end(),
                   [](const Member &m) { return m.isBaseType && m.isVector && m.type == "std::string"; });
   });
+}
+
+bool hasPlainString(const Package &p)
+{
+  return any_table_of(p, [](const Table &t) {
+    return any_of(t.member.begin(), t.member.end(),
+                  [](const Member &m) { return m.isBaseType && !m.isVector && m.type == "std::string"; });
+  });
+}
+
+bool isEnum(const Package &p, const string &type)
+{
+  return any_enum_of(p, [&type](const Enum &e) { return e.name == type; });
 }
 
 void WriteNameSpaceBegin(ostream &o, const string &path, int pos = 0)
@@ -266,10 +285,13 @@ void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
     o << "  }" << endl << endl;
   }
 
-  o << "  void Write(std::ostream &o, const std::string &v) {" << endl;
-  o << "    Write(o, v.size());" << endl;
-  o << "    o.write(v.data(), v.size());" << endl;
-  o << "  }" << endl << endl;
+  if (hasPlainString(p))
+  {
+    o << "  void Write(std::ostream &o, const std::string &v) {" << endl;
+    o << "    Write(o, v.size());" << endl;
+    o << "    o.write(v.data(), v.size());" << endl;
+    o << "  }" << endl << endl;
+  }
 
   o << "  template<typename T> void Read(std::istream &i, T &v) {" << endl;
   o << "    i.read(reinterpret_cast<char *>(&v), sizeof(T));" << endl;
@@ -367,12 +389,15 @@ void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
     o << "  }" << endl << endl;
   }
 
-  o << "  void Read(std::istream &i, std::string &v) {" << endl;
-  o << "    std::string::size_type s{0};" << endl;
-  o << "    Read(i, s);" << endl;
-  o << "    v.resize(s);" << endl;
-  o << "    i.read(&v[0], s);" << endl;
-  o << "  }" << endl << endl;
+  if (hasPlainString(p))
+  {
+    o << "  void Read(std::istream &i, std::string &v) {" << endl;
+    o << "    std::string::size_type s{0};" << endl;
+    o << "    Read(i, s);" << endl;
+    o << "    v.resize(s);" << endl;
+    o << "    i.read(&v[0], s);" << endl;
+    o << "  }" << endl << endl;
+  }
 }
 
 ostream &WriteType(ostream &o, const Member &m)
@@ -502,7 +527,157 @@ void WriteTableCompareFunctions(ostream &o, const Table &t)
   o << "  }" << endl;
 }
 
-void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
+void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
+{
+  if (!m.isVector)
+    return;
+
+  o << endl;
+  if (m.pointer != Pointer::Unique)
+  {
+    o << "  template<class T> void fill_" << m.name << "(const T &v) {" << endl;
+    o << "    std::fill(" << m.name << ".begin(), " << m.name << ".end(), v);" << endl;
+    o << "  }" << endl << endl;
+  }
+
+  o << "  template<class Generator> void generate_" << m.name << "(Generator gen) {" << endl;
+  o << "    std::generate(" << m.name << ".begin(), " << m.name << ".end(), gen);" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  template<class T> ";
+  WriteType(o, m) << "::iterator remove_" << m.name << "(const T &v) {" << endl;
+  o << "    return std::remove(" << m.name << ".begin(), " << m.name << ".end(), v);" << endl;
+  o << "  }" << endl;
+  o << "  template<class Pred> ";
+  WriteType(o, m) << "::iterator remove_" << m.name << "_if(Pred v) {" << endl;
+  o << "    return std::remove_if(" << m.name << ".begin(), " << m.name << ".end(), v);" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  template<class T> void erase_" << m.name << "(const T &v) {" << endl;
+  o << "    " << m.name << ".erase(remove_" << m.name << "(v));" << endl;
+  o << "  }" << endl;
+  o << "  template<class Pred> void erase_" << m.name << "_if(Pred v) {" << endl;
+  o << "    " << m.name << ".erase(remove_" << m.name << "_if(v));" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  void reverse_" << m.name << "() {" << endl;
+  o << "    std::reverse(" << m.name << ".begin(), " << m.name << ".end());" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  void rotate_" << m.name << "(";
+  WriteType(o, m) << "::iterator i) {" << endl;
+  o << "    std::rotate(" << m.name << ".begin(), i, " << m.name << ".end());" << endl;
+  o << "  }" << endl << endl;
+
+  if (m.isBaseType || isEnum(p, m.type))
+  {
+    o << "  void sort_" << m.name << "() {" << endl;
+    o << "    std::sort(" << m.name << ".begin(), " << m.name << ".end());" << endl;
+    o << "  }" << endl;
+  }
+  o << "  template<class Comp> void sort_" << m.name << "(Comp p) {" << endl;
+  o << "    std::sort(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  template<class Comp> bool any_of_" << m.name << "(Comp p) {" << endl;
+  o << "    return std::any_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl;
+  o << "  template<class T> bool any_of_" << m.name << "_is(const T &p) {" << endl;
+  o << "    return any_of_" << m.name << "([&p](const ";
+  auto mm = m;
+  mm.isVector = false;
+  auto mmm = mm;
+  mmm.pointer = Pointer::Shared;
+  WriteType(o, mm) << " &x) { return ";
+  if (m.pointer == Pointer::Weak)
+    o << "x.lock() && ";
+  else if (m.pointer != Pointer::Plain)
+    o << "x && ";
+  o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
+    << endl;
+  o << "  }" << endl << endl;
+  if (m.pointer == Pointer::Shared || m.pointer == Pointer::Weak)
+  {
+    o << "  bool any_of_" << m.name << "_is(const ";
+    WriteType(o, mmm) << " &p) {" << endl;
+    o << "    return any_of_" << m.name << "([&p](const ";
+    WriteType(o, mm) << " &x) { return ";
+    o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
+    o << "  }" << endl << endl;
+  }
+
+  o << "  template<class Comp> bool all_of_" << m.name << "(Comp p) {" << endl;
+  o << "    return std::all_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl;
+  o << "  template<class T> bool all_of_" << m.name << "_are(const T &p) {" << endl;
+  o << "    return all_of_" << m.name << "([&p](const ";
+  WriteType(o, mm) << " &x) { return ";
+  if (m.pointer == Pointer::Weak)
+    o << "x.lock() && ";
+  else if (m.pointer != Pointer::Plain)
+    o << "x && ";
+  o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
+    << endl;
+  o << "  }" << endl << endl;
+  if (m.pointer == Pointer::Shared || m.pointer == Pointer::Weak)
+  {
+    o << "  bool all_of_" << m.name << "_are(const ";
+    WriteType(o, mmm) << " &p) {" << endl;
+    o << "    return all_of_" << m.name << "([&p](const ";
+    WriteType(o, mm) << " &x) { return ";
+    o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
+    o << "  }" << endl << endl;
+  }
+
+  o << "  template<class Comp> bool none_of_" << m.name << "(Comp p) {" << endl;
+  o << "    return std::none_of(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl;
+  o << "  template<class T> bool none_of_" << m.name << "_is(const T &p) {" << endl;
+  o << "    return none_of_" << m.name << "([&p](const ";
+  WriteType(o, mm) << " &x) { return ";
+  if (m.pointer == Pointer::Weak)
+    o << "x.lock() && ";
+  else if (m.pointer != Pointer::Plain)
+    o << "x && ";
+  o << (m.pointer != Pointer::Plain ? "*" : "") << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });"
+    << endl;
+  o << "  }" << endl << endl;
+  if (m.pointer == Pointer::Shared || m.pointer == Pointer::Weak)
+  {
+    o << "  bool none_of_" << m.name << "_is(const ";
+    WriteType(o, mmm) << " &p) {" << endl;
+    o << "    return none_of_" << m.name << "([&p](const ";
+    WriteType(o, mm) << " &x) { return ";
+    o << "x" << (m.pointer == Pointer::Weak ? ".lock()" : "") << " == p; });" << endl;
+    o << "  }" << endl << endl;
+  }
+
+  o << "  template<class Fn> Fn for_each_" << m.name << "(Fn p) {" << endl;
+  o << "    return std::for_each(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  template<class T> ";
+  WriteType(o, m) << "::iterator find_in_" << m.name << "(const T &p) {" << endl;
+  o << "    return std::find(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl;
+  o << "  template<class Comp> ";
+  WriteType(o, m) << "::iterator find_in_" << m.name << "_if(Comp p) {" << endl;
+  o << "    return std::find_if(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl << endl;
+
+  o << "  template<class T> ";
+  o << "  typename std::iterator_traits<";
+  WriteType(o, m) << "::iterator>::difference_type count_in_" << m.name << "(const T &p) {" << endl;
+  o << "    return std::count(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl;
+  o << "  template<class Comp> ";
+  o << "  typename std::iterator_traits<";
+  WriteType(o, m) << "::iterator>::difference_type count_in_" << m.name << "_if(Comp p) {" << endl;
+  o << "    return std::count_if(" << m.name << ".begin(), " << m.name << ".end(), p);" << endl;
+  o << "  }" << endl;
+}
+
+void WriteTableDeclaration(ostream &o, const Package &p, const Table &t, const string &root_type)
 {
   o << "struct " << t.name << " {" << endl;
   for (const auto &m : t.member)
@@ -517,6 +692,9 @@ void WriteTableDeclaration(ostream &o, const Table &t, const string &root_type)
   WriteTableInitializer(o, t);
 
   WriteTableCompareFunctions(o, t);
+
+  for (const auto &m : t.member)
+    WriteMemberVectorFunctions(o, p, m);
 
   if (hasSharedAppearance(t))
   {
@@ -751,7 +929,7 @@ void WriteTypeStructs(ostream &o, const Package &p)
   for (const auto &t : p.types)
   {
     if (t.is_Table())
-      WriteTableDeclaration(o, t.as_Table(), p.root_type.value);
+      WriteTableDeclaration(o, p, t.as_Table(), p.root_type.value);
     else if (t.is_Union())
       WriteUnionStruct(o, t.as_Union(), p.root_type.value);
     else if (t.is_Enum())
@@ -894,6 +1072,7 @@ void WriteCppCode(ostream &o, const Package &p)
   o << "#include <istream>" << endl;
   o << "#include <memory>" << endl;
   o << "#include <array>" << endl;
+  o << "#include <algorithm>" << endl;
   o << "#include <type_traits>" << endl << endl;
 
   WriteNameSpaceBegin(o, p.path.value);

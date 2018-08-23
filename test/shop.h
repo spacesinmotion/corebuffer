@@ -6,6 +6,7 @@
 #include <istream>
 #include <memory>
 #include <array>
+#include <algorithm>
 #include <type_traits>
 
 namespace Example {
@@ -82,6 +83,91 @@ struct Order {
       l.items != r.items
       || l.customer != r.customer;
   }
+
+  template<class T> void fill_items(const T &v) {
+    std::fill(items.begin(), items.end(), v);
+  }
+
+  template<class Generator> void generate_items(Generator gen) {
+    std::generate(items.begin(), items.end(), gen);
+  }
+
+  template<class T> std::vector<std::shared_ptr<Item>>::iterator remove_items(const T &v) {
+    return std::remove(items.begin(), items.end(), v);
+  }
+  template<class Pred> std::vector<std::shared_ptr<Item>>::iterator remove_items_if(Pred v) {
+    return std::remove_if(items.begin(), items.end(), v);
+  }
+
+  template<class T> void erase_items(const T &v) {
+    items.erase(remove_items(v));
+  }
+  template<class Pred> void erase_items_if(Pred v) {
+    items.erase(remove_items_if(v));
+  }
+
+  void reverse_items() {
+    std::reverse(items.begin(), items.end());
+  }
+
+  void rotate_items(std::vector<std::shared_ptr<Item>>::iterator i) {
+    std::rotate(items.begin(), i, items.end());
+  }
+
+  template<class Comp> void sort_items(Comp p) {
+    std::sort(items.begin(), items.end(), p);
+  }
+
+  template<class Comp> bool any_of_items(Comp p) {
+    return std::any_of(items.begin(), items.end(), p);
+  }
+  template<class T> bool any_of_items_is(const T &p) {
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool any_of_items_is(const std::shared_ptr<Item> &p) {
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_items(Comp p) {
+    return std::all_of(items.begin(), items.end(), p);
+  }
+  template<class T> bool all_of_items_are(const T &p) {
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool all_of_items_are(const std::shared_ptr<Item> &p) {
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_items(Comp p) {
+    return std::none_of(items.begin(), items.end(), p);
+  }
+  template<class T> bool none_of_items_is(const T &p) {
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool none_of_items_is(const std::shared_ptr<Item> &p) {
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_items(Fn p) {
+    return std::for_each(items.begin(), items.end(), p);
+  }
+
+  template<class T> std::vector<std::shared_ptr<Item>>::iterator find_in_items(const T &p) {
+    return std::find(items.begin(), items.end(), p);
+  }
+  template<class Comp> std::vector<std::shared_ptr<Item>>::iterator find_in_items_if(Comp p) {
+    return std::find_if(items.begin(), items.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<std::shared_ptr<Item>>::iterator>::difference_type count_in_items(const T &p) {
+    return std::count(items.begin(), items.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<std::shared_ptr<Item>>::iterator>::difference_type count_in_items_if(Comp p) {
+    return std::count_if(items.begin(), items.end(), p);
+  }
 };
 
 struct Shop {
@@ -103,6 +189,249 @@ struct Shop {
       l.items != r.items
       || l.customers != r.customers
       || l.orders != r.orders;
+  }
+
+  template<class T> void fill_items(const T &v) {
+    std::fill(items.begin(), items.end(), v);
+  }
+
+  template<class Generator> void generate_items(Generator gen) {
+    std::generate(items.begin(), items.end(), gen);
+  }
+
+  template<class T> std::vector<std::shared_ptr<Item>>::iterator remove_items(const T &v) {
+    return std::remove(items.begin(), items.end(), v);
+  }
+  template<class Pred> std::vector<std::shared_ptr<Item>>::iterator remove_items_if(Pred v) {
+    return std::remove_if(items.begin(), items.end(), v);
+  }
+
+  template<class T> void erase_items(const T &v) {
+    items.erase(remove_items(v));
+  }
+  template<class Pred> void erase_items_if(Pred v) {
+    items.erase(remove_items_if(v));
+  }
+
+  void reverse_items() {
+    std::reverse(items.begin(), items.end());
+  }
+
+  void rotate_items(std::vector<std::shared_ptr<Item>>::iterator i) {
+    std::rotate(items.begin(), i, items.end());
+  }
+
+  template<class Comp> void sort_items(Comp p) {
+    std::sort(items.begin(), items.end(), p);
+  }
+
+  template<class Comp> bool any_of_items(Comp p) {
+    return std::any_of(items.begin(), items.end(), p);
+  }
+  template<class T> bool any_of_items_is(const T &p) {
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool any_of_items_is(const std::shared_ptr<Item> &p) {
+    return any_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_items(Comp p) {
+    return std::all_of(items.begin(), items.end(), p);
+  }
+  template<class T> bool all_of_items_are(const T &p) {
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool all_of_items_are(const std::shared_ptr<Item> &p) {
+    return all_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_items(Comp p) {
+    return std::none_of(items.begin(), items.end(), p);
+  }
+  template<class T> bool none_of_items_is(const T &p) {
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x && *x == p; });
+  }
+
+  bool none_of_items_is(const std::shared_ptr<Item> &p) {
+    return none_of_items([&p](const std::shared_ptr<Item> &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_items(Fn p) {
+    return std::for_each(items.begin(), items.end(), p);
+  }
+
+  template<class T> std::vector<std::shared_ptr<Item>>::iterator find_in_items(const T &p) {
+    return std::find(items.begin(), items.end(), p);
+  }
+  template<class Comp> std::vector<std::shared_ptr<Item>>::iterator find_in_items_if(Comp p) {
+    return std::find_if(items.begin(), items.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<std::shared_ptr<Item>>::iterator>::difference_type count_in_items(const T &p) {
+    return std::count(items.begin(), items.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<std::shared_ptr<Item>>::iterator>::difference_type count_in_items_if(Comp p) {
+    return std::count_if(items.begin(), items.end(), p);
+  }
+
+  template<class T> void fill_customers(const T &v) {
+    std::fill(customers.begin(), customers.end(), v);
+  }
+
+  template<class Generator> void generate_customers(Generator gen) {
+    std::generate(customers.begin(), customers.end(), gen);
+  }
+
+  template<class T> std::vector<std::shared_ptr<Customer>>::iterator remove_customers(const T &v) {
+    return std::remove(customers.begin(), customers.end(), v);
+  }
+  template<class Pred> std::vector<std::shared_ptr<Customer>>::iterator remove_customers_if(Pred v) {
+    return std::remove_if(customers.begin(), customers.end(), v);
+  }
+
+  template<class T> void erase_customers(const T &v) {
+    customers.erase(remove_customers(v));
+  }
+  template<class Pred> void erase_customers_if(Pred v) {
+    customers.erase(remove_customers_if(v));
+  }
+
+  void reverse_customers() {
+    std::reverse(customers.begin(), customers.end());
+  }
+
+  void rotate_customers(std::vector<std::shared_ptr<Customer>>::iterator i) {
+    std::rotate(customers.begin(), i, customers.end());
+  }
+
+  template<class Comp> void sort_customers(Comp p) {
+    std::sort(customers.begin(), customers.end(), p);
+  }
+
+  template<class Comp> bool any_of_customers(Comp p) {
+    return std::any_of(customers.begin(), customers.end(), p);
+  }
+  template<class T> bool any_of_customers_is(const T &p) {
+    return any_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
+  }
+
+  bool any_of_customers_is(const std::shared_ptr<Customer> &p) {
+    return any_of_customers([&p](const std::shared_ptr<Customer> &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_customers(Comp p) {
+    return std::all_of(customers.begin(), customers.end(), p);
+  }
+  template<class T> bool all_of_customers_are(const T &p) {
+    return all_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
+  }
+
+  bool all_of_customers_are(const std::shared_ptr<Customer> &p) {
+    return all_of_customers([&p](const std::shared_ptr<Customer> &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_customers(Comp p) {
+    return std::none_of(customers.begin(), customers.end(), p);
+  }
+  template<class T> bool none_of_customers_is(const T &p) {
+    return none_of_customers([&p](const std::shared_ptr<Customer> &x) { return x && *x == p; });
+  }
+
+  bool none_of_customers_is(const std::shared_ptr<Customer> &p) {
+    return none_of_customers([&p](const std::shared_ptr<Customer> &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_customers(Fn p) {
+    return std::for_each(customers.begin(), customers.end(), p);
+  }
+
+  template<class T> std::vector<std::shared_ptr<Customer>>::iterator find_in_customers(const T &p) {
+    return std::find(customers.begin(), customers.end(), p);
+  }
+  template<class Comp> std::vector<std::shared_ptr<Customer>>::iterator find_in_customers_if(Comp p) {
+    return std::find_if(customers.begin(), customers.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<std::shared_ptr<Customer>>::iterator>::difference_type count_in_customers(const T &p) {
+    return std::count(customers.begin(), customers.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<std::shared_ptr<Customer>>::iterator>::difference_type count_in_customers_if(Comp p) {
+    return std::count_if(customers.begin(), customers.end(), p);
+  }
+
+  template<class T> void fill_orders(const T &v) {
+    std::fill(orders.begin(), orders.end(), v);
+  }
+
+  template<class Generator> void generate_orders(Generator gen) {
+    std::generate(orders.begin(), orders.end(), gen);
+  }
+
+  template<class T> std::vector<Order>::iterator remove_orders(const T &v) {
+    return std::remove(orders.begin(), orders.end(), v);
+  }
+  template<class Pred> std::vector<Order>::iterator remove_orders_if(Pred v) {
+    return std::remove_if(orders.begin(), orders.end(), v);
+  }
+
+  template<class T> void erase_orders(const T &v) {
+    orders.erase(remove_orders(v));
+  }
+  template<class Pred> void erase_orders_if(Pred v) {
+    orders.erase(remove_orders_if(v));
+  }
+
+  void reverse_orders() {
+    std::reverse(orders.begin(), orders.end());
+  }
+
+  void rotate_orders(std::vector<Order>::iterator i) {
+    std::rotate(orders.begin(), i, orders.end());
+  }
+
+  template<class Comp> void sort_orders(Comp p) {
+    std::sort(orders.begin(), orders.end(), p);
+  }
+
+  template<class Comp> bool any_of_orders(Comp p) {
+    return std::any_of(orders.begin(), orders.end(), p);
+  }
+  template<class T> bool any_of_orders_is(const T &p) {
+    return any_of_orders([&p](const Order &x) { return x == p; });
+  }
+
+  template<class Comp> bool all_of_orders(Comp p) {
+    return std::all_of(orders.begin(), orders.end(), p);
+  }
+  template<class T> bool all_of_orders_are(const T &p) {
+    return all_of_orders([&p](const Order &x) { return x == p; });
+  }
+
+  template<class Comp> bool none_of_orders(Comp p) {
+    return std::none_of(orders.begin(), orders.end(), p);
+  }
+  template<class T> bool none_of_orders_is(const T &p) {
+    return none_of_orders([&p](const Order &x) { return x == p; });
+  }
+
+  template<class Fn> Fn for_each_orders(Fn p) {
+    return std::for_each(orders.begin(), orders.end(), p);
+  }
+
+  template<class T> std::vector<Order>::iterator find_in_orders(const T &p) {
+    return std::find(orders.begin(), orders.end(), p);
+  }
+  template<class Comp> std::vector<Order>::iterator find_in_orders_if(Comp p) {
+    return std::find_if(orders.begin(), orders.end(), p);
+  }
+
+  template<class T>   typename std::iterator_traits<std::vector<Order>::iterator>::difference_type count_in_orders(const T &p) {
+    return std::count(orders.begin(), orders.end(), p);
+  }
+  template<class Comp>   typename std::iterator_traits<std::vector<Order>::iterator>::difference_type count_in_orders_if(Comp p) {
+    return std::count_if(orders.begin(), orders.end(), p);
   }
 };
 

@@ -22,6 +22,8 @@ table BaseTypes {
 
 table PointerBaseTypes {
   b1:[string];
+
+  x:[int];
 }
 
 table Initializer {
@@ -36,4 +38,5 @@ table Initializer {
 table Root {
   a:BaseTypes;
   b:PointerBaseTypes;
+  c:Initializer;
 }
