@@ -29,7 +29,7 @@ build_script:
 
     cmake ..
 
-    cmake --build .
+    cmake --build . --config Release
 
 test_script:
 - sh: ctest --output-on-failure
