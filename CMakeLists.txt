@@ -22,7 +22,7 @@ add_definitions(-DCOREBUFFER_VERSION="${PROJECT_VERSION}")
 add_definitions(-DCOREBUFFER_BRANCH="${COREBUFFER_BRANCH}")
 
 message(STATUS "Building CoreBuffer ${PROJECT_VERSION} (${COREBUFFER_BRANCH})")
-
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 add_library(CoreBuffer STATIC src/parser.cpp src/parser.h src/structurecheck.h src/structurecheck.cpp src/cppoutput.cpp
   src/cppoutput.h src/package.cpp src/package.h src/fileposition.h src/fileerror.h)
