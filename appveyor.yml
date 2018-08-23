@@ -22,6 +22,16 @@ build_script:
 
     cmake --build . --target all
 
+- cmd: >-
+    mkdir build
+
+    cd build
+
+    cmake ..
+
+    cmake --build . --target all
+
 test_script:
 - sh: ctest --output-on-failure
+- cmd: ctest --output-on-failure
 
