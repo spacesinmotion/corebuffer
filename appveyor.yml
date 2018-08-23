@@ -9,6 +9,9 @@ image:
 - Visual Studio 2017
 - Ubuntu
 
+environment:
+  CMAKE_BUILD_TYPE: Release
+
 build_script:
 - sh: >-
     mkdir build
@@ -17,7 +20,28 @@ build_script:
 
     cmake ..
 
-    cmake --build . --target all
+    cmake --build . --config Release
+
+- cmd: >-
+    mkdir build
+
+    cd build
+
+    cmake -G "Visual Studio 15 2017 Win64" ..
+
+    cmake --build . --config Release
 
 test_script:
-- sh: ctest --output-on-failure
+- sh: ctest --output-on-failure -C Release
+- cmd: ctest --output-on-failure -C Release
+
+artifacts:
+  - path: build/CoreBufferC
+    name: CoreBufferC
+
+  - path: build/Release/CoreBufferC.exe
+    name: CoreBufferC.exe
+
+  - path: build/Testing/Temporary/LastTest.log
+    name: LastTest.log
+
