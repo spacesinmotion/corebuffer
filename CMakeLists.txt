@@ -33,7 +33,7 @@ add_executable (CoreBufferTests 3rdparty/catch2/catch.hpp test/parser_tests.cpp 
   test/corebuffer_tests.cpp test/structurecheck_tests.cpp)
 
 add_executable (CoreBufferOutputTests 3rdparty/catch2/catch.hpp test/basetypes.h test/enumtypes.h test/tabletypes.h
-  test/uniontypes.h test/shop.h test/schema.h test/shop_tests.cpp test/schema_tests.cpp test/tabletypes_tests.cpp
+  test/uniontypes.h test/schema.h test/schema_tests.cpp test/tabletypes_tests.cpp
   test/uniontypes_tests.cpp test/basetype_tests.cpp test/enumtypes_tests.cpp test/corebufferoutput_tests.cpp)
 
 target_link_libraries(CoreBufferC CoreBuffer)
@@ -46,7 +46,7 @@ add_test(NAME BaseTypeBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_
 add_test(NAME EnumTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/enumtypes.cor ${PROJECT_SOURCE_DIR}/test/enumtypes.h)
 add_test(NAME TableTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/tabletypes.cor ${PROJECT_SOURCE_DIR}/test/tabletypes.h)
 add_test(NAME UnionTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/uniontypes.cor ${PROJECT_SOURCE_DIR}/test/uniontypes.h)
-add_test(NAME ShopExampleBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/shop.cor ${PROJECT_SOURCE_DIR}/test/shop.h)
+add_test(NAME ShopExampleBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/game.cor ${PROJECT_SOURCE_DIR}/test/game.h)
 add_test(NAME SchemaBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/schema.cor ${PROJECT_SOURCE_DIR}/test/schema.h)
 
 add_test (NAME CheckUsage1 COMMAND $<TARGET_FILE:CoreBufferC> )

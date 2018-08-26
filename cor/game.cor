@@ -1,0 +1,27 @@
+package Example.Game;
+version "0.1";
+root_type Hero;
+
+table Spell {
+  manaCost:float;
+  cooldown:float;
+}
+
+table Technique {
+  damage:float;
+  strength:float;
+}
+
+union Ability { Spell, Technique }
+
+enum Category { Carries, Jungler, Initiator, Support }
+
+table Hero {
+  name:string;
+  category:Category;
+
+  health:float;
+  mana:float;
+
+  abilities:[Ability];
+}
