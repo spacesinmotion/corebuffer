@@ -44,29 +44,32 @@ for a little shop with items and orders *(There might be better solutions, but .
 
 
 ```
-package Example.Shop;
+package Example.Game;
 version "0.1";
-root_type Shop;
+root_type Hero;
 
-table Item {
+table Spell {
+  manaCost:float;
+  cooldown:float;
+}
+
+table Technique {
+  damage:float;
+  strength:float;
+}
+
+union Ability { Spell, Technique }
+
+enum Category { Carries, Jungler, Initiator, Support }
+
+table Hero {
   name:string;
-  price:float;
-}
+  category:Category;
 
-table Customer {
-  name:string;
-  address:string;
-}
+  health:float;
+  mana:float;
 
-table Order {
-  items:[shared Item];
-  customer:shared Customer;
-}
-
-table Shop {
-  items:[shared Item];
-  customers:[shared Customer];
-  orders:[Order];
+  abilities:[Ability];
 }
 ```
 
