@@ -431,14 +431,6 @@ private:
     Read(s, v.name);
   }
 
-  void Write(std::ostream &o, const B &v) {
-    Write(o, v.size);
-  }
-
-  void Read(std::istream &s, B &v) {
-    Read(s, v.size);
-  }
-
   void Write(std::ostream &o, const AB &v) {
     o.write(reinterpret_cast<const char*>(&v._selection), sizeof(AB::Selection_t));
     switch(v._selection) {

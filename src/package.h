@@ -95,12 +95,14 @@ struct Method
 struct Table
 {
   explicit Table(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
+  explicit Table(const string &n, bool isComplex) : name(n), isComplexType(isComplex) {}
 
   string name;
   vector<Member> member;
   vector<Method> methods;
   unsigned char appearance{0};
   FilePosition location;
+  bool isComplexType{true};
 };
 
 struct Union

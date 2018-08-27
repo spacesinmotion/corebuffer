@@ -711,18 +711,18 @@ void Parser::initBaseTypes()
   aliases["double"] = "double";
   aliases["bool"] = "bool";
 
-  package.baseTypes.emplace_back("float");
-  package.baseTypes.emplace_back("double");
-  package.baseTypes.emplace_back("bool");
+  package.baseTypes.emplace_back("float", false);
+  package.baseTypes.emplace_back("double", false);
+  package.baseTypes.emplace_back("bool", false);
 
-  package.baseTypes.emplace_back("std::int8_t");
-  package.baseTypes.emplace_back("std::int16_t");
-  package.baseTypes.emplace_back("std::int32_t");
-  package.baseTypes.emplace_back("std::int64_t");
-  package.baseTypes.emplace_back("std::uint8_t");
-  package.baseTypes.emplace_back("std::uint16_t");
-  package.baseTypes.emplace_back("std::uint32_t");
-  package.baseTypes.emplace_back("std::uint64_t");
+  package.baseTypes.emplace_back("std::int8_t", false);
+  package.baseTypes.emplace_back("std::int16_t", false);
+  package.baseTypes.emplace_back("std::int32_t", false);
+  package.baseTypes.emplace_back("std::int64_t", false);
+  package.baseTypes.emplace_back("std::uint8_t", false);
+  package.baseTypes.emplace_back("std::uint16_t", false);
+  package.baseTypes.emplace_back("std::uint32_t", false);
+  package.baseTypes.emplace_back("std::uint64_t", false);
 
   package.baseTypes.emplace_back("std::string");
 
@@ -741,7 +741,7 @@ void Parser::initBaseTypes()
   defaults["std::uint64_t"] = "0u";
 }
 
-Table *Parser::tableForType(const std::string &name)
+Table *Parser::tableForType(const std::string &name) const
 {
   for (auto &t : package.types)
     if (t.is_Table() && t.as_Table().name == name)
@@ -752,7 +752,7 @@ Table *Parser::tableForType(const std::string &name)
   return nullptr;
 }
 
-Union *Parser::unionForType(const std::string &name)
+Union *Parser::unionForType(const std::string &name) const
 {
   for (auto &u : package.types)
     if (u.is_Union() && u.as_Union().name == name)
@@ -760,7 +760,7 @@ Union *Parser::unionForType(const std::string &name)
   return nullptr;
 }
 
-Enum *Parser::enumForType(const std::string &name)
+Enum *Parser::enumForType(const std::string &name) const
 {
   for (auto &e : package.types)
     if (e.is_Enum() && e.as_Enum().name == name)
@@ -823,6 +823,7 @@ void Parser::updateTableAppearance()
       updateAppearance(tableForType(m.type), m);
       updateAppearance(unionForType(m.type), m);
     }
+    t.as_Table().isComplexType = isComplexType(t.as_Table(), std::unordered_set<const Table *>());
   }
 }
 
@@ -838,6 +839,32 @@ std::string Parser::fullPackageScope() const
     scope += "::" + package.path.value.substr(pos, end - pos);
   }
   return scope.empty() ? "" : scope + "::";
+}
+
+bool Parser::isComplexType(const std::string &n, std::unordered_set<const Table *> &visited) const
+{
+  if (enumForType(n))
+    return false;
+
+  if (n == "std::string" || unionForType(n))
+    return true;
+
+  const auto *t = tableForType(n);
+  return t && isComplexType(*t, visited);
+}
+
+bool Parser::isComplexType(const Table &t, std::unordered_set<const Table *> &visited) const
+{
+  if (!t.isComplexType)
+    return false;
+
+  if (visited.find(&t) != visited.end())
+    return true;
+  visited.insert(&t);
+
+  return std::any_of(t.member.begin(), t.member.end(), [this, &visited](const Member &m) {
+    return m.isVector || m.pointer != Pointer::Plain || isComplexType(m.type, visited);
+  });
 }
 
 FileError::FileError(const std::string &m, const FilePosition &s) : std::runtime_error(m), _state(s) {}

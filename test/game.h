@@ -374,26 +374,6 @@ private:
     i.read(&v[0], s);
   }
 
-  void Write(std::ostream &o, const Spell &v) {
-    Write(o, v.manaCost);
-    Write(o, v.cooldown);
-  }
-
-  void Read(std::istream &s, Spell &v) {
-    Read(s, v.manaCost);
-    Read(s, v.cooldown);
-  }
-
-  void Write(std::ostream &o, const Technique &v) {
-    Write(o, v.damage);
-    Write(o, v.strength);
-  }
-
-  void Read(std::istream &s, Technique &v) {
-    Read(s, v.damage);
-    Read(s, v.strength);
-  }
-
   void Write(std::ostream &o, const Ability &v) {
     o.write(reinterpret_cast<const char*>(&v._selection), sizeof(Ability::Selection_t));
     switch(v._selection) {

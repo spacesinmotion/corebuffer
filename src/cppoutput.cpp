@@ -72,6 +72,18 @@ bool someThingIsSharedVector(const Package &p)
 }
 
 template <class T>
+bool isComplex(const T &t)
+{
+  return t.isComplexType;
+}
+
+template <>
+bool isComplex(const Union &)
+{
+  return true;
+}
+
+template <class T>
 bool hasWeakAppearance(const T &t)
 {
   return ((t.appearance & WeakAppearance) == WeakAppearance) ||
@@ -721,7 +733,7 @@ void WritePointerOutputFor(ostream &o, const T &t)
     o << "    Write(o, v.lock(), " << t.name << "_count_);" << endl;
     o << "  }" << endl << endl;
   }
-  if (hasPlainVectorAppearance(t))
+  if (isComplex(t) && hasPlainVectorAppearance(t))
   {
     o << "  void Write(std::ostream &o, const std::vector<" << t.name << "> &v) {" << endl;
     o << "    Write(o, v.size());" << endl;
@@ -733,10 +745,13 @@ void WritePointerOutputFor(ostream &o, const T &t)
 
 void WriteTableOutput(ostream &o, const Table &t)
 {
-  o << "  void Write(std::ostream &o, const " << t.name << " &v) {" << endl;
-  for (const auto &m : t.member)
-    o << "    Write(o, v." << m.name << ");" << endl;
-  o << "  }" << endl << endl;
+  if (isComplex(t))
+  {
+    o << "  void Write(std::ostream &o, const " << t.name << " &v) {" << endl;
+    for (const auto &m : t.member)
+      o << "    Write(o, v." << m.name << ");" << endl;
+    o << "  }" << endl << endl;
+  }
 
   WritePointerOutputFor(o, t);
 }
@@ -758,7 +773,7 @@ void WritePointerInputFor(ostream &o, const T &t)
     o << "    v = t;" << endl;
     o << "  }" << endl << endl;
   }
-  if (hasPlainVectorAppearance(t))
+  if (isComplex(t) && hasPlainVectorAppearance(t))
   {
     o << "  void Read(std::istream &s, std::vector<" << t.name << "> &v) {" << endl;
     o << "    auto size = v.size();" << endl;
@@ -772,10 +787,13 @@ void WritePointerInputFor(ostream &o, const T &t)
 
 void WriteTableInput(ostream &o, const Table &t)
 {
-  o << "  void Read(std::istream &s, " << t.name << " &v) {" << endl;
-  for (const auto &m : t.member)
-    o << "    Read(s, v." << m.name << ");" << endl;
-  o << "  }" << endl << endl;
+  if (isComplex(t))
+  {
+    o << "  void Read(std::istream &s, " << t.name << " &v) {" << endl;
+    for (const auto &m : t.member)
+      o << "    Read(s, v." << m.name << ");" << endl;
+    o << "  }" << endl << endl;
+  }
 
   WritePointerInputFor(o, t);
 }

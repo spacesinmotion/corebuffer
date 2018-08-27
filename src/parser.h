@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 using std::unique_ptr;
 
@@ -74,11 +75,14 @@ private:
   bool readString(std::string &val);
 
   void initBaseTypes();
-  Table *tableForType(const std::string &t);
-  Union *unionForType(const std::string &t);
-  Enum *enumForType(const std::string &t);
+  Table *tableForType(const std::string &t) const;
+  Union *unionForType(const std::string &t) const;
+  Enum *enumForType(const std::string &t) const;
   void updateTableAppearance();
   std::string fullPackageScope() const;
+
+  bool isComplexType(const std::string &t, std::unordered_set<const Table *> &visited) const;
+  bool isComplexType(const Table &t, std::unordered_set<const Table *> &visited) const;
 
 private:
   const string &text;

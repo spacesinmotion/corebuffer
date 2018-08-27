@@ -80,6 +80,7 @@ enum Access { Private, Public = 3, Protected }
       REQUIRE(p.types[1].is_Table());
 
       CHECK(p.types[0].as_Table().name == "XXX");
+      CHECK(p.types[0].as_Table().isComplexType);
 
       REQUIRE(p.types[0].as_Table().member.size() == 4);
 
@@ -225,6 +226,8 @@ table VectorTypes {
 
     REQUIRE((p.types.size() == 2 && p.types.back().is_Table() && p.types.back().as_Table().member.size() == 4));
 
+    CHECK(p.types.back().as_Table().isComplexType);
+
     CHECK(!p.types.back().as_Table().member[0].isBaseType);
     CHECK(p.types.back().as_Table().member[0].isVector);
     CHECK(p.types.back().as_Table().member[0].pointer == Pointer::Unique);
@@ -255,8 +258,12 @@ table VectorTypes {
   a:Test;
 })");
 
-    CHECK((p.types.size() == 2 && p.types.front().is_Enum() && p.types.front().as_Enum().entries.size() == 3));
-    CHECK((p.types.size() == 2 && p.types.back().is_Table() && p.types.back().as_Table().member.size() == 1));
+    REQUIRE(p.types.size() == 2);
+    REQUIRE(p.types.front().is_Enum());
+    REQUIRE(p.types.back().is_Table());
+    CHECK(p.types.front().as_Enum().entries.size() == 3);
+    CHECK(p.types.back().as_Table().member.size() == 1);
+    CHECK_FALSE(p.types.back().as_Table().isComplexType);
   }
 
   SECTION("default values for enums")
@@ -279,6 +286,7 @@ table Dummy
 
     CHECK(p.types[1].as_Table().member[0].defaultValue.value == "Scope::Sub::EnumTypes::alpha");
     CHECK(p.types[1].as_Table().member[1].defaultValue.value == "Scope::Sub::EnumTypes::delta");
+    CHECK_FALSE(p.types[1].as_Table().isComplexType);
   }
 
   SECTION("default values for enums without package")
@@ -300,6 +308,7 @@ table Dummy
 
     CHECK(p.types[1].as_Table().member[0].defaultValue.value == "EnumTypes::alpha");
     CHECK(p.types[1].as_Table().member[1].defaultValue.value == "EnumTypes::delta");
+    CHECK_FALSE(p.types[1].as_Table().isComplexType);
   }
 
   SECTION("empty table or enum")
@@ -310,11 +319,59 @@ table Dummy
 
   SECTION("default values for bool")
   {
-    parse(
+    auto p = parse(
         "table A {\n"
         "a:bool = false;\n"
         "b:bool = true;\n"
         "}");
+    REQUIRE(p.types.size() == 1);
+    REQUIRE(p.types.front().is_Table());
+    CHECK_FALSE(p.types.front().as_Table().isComplexType);
+  }
+
+  SECTION("vectors are complex")
+  {
+    auto p = parse(
+        "table A {\n"
+        "a:[int];\n"
+        "}");
+    REQUIRE(p.types.size() == 1);
+    REQUIRE(p.types.front().is_Table());
+    CHECK(p.types.front().as_Table().isComplexType);
+  }
+
+  SECTION("pointers are complex")
+  {
+    auto p = parse(
+        "table B{}"
+        "table A {\n"
+        "a:shared B;\n"
+        "}");
+    REQUIRE(p.types.size() == 2);
+    REQUIRE(p.types.back().is_Table());
+    CHECK(p.types.back().as_Table().isComplexType);
+  }
+
+  SECTION("recursive table is complex")
+  {
+    auto p = parse(
+        "table A {\n"
+        "a:shared A;\n"
+        "}");
+    REQUIRE(p.types.size() == 1);
+    REQUIRE(p.types.back().is_Table());
+    CHECK(p.types.back().as_Table().isComplexType);
+  }
+
+  SECTION("strings are complex")
+  {
+    auto p = parse(
+        "table A {\n"
+        "a:string;\n"
+        "}");
+    REQUIRE(p.types.size() == 1);
+    REQUIRE(p.types.back().is_Table());
+    CHECK(p.types.back().as_Table().isComplexType);
   }
 
   SECTION("trailing ',' enum") { parse("enum Dummy {a,b,}"); }
