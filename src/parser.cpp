@@ -823,7 +823,9 @@ void Parser::updateTableAppearance()
       updateAppearance(tableForType(m.type), m);
       updateAppearance(unionForType(m.type), m);
     }
-    t.as_Table().isComplexType = isComplexType(t.as_Table(), std::unordered_set<const Table *>());
+
+    std::unordered_set<const Table *> visited;
+    t.as_Table().isComplexType = isComplexType(t.as_Table(), visited);
   }
 }
 
