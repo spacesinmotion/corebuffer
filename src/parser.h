@@ -49,6 +49,7 @@ private:
   bool readMainContent();
   bool readTable();
   bool readEnum();
+  bool readFlag();
 
   bool readUnion();
   bool readUnionEntries(Union &u);
@@ -57,6 +58,8 @@ private:
 
   bool readEnumEntryList(Enum &e, size_t lastValue);
   bool readEnumMemberDefault(size_t &v);
+
+  bool readFlagEntryList(Flag &f);
 
   bool readTableMemberOrMethod(Table &t);
   bool readTableMethod(Table &t);

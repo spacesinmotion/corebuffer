@@ -236,7 +236,7 @@ bool Parser::readRootType()
 
 bool Parser::readMainContent()
 {
-  return readTable() || readUnion() || readEnum() || readPackage() || readVersion() || readRootType();
+  return readTable() || readUnion() || readEnum() || readFlag() || readPackage() || readVersion() || readRootType();
 }
 
 bool Parser::readTable()
@@ -286,6 +286,31 @@ bool Parser::readEnum()
         }))
     {
       package.types.emplace_back(e);
+      return true;
+    }
+  }
+
+  rewind(s);
+  return false;
+}
+
+bool Parser::readFlag()
+{
+  auto s = state();
+
+  if (read("flag"))
+  {
+    const auto location = stateBefor(4);
+    Flag f(readIdentifier(), location);
+    if (f.name.empty())
+      throw FileError("Expected flag name after 'flag'.", state());
+
+    if (readScopeStatement([this, &f]() {
+          readFlagEntryList(f);
+          return true;
+        }))
+    {
+      package.types.emplace_back(f);
       return true;
     }
   }
@@ -412,6 +437,26 @@ bool Parser::readEnumMemberDefault(size_t &v)
     std::stringstream ss(val);
     if (ss >> v)
       return true;
+  }
+
+  rewind(s);
+  return false;
+}
+
+bool Parser::readFlagEntryList(Flag &f)
+{
+  auto s = state();
+
+  const auto name = readIdentifier();
+  if (!name.empty())
+  {
+    const auto location = stateBefor(name.size());
+    f.entries.emplace_back(name, location);
+    if (read("="))
+      throw FileError("Definition of flag values not supported.", stateBefor(1));
+    if (read(","))
+      readFlagEntryList(f);
+    return true;
   }
 
   rewind(s);

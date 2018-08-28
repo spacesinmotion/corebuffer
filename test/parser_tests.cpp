@@ -440,4 +440,26 @@ table Dummy
       CHECK(p.types[0].as_Union().tables[1].value == "B");
     }
   }
+
+  SECTION("flags")
+  {
+    SECTION("basic parsing")
+    {
+      parse("flag U { }\n");
+      parse("flag U { a }\n");
+      parse("flag U { v, x }\n");
+      parse("flag U { b, a, }\n");
+    }
+
+    SECTION("parsing content test")
+    {
+      const auto p = parse("flag U { a, b }\n");
+      REQUIRE((p.types.size() == 1 && p.types[0].is_Flag()));
+      CHECK(p.types[0].as_Flag().name == "U");
+
+      REQUIRE(p.types[0].as_Flag().entries.size() == 2);
+      CHECK(p.types[0].as_Flag().entries[0].value == "a");
+      CHECK(p.types[0].as_Flag().entries[1].value == "b");
+    }
+  }
 }
