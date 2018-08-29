@@ -9,6 +9,7 @@
 struct Package;
 struct Table;
 struct Enum;
+struct Flag;
 struct Union;
 struct Method;
 
@@ -23,6 +24,7 @@ private:
   void initNameSets();
   void checkDuplicateTables();
   void checkDuplicateEnums();
+  void checkDuplicateFlags();
   void checkDuplicateUnions();
 
   void checkTables();
@@ -38,6 +40,10 @@ private:
   void checkEmptyEnums();
   void checkDuplicateEnumEntries(const Enum &e);
 
+  void checkFlags();
+  void checkEmptyFlags();
+  void checkDuplicateFlagEntries(const Flag &e);
+
   void checkUnions();
   void checkEmptyUnions();
   void checkDuplicateUnionEntries(const Union &u);
@@ -48,15 +54,18 @@ private:
 
   void checkBaseTypePointer();
   void checkEnumTypePointer();
+  void checkFlagTypePointer();
 
   void checkDefaultValues();
   void checkDefaultValuesOfBaseTypes();
   void checkDefaultValuesOfEnums();
+  void checkDefaultValuesOfFlags();
   void checkDefaultValuesOfTables();
 
   bool isBaseType(const std::string &name);
   bool tableExists(const std::string &name);
   bool enumExists(const std::string &name);
+  bool flagExists(const std::string &name);
   bool unionExists(const std::string &name);
   bool isValidType(const std::string &name);
 
@@ -74,6 +83,7 @@ private:
 
   std::unordered_set<std::string> _tableNames;
   std::unordered_set<std::string> _enumNames;
+  std::unordered_set<std::string> _flagNames;
   std::unordered_set<std::string> _unionNames;
 };
 

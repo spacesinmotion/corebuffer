@@ -64,7 +64,7 @@ add_test (NAME CheckStructureError COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_
 add_test (NAME CheckError COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/parser_errors.cor schema.h)
 set_tests_properties (CheckStructureError CheckError PROPERTIES PASS_REGULAR_EXPRESSION "error:")
 
-add_test(CoreBufferTest CoreBufferTests -r compact)
+add_test(CoreBufferTest CoreBufferTests)
 add_test(CoreBufferOutputTest CoreBufferOutputTests)
 
 

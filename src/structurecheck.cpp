@@ -12,11 +12,13 @@ const std::vector<FileError> &StructureCheck::check()
   initNameSets();
   checkTables();
   checkEnums();
+  checkFlags();
   checkUnions();
   checkPackage();
   checkRootType();
   checkBaseTypePointer();
   checkEnumTypePointer();
+  checkFlagTypePointer();
   checkDefaultValues();
 
   return _errors;
@@ -26,6 +28,7 @@ void StructureCheck::initNameSets()
 {
   checkDuplicateTables();
   checkDuplicateEnums();
+  checkDuplicateFlags();
   checkDuplicateUnions();
 }
 
@@ -43,11 +46,19 @@ void StructureCheck::checkDuplicateEnums()
       _errors.emplace_back("enum '" + e.as_Enum().name + "' already defined.", e.as_Enum().location);
 }
 
+void StructureCheck::checkDuplicateFlags()
+{
+  for (const auto &e : _package.types)
+    if (e.is_Flag() &&
+        (!_flagNames.emplace(e.as_Flag().name).second || tableExists(e.as_Flag().name) || enumExists(e.as_Flag().name)))
+      _errors.emplace_back("flag '" + e.as_Flag().name + "' already defined.", e.as_Flag().location);
+}
+
 void StructureCheck::checkDuplicateUnions()
 {
   for (const auto &u : _package.types)
     if (u.is_Union() && (!_unionNames.emplace(u.as_Union().name).second || tableExists(u.as_Union().name) ||
-                         enumExists(u.as_Union().name)))
+                         enumExists(u.as_Union().name) || flagExists(u.as_Union().name)))
       _errors.emplace_back("union '" + u.as_Union().name + "' already defined.", u.as_Union().location);
 }
 
@@ -168,6 +179,29 @@ void StructureCheck::checkDuplicateEnumEntries(const Enum &e)
       _errors.emplace_back("enum value '" + entry.name + "' already defined for '" + e.name + "'.", entry.location);
 }
 
+void StructureCheck::checkFlags()
+{
+  checkEmptyFlags();
+  for (const auto &f : _package.types)
+    if (f.is_Flag())
+      checkDuplicateFlagEntries(f.as_Flag());
+}
+
+void StructureCheck::checkEmptyFlags()
+{
+  for (const auto &e : _package.types)
+    if (e.is_Flag() && e.as_Flag().entries.empty())
+      _errors.emplace_back("Empty flag '" + e.as_Flag().name + "'.", e.as_Flag().location);
+}
+
+void StructureCheck::checkDuplicateFlagEntries(const Flag &f)
+{
+  unordered_set<string> names;
+  for (const auto &entry : f.entries)
+    if (!names.emplace(entry.value).second)
+      _errors.emplace_back("flag value '" + entry.value + "' already defined for '" + f.name + "'.", entry.location);
+}
+
 void StructureCheck::checkUnions()
 {
   checkEmptyUnions();
@@ -246,6 +280,15 @@ void StructureCheck::checkEnumTypePointer()
           _errors.emplace_back("enums cannot be pointer.", m.location);
 }
 
+void StructureCheck::checkFlagTypePointer()
+{
+  for (const auto &t : _package.types)
+    if (t.is_Table())
+      for (const auto &m : t.as_Table().member)
+        if (!m.isBaseType && m.pointer != Pointer::Plain && flagExists(m.type))
+          _errors.emplace_back("flags cannot be pointer.", m.location);
+}
+
 bool StructureCheck::isFloat(const string &number)
 {
   istringstream iss(number);
@@ -276,6 +319,7 @@ void StructureCheck::checkDefaultValues()
 {
   checkDefaultValuesOfBaseTypes();
   checkDefaultValuesOfEnums();
+  checkDefaultValuesOfFlags();
   checkDefaultValuesOfTables();
 }
 
@@ -331,6 +375,26 @@ void StructureCheck::checkDefaultValuesOfEnums()
   }
 }
 
+void StructureCheck::checkDefaultValuesOfFlags()
+{
+  for (const auto &t : _package.types)
+  {
+    if (!t.is_Table())
+      continue;
+    for (const auto &m : t.as_Table().member)
+    {
+      if (!flagExists(m.type) || m.defaultValue.value.empty())
+        continue;
+
+      if (isFloat(m.defaultValue.value) || isString(m.defaultValue.value) || isBool(m.defaultValue.value))
+        _errors.emplace_back("only values of '" + m.type + "' can be assigned here.", m.defaultValue.location);
+      else if (m.defaultValue.value.find(m.type) == string::npos)
+        _errors.emplace_back("unknown value '" + m.defaultValue.value + "' for flag '" + m.type + "'.",
+                             m.defaultValue.location);
+    }
+  }
+}
+
 void StructureCheck::checkDefaultValuesOfTables()
 {
   for (const auto &t : _package.types)
@@ -370,6 +434,11 @@ bool StructureCheck::enumExists(const string &name)
   return _enumNames.find(name) != _enumNames.end();
 }
 
+bool StructureCheck::flagExists(const string &name)
+{
+  return _flagNames.find(name) != _flagNames.end();
+}
+
 bool StructureCheck::unionExists(const string &name)
 {
   return _unionNames.find(name) != _unionNames.end();
@@ -377,7 +446,7 @@ bool StructureCheck::unionExists(const string &name)
 
 bool StructureCheck::isValidType(const string &name)
 {
-  return isBaseType(name) || tableExists(name) || unionExists(name) || enumExists(name);
+  return isBaseType(name) || tableExists(name) || unionExists(name) || enumExists(name) || flagExists(name);
 }
 
 string StructureCheck::methodParameterKey(const Method &m)

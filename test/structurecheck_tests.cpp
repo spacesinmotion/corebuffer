@@ -75,6 +75,20 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
     checkErrorIn("enum value 'a' already defined for 'E2'.", 1, 14, "enum E2 {a,b,a}");
   }
 
+  SECTION("flag structure errors")
+  {
+    checkErrorIn("flag 'F1' already defined.", 3, 2,
+                 "flag F1 { c }\n"
+                 "flag F2 { c }\n"
+                 " flag F1 { a }\n");
+    checkErrorIn("flag 'F1' already defined.", 3, 2,
+                 "table F1 { c:int; }\n"
+                 "flag F2 { c }\n"
+                 " flag F1 { a }\n");
+    checkErrorIn("Empty flag 'F2'.", 1, 4, "   flag F2 {}");
+    checkErrorIn("flag value 'a' already defined for 'F2'.", 1, 14, "flag F2 {a,b,a}");
+  }
+
   SECTION("root_type errors")
   {
     string allText =
@@ -139,6 +153,27 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                  "  c:unique E;\n"
                  "}\n"
                  "enum E {a,b}\n");
+  }
+
+  SECTION("no pointer for flags")
+  {
+    checkErrorIn("flags cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:shared F;\n"
+                 "}\n"
+                 "flag F {a,b}\n");
+
+    checkErrorIn("flags cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:weak F;\n"
+                 "}\n"
+                 "flag F {a,b}\n");
+
+    checkErrorIn("flags cannot be pointer.", 2, 3,
+                 "table T {\n"
+                 "  c:unique F;\n"
+                 "}\n"
+                 "flag F {a,b}\n");
   }
 
   SECTION("table special function checks")
@@ -289,6 +324,20 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                    "enum E1 { A, B, C }\n"
                    "table T1 {\n"
                    "  a:E1=fail;\n"
+                   "}");
+      checkErrorIn("only values of 'E1' can be assigned here.", 3, 8,
+                   "enum E1 { A, B, C }\n"
+                   "table T1 {\n"
+                   "  a:E1=true;\n"
+                   "}");
+    }
+
+    SECTION("flags")
+    {
+      checkErrorIn("unknown value 'fail' for flag 'F1'.", 3, 8,
+                   "flag F1 { A, B, C }\n"
+                   "table T1 {\n"
+                   "  a:F1=fail;\n"
                    "}");
       checkErrorIn("only values of 'E1' can be assigned here.", 3, 8,
                    "enum E1 { A, B, C }\n"
