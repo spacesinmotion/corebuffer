@@ -25,6 +25,12 @@ bool any_enum_of(const Package &p, const Predicate &pr)
   return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Enum() && pr(u.as_Enum()); });
 }
 
+template <typename Predicate>
+bool any_flag_of(const Package &p, const Predicate &pr)
+{
+  return any_of(p.types.begin(), p.types.end(), [&pr](const Type &u) { return u.is_Flag() && pr(u.as_Flag()); });
+}
+
 template <class T>
 bool hasUniqueAppearance(const T &t)
 {
@@ -133,6 +139,11 @@ bool isEnum(const Package &p, const string &type)
   return any_enum_of(p, [&type](const Enum &e) { return e.name == type; });
 }
 
+bool isFlag(const Package &p, const string &type)
+{
+  return any_flag_of(p, [&type](const Flag &e) { return e.name == type; });
+}
+
 void WriteNameSpaceBegin(ostream &o, const string &path, int pos = 0)
 {
   if (path.empty())
@@ -202,6 +213,152 @@ void WriteEnumFunctions(ostream &o, const Enum &e)
   o << "  }" << endl;
   o << "  return \"<error>\";" << endl;
   o << "};" << endl << endl;
+}
+
+void WriteFlagDeclaration(ostream &o, const Flag &f, const string &intType)
+{
+  o << "struct " << f.name << " {" << endl;
+  o << "  enum value_t {" << endl;
+  o << "    _none = 0," << endl;
+  int64_t i = 1;
+  for (const auto &v : f.entries)
+  {
+    o << "    " << v.value << " = " << i << "," << endl;
+    i <<= 1;
+  }
+  o << "  };" << endl << endl;
+
+  o << "  inline " << f.name << "(value_t v = _none) : value(v) {}" << endl << endl;
+
+  o << "  bool operator[](const value_t &a) const { return (value & a) == a; }" << endl;
+  o << "  bool operator[](const " << f.name << " &a) const { return (value & a.value) == a.value; }" << endl;
+
+  o << "  friend bool operator==(const " << f.name << " &a, const " << f.name << " &b) { return a.value == b.value; }"
+    << endl;
+  o << "  friend bool operator!=(const " << f.name << " &a, const " << f.name << " &b) { return a.value != b.value; }"
+    << endl
+    << endl;
+
+  o << "  " << intType << " value;" << endl;
+
+  o << "};" << endl << endl;
+}
+
+void WriteFlagFunctions(ostream &o, const Flag &f, const string &intType)
+{
+  o << "inline " << f.name << " operator|(" << f.name << "::value_t a, " << f.name << "::value_t b)" << endl;
+  o << "{" << endl;
+  o << "  return " << f.name << "::value_t((static_cast<" << intType << ">(a)) | (static_cast<" << intType << ">(b)));"
+    << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " operator|(const " << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return " << f.name << "::value_t((static_cast<" << intType << ">(a.value)) | (static_cast<" << intType
+    << ">(b.value)));" << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " &operator|=(" << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return reinterpret_cast<" << f.name << " &>((reinterpret_cast<" << intType << " &>(a.value)) |= (static_cast<"
+    << intType << ">(b.value)));" << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " operator&(" << f.name << "::value_t a, " << f.name << "::value_t b)" << endl;
+  o << "{" << endl;
+  o << "  return " << f.name << "::value_t((static_cast<" << intType << ">(a)) & (static_cast<" << intType << ">(b)));"
+    << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " operator&(const " << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return " << f.name << "::value_t((static_cast<" << intType << ">(a.value)) & (static_cast<" << intType
+    << ">(b.value)));" << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " &operator&=(" << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return reinterpret_cast<" << f.name << " &>((reinterpret_cast<" << intType << " &>(a.value)) &= (static_cast<"
+    << intType << ">(b.value)));" << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " operator~(" << f.name << "::value_t a) { return " << f.name << "::value_t(~static_cast<"
+    << intType << ">(a)); }" << endl;
+  o << "inline " << f.name << " operator~(const " << f.name << " &a) { return " << f.name << "::value_t(~a.value); }"
+    << endl;
+  o << "inline " << f.name << " operator^(" << f.name << "::value_t a, " << f.name << "::value_t b)" << endl;
+  o << "{" << endl;
+  o << "  return " << f.name << "::value_t((static_cast<" << intType << ">(a)) ^ (static_cast<" << intType << ">(b)));"
+    << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " operator^(const " << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return " << f.name << "::value_t((static_cast<" << intType << ">(a.value)) ^ (static_cast<" << intType
+    << ">(b.value)));" << endl;
+  o << "}" << endl;
+  o << "inline " << f.name << " &operator^=(" << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return reinterpret_cast<" << f.name << " &>((reinterpret_cast<" << intType << " &>(a.value)) ^= (static_cast<"
+    << intType << ">(b.value)));" << endl;
+  o << "}" << endl;
+  o << "inline bool operator<(const " << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return a.value < b.value;" << endl;
+  o << "}" << endl;
+  o << "inline bool operator>(const " << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return a.value > b.value;" << endl;
+  o << "}" << endl;
+  o << "inline bool operator>=(const " << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return a.value >= b.value;" << endl;
+  o << "}" << endl;
+  o << "inline bool operator<=(const " << f.name << " &a, const " << f.name << " &b)" << endl;
+  o << "{" << endl;
+  o << "  return a.value <= b.value;" << endl;
+  o << "}" << endl;
+  o << "" << endl;
+  o << "inline const std::array<" << f.name << "::value_t, 4> &" << f.name << "Values()" << endl;
+  o << "{" << endl;
+  o << "  static const std::array<" << f.name << "::value_t, 4> values{{" << endl;
+  o << "      " << f.name << "::alpha," << endl;
+  o << "      " << f.name << "::beta," << endl;
+  o << "      " << f.name << "::gamma," << endl;
+  o << "      " << f.name << "::delta," << endl;
+  o << "  }};" << endl;
+  o << "  return values;" << endl;
+  o << "};" << endl;
+  o << "" << endl;
+  o << "inline const char *ValueName(const " << f.name << "::value_t &v)" << endl;
+  o << "{" << endl;
+  o << "  switch (v)" << endl;
+  o << "  {" << endl;
+  o << "    default:" << endl;
+  o << "      break;" << endl;
+  o << "    case " << f.name << "::alpha:" << endl;
+  o << "      return \"alpha\";" << endl;
+  o << "    case " << f.name << "::beta:" << endl;
+  o << "      return \"beta\";" << endl;
+  o << "    case " << f.name << "::gamma:" << endl;
+  o << "      return \"gamma\";" << endl;
+  o << "    case " << f.name << "::delta:" << endl;
+  o << "      return \"delta\";" << endl;
+  o << "  }" << endl;
+  o << "  return \"<error>\";" << endl;
+  o << "};" << endl;
+}
+
+void WriteFlag(ostream &o, const Flag &f)
+{
+  int64_t maxEntry = 0ul;
+  int64_t i = 1;
+  for (const auto &e : f.entries)
+    maxEntry = max(i <<= 1, maxEntry);
+
+  string intType = "std::int8_t";
+  if (maxEntry > numeric_limits<uint32_t>::max())
+    intType = "std::int64_t";
+  else if (maxEntry > numeric_limits<uint16_t>::max())
+    intType = "std::int32_t";
+  else if (maxEntry > numeric_limits<uint8_t>::max())
+    intType = "std::int16_t";
+
+  WriteFlagDeclaration(o, f, intType);
+  WriteFlagFunctions(o, f, intType);
 }
 
 void WriteBaseTypeIoFnuctions(ostream &o, const Package &p)
@@ -581,7 +738,7 @@ void WriteMemberVectorFunctions(ostream &o, const Package &p, const Member &m)
   o << "    std::rotate(" << m.name << ".begin(), i, " << m.name << ".end());" << endl;
   o << "  }" << endl << endl;
 
-  if (m.isBaseType || isEnum(p, m.type))
+  if (m.isBaseType || isEnum(p, m.type) || isFlag(p, m.type))
   {
     o << "  void sort_" << m.name << "() {" << endl;
     o << "    std::sort(" << m.name << ".begin(), " << m.name << ".end());" << endl;
@@ -955,6 +1112,8 @@ void WriteTypeStructs(ostream &o, const Package &p)
       WriteEnumDeclaration(o, t.as_Enum());
       WriteEnumFunctions(o, t.as_Enum());
     }
+    else if (t.is_Flag())
+      WriteFlag(o, t.as_Flag());
   }
 }
 

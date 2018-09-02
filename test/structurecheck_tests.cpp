@@ -3,6 +3,8 @@
 #include "parser.h"
 #include "structurecheck.h"
 
+#include <iostream>
+
 void checkErrorInPure(const std::string &error, size_t line, size_t column, const std::string &source)
 {
   INFO(error);
@@ -11,6 +13,11 @@ void checkErrorInPure(const std::string &error, size_t line, size_t column, cons
   REQUIRE_NOTHROW(Parser(source, p).parse());
 
   const auto errors = StructureCheck(p).check();
+
+  if (errors.size() > 1)
+    for (const auto &fp : errors)
+      std::cerr << fp.what() << std::endl;
+
   REQUIRE(errors.size() == 1);
   CHECK(errors.front().what() == error);
   CHECK(errors.front()._state.line == line);
@@ -340,7 +347,7 @@ TEST_CASE("Check structure errors", "[error, parsing, structure]")
                    "  a:F1=fail;\n"
                    "}");
       checkErrorIn("only values of 'E1' can be assigned here.", 3, 8,
-                   "enum E1 { A, B, C }\n"
+                   "flag E1 { A, B, C }\n"
                    "table T1 {\n"
                    "  a:E1=true;\n"
                    "}");

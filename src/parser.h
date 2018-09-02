@@ -81,6 +81,7 @@ private:
   Table *tableForType(const std::string &t) const;
   Union *unionForType(const std::string &t) const;
   Enum *enumForType(const std::string &t) const;
+  Flag *flagForType(const std::string &t) const;
   void updateTableAppearance();
   std::string fullPackageScope() const;
 

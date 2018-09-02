@@ -813,6 +813,14 @@ Enum *Parser::enumForType(const std::string &name) const
   return nullptr;
 }
 
+Flag *Parser::flagForType(const std::string &name) const
+{
+  for (auto &e : package.types)
+    if (e.is_Flag() && e.as_Flag().name == name)
+      return &e.as_Flag();
+  return nullptr;
+}
+
 template <class T>
 void updateAppearance(T *t, const Member &m)
 {
@@ -855,14 +863,23 @@ void Parser::updateTableAppearance()
         m.defaultValue.value = defaults[m.type];
       }
 
-      auto *e = enumForType(m.type);
-      if (e)
       {
-        if (m.defaultValue.value.empty())
-          m.defaultValue.value = fullPackageScope() + e->name + "::" + e->entries.front().name;
-        else if (std::any_of(e->entries.begin(), e->entries.end(),
-                             [&m](const EnumEntry &ee) { return ee.name == m.defaultValue.value; }))
-          m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
+        auto *e = enumForType(m.type);
+        if (e)
+        {
+          if (m.defaultValue.value.empty())
+            m.defaultValue.value = fullPackageScope() + e->name + "::" + e->entries.front().name;
+          else if (std::any_of(e->entries.begin(), e->entries.end(),
+                               [&m](const EnumEntry &ee) { return ee.name == m.defaultValue.value; }))
+            m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
+        }
+      }
+
+      auto *f = flagForType(m.type);
+      if (f && std::any_of(f->entries.begin(), f->entries.end(),
+                           [&m](const Attribute &ee) { return ee.value == m.defaultValue.value; }))
+      {
+        m.defaultValue.value = fullPackageScope() + f->name + "::" + m.defaultValue.value;
       }
 
       updateAppearance(tableForType(m.type), m);
