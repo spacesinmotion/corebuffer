@@ -405,18 +405,6 @@ private:
     Read(s, v.x);
   }
 
-  void Write(std::ostream &o, const Initializer &v) {
-    Write(o, v.a);
-    Write(o, v.b);
-    Write(o, v.c);
-  }
-
-  void Read(std::istream &s, Initializer &v) {
-    Read(s, v.a);
-    Read(s, v.b);
-    Read(s, v.c);
-  }
-
   void Write(std::ostream &o, const Root &v) {
     Write(o, v.a);
     Write(o, v.b);

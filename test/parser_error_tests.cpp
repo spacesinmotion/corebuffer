@@ -161,4 +161,11 @@ TEST_CASE("Parsing idls with error", "[parsing, error, syntax]")
     checkThrowIn("Expected union name after 'union'.", 1, 6, "union {}");
     checkThrowIn("Missing closing '}'.", 1, 14, "union Dummy { ,}");
   }
+
+  SECTION("flags")
+  {
+    checkThrowIn("Expected flag name after 'flag'.", 1, 5, "flag {}");
+    checkThrowIn("Missing closing '}'.", 1, 13, "flag Dummy { ,}");
+    checkThrowIn("Definition of flag values not supported.", 1, 16, "flag Dummy { a = 3 }");
+  }
 }

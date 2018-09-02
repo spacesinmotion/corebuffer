@@ -1,0 +1,17 @@
+package FlagScope;
+version "0.0";
+root_type Dummy;
+
+flag Flags
+{
+  alpha,
+  beta,
+  gamma,
+  delta
+}
+
+table Dummy {
+  en1:Flags;
+  en2:Flags=gamma;
+  en3:[Flags];
+}

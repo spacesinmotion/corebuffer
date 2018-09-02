@@ -32,9 +32,10 @@ add_executable (CoreBufferC 3rdparty/args/args.hxx src/corebuffer.cpp)
 add_executable (CoreBufferTests 3rdparty/catch2/catch.hpp test/parser_tests.cpp test/parser_error_tests.cpp
   test/corebuffer_tests.cpp test/structurecheck_tests.cpp)
 
-add_executable (CoreBufferOutputTests 3rdparty/catch2/catch.hpp test/basetypes.h test/enumtypes.h test/tabletypes.h
-  test/uniontypes.h test/schema.h test/schema_tests.cpp test/tabletypes_tests.cpp
-  test/uniontypes_tests.cpp test/basetype_tests.cpp test/enumtypes_tests.cpp test/corebufferoutput_tests.cpp)
+add_executable (CoreBufferOutputTests 3rdparty/catch2/catch.hpp test/basetypes.h test/enumtypes.h test/flagtypes.h
+  test/tabletypes.h test/uniontypes.h test/schema.h test/schema_tests.cpp test/tabletypes_tests.cpp
+  test/uniontypes_tests.cpp test/basetype_tests.cpp test/enumtypes_tests.cpp test/flagtypes_tests.cpp
+  test/corebufferoutput_tests.cpp)
 
 target_link_libraries(CoreBufferC CoreBuffer)
 target_link_libraries(CoreBufferTests CoreBuffer)
@@ -44,6 +45,7 @@ enable_testing()
 
 add_test(NAME BaseTypeBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/basetypes.cor ${PROJECT_SOURCE_DIR}/test/basetypes.h)
 add_test(NAME EnumTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/enumtypes.cor ${PROJECT_SOURCE_DIR}/test/enumtypes.h)
+add_test(NAME FlagTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/flagtypes.cor ${PROJECT_SOURCE_DIR}/test/flagtypes.h)
 add_test(NAME TableTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/tabletypes.cor ${PROJECT_SOURCE_DIR}/test/tabletypes.h)
 add_test(NAME UnionTypesBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/uniontypes.cor ${PROJECT_SOURCE_DIR}/test/uniontypes.h)
 add_test(NAME ShopExampleBuild COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/game.cor ${PROJECT_SOURCE_DIR}/test/game.h)
@@ -64,7 +66,7 @@ add_test (NAME CheckStructureError COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_
 add_test (NAME CheckError COMMAND $<TARGET_FILE:CoreBufferC> ${PROJECT_SOURCE_DIR}/cor/parser_errors.cor schema.h)
 set_tests_properties (CheckStructureError CheckError PROPERTIES PASS_REGULAR_EXPRESSION "error:")
 
-add_test(CoreBufferTest CoreBufferTests -r compact)
+add_test(CoreBufferTest CoreBufferTests)
 add_test(CoreBufferOutputTest CoreBufferOutputTests)
 
 

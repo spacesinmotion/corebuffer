@@ -236,7 +236,7 @@ bool Parser::readRootType()
 
 bool Parser::readMainContent()
 {
-  return readTable() || readUnion() || readEnum() || readPackage() || readVersion() || readRootType();
+  return readTable() || readUnion() || readEnum() || readFlag() || readPackage() || readVersion() || readRootType();
 }
 
 bool Parser::readTable()
@@ -286,6 +286,31 @@ bool Parser::readEnum()
         }))
     {
       package.types.emplace_back(e);
+      return true;
+    }
+  }
+
+  rewind(s);
+  return false;
+}
+
+bool Parser::readFlag()
+{
+  auto s = state();
+
+  if (read("flag"))
+  {
+    const auto location = stateBefor(4);
+    Flag f(readIdentifier(), location);
+    if (f.name.empty())
+      throw FileError("Expected flag name after 'flag'.", state());
+
+    if (readScopeStatement([this, &f]() {
+          readFlagEntryList(f);
+          return true;
+        }))
+    {
+      package.types.emplace_back(f);
       return true;
     }
   }
@@ -412,6 +437,26 @@ bool Parser::readEnumMemberDefault(size_t &v)
     std::stringstream ss(val);
     if (ss >> v)
       return true;
+  }
+
+  rewind(s);
+  return false;
+}
+
+bool Parser::readFlagEntryList(Flag &f)
+{
+  auto s = state();
+
+  const auto name = readIdentifier();
+  if (!name.empty())
+  {
+    const auto location = stateBefor(name.size());
+    f.entries.emplace_back(name, location);
+    if (read("="))
+      throw FileError("Definition of flag values not supported.", stateBefor(1));
+    if (read(","))
+      readFlagEntryList(f);
+    return true;
   }
 
   rewind(s);
@@ -711,18 +756,18 @@ void Parser::initBaseTypes()
   aliases["double"] = "double";
   aliases["bool"] = "bool";
 
-  package.baseTypes.emplace_back("float");
-  package.baseTypes.emplace_back("double");
-  package.baseTypes.emplace_back("bool");
+  package.baseTypes.emplace_back("float", false);
+  package.baseTypes.emplace_back("double", false);
+  package.baseTypes.emplace_back("bool", false);
 
-  package.baseTypes.emplace_back("std::int8_t");
-  package.baseTypes.emplace_back("std::int16_t");
-  package.baseTypes.emplace_back("std::int32_t");
-  package.baseTypes.emplace_back("std::int64_t");
-  package.baseTypes.emplace_back("std::uint8_t");
-  package.baseTypes.emplace_back("std::uint16_t");
-  package.baseTypes.emplace_back("std::uint32_t");
-  package.baseTypes.emplace_back("std::uint64_t");
+  package.baseTypes.emplace_back("std::int8_t", false);
+  package.baseTypes.emplace_back("std::int16_t", false);
+  package.baseTypes.emplace_back("std::int32_t", false);
+  package.baseTypes.emplace_back("std::int64_t", false);
+  package.baseTypes.emplace_back("std::uint8_t", false);
+  package.baseTypes.emplace_back("std::uint16_t", false);
+  package.baseTypes.emplace_back("std::uint32_t", false);
+  package.baseTypes.emplace_back("std::uint64_t", false);
 
   package.baseTypes.emplace_back("std::string");
 
@@ -741,7 +786,7 @@ void Parser::initBaseTypes()
   defaults["std::uint64_t"] = "0u";
 }
 
-Table *Parser::tableForType(const std::string &name)
+Table *Parser::tableForType(const std::string &name) const
 {
   for (auto &t : package.types)
     if (t.is_Table() && t.as_Table().name == name)
@@ -752,7 +797,7 @@ Table *Parser::tableForType(const std::string &name)
   return nullptr;
 }
 
-Union *Parser::unionForType(const std::string &name)
+Union *Parser::unionForType(const std::string &name) const
 {
   for (auto &u : package.types)
     if (u.is_Union() && u.as_Union().name == name)
@@ -760,11 +805,19 @@ Union *Parser::unionForType(const std::string &name)
   return nullptr;
 }
 
-Enum *Parser::enumForType(const std::string &name)
+Enum *Parser::enumForType(const std::string &name) const
 {
   for (auto &e : package.types)
     if (e.is_Enum() && e.as_Enum().name == name)
       return &e.as_Enum();
+  return nullptr;
+}
+
+Flag *Parser::flagForType(const std::string &name) const
+{
+  for (auto &e : package.types)
+    if (e.is_Flag() && e.as_Flag().name == name)
+      return &e.as_Flag();
   return nullptr;
 }
 
@@ -810,19 +863,31 @@ void Parser::updateTableAppearance()
         m.defaultValue.value = defaults[m.type];
       }
 
-      auto *e = enumForType(m.type);
-      if (e)
       {
-        if (m.defaultValue.value.empty())
-          m.defaultValue.value = fullPackageScope() + e->name + "::" + e->entries.front().name;
-        else if (std::any_of(e->entries.begin(), e->entries.end(),
-                             [&m](const EnumEntry &ee) { return ee.name == m.defaultValue.value; }))
-          m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
+        auto *e = enumForType(m.type);
+        if (e)
+        {
+          if (m.defaultValue.value.empty())
+            m.defaultValue.value = fullPackageScope() + e->name + "::" + e->entries.front().name;
+          else if (std::any_of(e->entries.begin(), e->entries.end(),
+                               [&m](const EnumEntry &ee) { return ee.name == m.defaultValue.value; }))
+            m.defaultValue.value = fullPackageScope() + e->name + "::" + m.defaultValue.value;
+        }
+      }
+
+      auto *f = flagForType(m.type);
+      if (f && std::any_of(f->entries.begin(), f->entries.end(),
+                           [&m](const Attribute &ee) { return ee.value == m.defaultValue.value; }))
+      {
+        m.defaultValue.value = fullPackageScope() + f->name + "::" + m.defaultValue.value;
       }
 
       updateAppearance(tableForType(m.type), m);
       updateAppearance(unionForType(m.type), m);
     }
+
+    std::unordered_set<const Table *> visited;
+    t.as_Table().isComplexType = isComplexType(t.as_Table(), visited);
   }
 }
 
@@ -838,6 +903,32 @@ std::string Parser::fullPackageScope() const
     scope += "::" + package.path.value.substr(pos, end - pos);
   }
   return scope.empty() ? "" : scope + "::";
+}
+
+bool Parser::isComplexType(const std::string &n, std::unordered_set<const Table *> &visited) const
+{
+  if (enumForType(n))
+    return false;
+
+  if (n == "std::string" || unionForType(n))
+    return true;
+
+  const auto *t = tableForType(n);
+  return t && isComplexType(*t, visited);
+}
+
+bool Parser::isComplexType(const Table &t, std::unordered_set<const Table *> &visited) const
+{
+  if (!t.isComplexType)
+    return false;
+
+  if (visited.find(&t) != visited.end())
+    return true;
+  visited.insert(&t);
+
+  return std::any_of(t.member.begin(), t.member.end(), [this, &visited](const Member &m) {
+    return m.isVector || m.pointer != Pointer::Plain || isComplexType(m.type, visited);
+  });
 }
 
 FileError::FileError(const std::string &m, const FilePosition &s) : std::runtime_error(m), _state(s) {}

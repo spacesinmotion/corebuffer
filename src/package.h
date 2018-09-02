@@ -39,6 +39,15 @@ struct Enum
   FilePosition location;
 };
 
+struct Flag
+{
+  explicit Flag(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
+
+  string name;
+  vector<Attribute> entries;
+  FilePosition location;
+};
+
 enum class Pointer : unsigned char
 {
   Plain,
@@ -95,12 +104,14 @@ struct Method
 struct Table
 {
   explicit Table(const string &n, const FilePosition &fp = FilePosition()) : name(n), location(fp) {}
+  explicit Table(const string &n, bool isComplex) : name(n), isComplexType(isComplex) {}
 
   string name;
   vector<Member> member;
   vector<Method> methods;
   unsigned char appearance{0};
   FilePosition location;
+  bool isComplexType{true};
 };
 
 struct Union
@@ -122,6 +133,8 @@ struct Type
 
   Type(const Enum &v) : _Enum(new Enum(v)), _selection(_Enum_selection) {}
   Type(Enum &&v) : _Enum(new Enum(std::forward<Enum>(v))), _selection(_Enum_selection) {}
+  Type(const Flag &v) : _Flag(new Flag(v)), _selection(_Flag_selection) {}
+  Type(Flag &&v) : _Flag(new Flag(std::forward<Flag>(v))), _selection(_Flag_selection) {}
   Type(const Table &v) : _Table(new Table(v)), _selection(_Table_selection) {}
   Type(Table &&v) : _Table(new Table(std::forward<Table>(v))), _selection(_Table_selection) {}
   Type(const Union &v) : _Union(new Union(v)), _selection(_Union_selection) {}
@@ -134,6 +147,10 @@ struct Type
   bool is_Enum() const noexcept { return _selection == _Enum_selection; }
   const Enum &as_Enum() const noexcept { return *_Enum; }
   Enum &as_Enum() { return *_Enum; }
+
+  bool is_Flag() const noexcept { return _selection == _Flag_selection; }
+  const Flag &as_Flag() const noexcept { return *_Flag; }
+  Flag &as_Flag() { return *_Flag; }
 
   bool is_Table() const noexcept { return _selection == _Table_selection; }
   const Table &as_Table() const noexcept { return *_Table; }
@@ -154,6 +171,9 @@ private:
       case _Enum_selection:
         _Enum = new Enum(*o._Enum);
         break;
+      case _Flag_selection:
+        _Flag = new Flag(*o._Flag);
+        break;
       case _Table_selection:
         _Table = new Table(*o._Table);
         break;
@@ -172,6 +192,9 @@ private:
       case _Enum_selection:
         delete _Enum;
         break;
+      case _Flag_selection:
+        delete _Flag;
+        break;
       case _Table_selection:
         delete _Table;
         break;
@@ -186,6 +209,7 @@ private:
   {
     struct NoValue_t *no_value{nullptr};
     Enum *_Enum;
+    Flag *_Flag;
     Table *_Table;
     Union *_Union;
   };
@@ -194,6 +218,7 @@ private:
   {
     no_selection,
     _Enum_selection,
+    _Flag_selection,
     _Table_selection,
     _Union_selection,
   };

@@ -934,14 +934,6 @@ private:
     Read(s, v.tables);
   }
 
-  void Write(std::ostream &o, const BaseType &v) {
-    Write(o, v.isComplex);
-  }
-
-  void Read(std::istream &s, BaseType &v) {
-    Read(s, v.isComplex);
-  }
-
   void Write(std::ostream &o, const Representation &v) {
     o.write(reinterpret_cast<const char*>(&v._selection), sizeof(Representation::Selection_t));
     switch(v._selection) {
